@@ -1,0 +1,79 @@
+# Format: Category|Query
+# 🟢 TECHNICAL/PROGRAMMING (Should prefer Text-Only/Parametric)
+Technical|How do I fix 'undefined is not a function' in JavaScript?
+Technical|What's the difference between let and const in JavaScript?
+Technical|How to connect to PostgreSQL database in Python?
+Technical|Why is my React component not re-rendering?
+Technical|How to handle errors in async/await?
+Technical|What is dependency injection and why use it?
+Technical|How to optimize SQL query performance?
+Technical|Explain the difference between TCP and UDP
+
+# 🟡 MEDICAL/HEALTHCARE (Should prefer Visual/Text combination)
+Medical|What are the early warning signs of a heart attack?
+Medical|How to check blood pressure at home?
+Medical|What does a melanoma skin cancer look like?
+Medical|How to perform CPR correctly?
+Medical|What are the side effects of COVID-19 vaccine?
+Medical|How to interpret an ECG reading?
+Medical|What does a healthy diet look like for diabetics?
+
+# 🔵 LEGAL (Should prefer Text-Only/Legal documents)
+Legal|What are my rights if I'm pulled over by police?
+Legal|How to write a legally binding contract?
+Legal|What is the difference between copyright and trademark?
+Legal|How to file for divorce without a lawyer?
+Legal|What are tenant rights for security deposits?
+Legal|How to create a will that is legally valid?
+Legal|What is employment at will and what does it mean?
+
+# 🟠 BUSINESS/MARKETING (Should prefer Text-Only/Business docs)
+Business|How to calculate break-even point for a startup?
+Business|What's the best way to find product-market fit?
+Business|How to create a marketing budget for small business?
+Business|What metrics should I track for SaaS business?
+Business|How to price a product for maximum profit?
+Business|How to write a business plan that investors like?
+Business|What is customer churn and how to reduce it?
+
+# 🟣 VISUAL/IMAGE-RELATED (Should prefer Visual-Only)
+Visual|Show me what a cat scan image looks like
+Visual|What does a wiring diagram for a 3-way switch look like?
+Visual|Show me examples of Art Deco architecture in NYC
+Visual|What does a positive pregnancy test look like?
+Visual|Show me different types of clouds with pictures
+Visual|What does a skin rash from poison ivy look like?
+Visual|Show me how to tie a tie step by step with images
+
+# 🔄 HYBRID (Needs both text and visuals)
+Hybrid|Explain how a car engine works with diagrams
+Hybrid|How to bake sourdough bread with step-by-step photos
+Hybrid|What does the human digestive system look like with labels?
+Hybrid|Show me how to do yoga poses with instructions and images
+Hybrid|Explain the water cycle with visual examples
+Hybrid|How to change a tire with pictures and instructions
+Hybrid|What does a neural network architecture diagram look like?
+
+# 📚 EDUCATIONAL (Mixed)
+Educational|What does the periodic table look like?
+Educational|How to solve quadratic equations step by step?
+Educational|Show me the structure of a plant cell with diagram
+Educational|Explain photosynthesis with visual guide
+Educational|What are the parts of a microscope with labels?
+
+# 💼 REAL-WORLD SCENARIOS
+RealWorld|I need to write a resignation letter, what should it say?
+RealWorld|How to fix a leaking faucet with pictures?
+RealWorld|What does poison ivy look like?
+RealWorld|How to calculate my monthly mortgage payment?
+RealWorld|What are the symptoms of food poisoning?
+
+# ⚠️ EDGE CASES (Short queries, typos, slang)
+Short|Python async
+Short|chest pain causes
+Short|copyright fair use
+Short|ROI formula
+Typo|how to impliment binary search in pyhton
+Typo|what are symtoms of diabites
+Slang|best way to get ROI in real estate
+Slang|how to not get sued for copyright
