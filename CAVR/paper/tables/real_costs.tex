@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Real Cost Measurements from API Logs and GPU Monitoring}
+\label{tab:real_costs}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{API Cost} & \textbf{GPU Cost} & \textbf{Total} \\
+\midrule
+Text Path (90 queries) & \$0.025 & \$0 & \$0.025 \\
+Visual Path (135 queries) & \$0 & \$0.016 & \$0.016 \\
+Hybrid Path (43 queries) & \$0 & \$0.011 & \$0.011 \\
+\midrule
+\textbf{Total (268 queries)} & \$0.025 & \$0.027 & \textbf{\$0.052} \\
+\bottomrule
+\end{tabular}
+\par\medskip
+\footnotesize Note: Average cost per query = \$0.00019. GPU pricing assumes \$1.50/hour for NVIDIA A100.
+\end{table}
