@@ -79,10 +79,10 @@ Avg Cost/Query	$0.00019
 
 
 
-@article{rashid2024cost,
-  title={Cost-Aware Visual Router: Dynamic Query Routing for Cost-Efficient Multimodal RAG},
+@article{rashid2026cost,
+  title={Cost-Aware Visual Router (CAVR): Dynamic Query Routing for Cost-Efficient Multimodal RAG},
   author={Rashid, Muhammad Ahsan and Shabbir, Sohail},
   journal={arXiv preprint},
-  year={2024}
+  year={2026}
 }
 
