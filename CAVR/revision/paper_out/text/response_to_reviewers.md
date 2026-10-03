@@ -52,9 +52,10 @@ withdrawn; we list them first so that nothing is hidden behind the new results.
 **E.1 — Justify the need for supercomputing, real-time and parallel or distributed computing throughout.**
 The revised paper frames CAVR as a scheduler for GPU resources in multimodal RAG serving. Late-interaction visual
 retrieval stores 1,031 vectors per page, so index memory and scoring time grow with the corpus: at 100k pages the
-ColPali index needs 24.6 GiB, more than one 24 GiB GPU holds. It must then be streamed from host
-memory (1044 ms per query), pooled (recall@1 drops from 0.577 to 0.525) or sharded
-over 2 GPUs. In a simulated Poisson load test with dynamic batching, driven by measured service
+ColPali index needs 24.6 GiB, more than our 24 GiB GPU holds, and a million pages (about 246
+GiB) would exceed any single accelerator. Such an index must be streamed from host memory (1044 ms per
+query on our hardware), pooled (recall@1 drops from 0.577 to 0.525) or sharded (emulated over
+2 GPUs). Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
 times, serving 100 queries/s at p95 ≤ 2 s needs 106 GPUs for always-hybrid and
 72 for CAVR-CE (32% fewer; means over 5 seeds). We added these
 experiments, a hardware table, energy per query, router throughput up to batch 1,024, and serial versus
@@ -85,8 +86,8 @@ log-probabilities) require the first answer, and a serial cascade has p95 1.91 s
 launches the hybrid path alongside the routed path cuts p95 to 1.42 s but costs 1.46 GPU-s per query,
 45% more than always-hybrid. The paper gives both designs and their latency accounting, and recommends
 pre-generation escalation.
-*Changes:* Method (escalation designs and latency accounting) [AUTHOR ACTION: write the formula]; Results,
-subsection "Confidence-based escalation" (Table escalation, Figure escalation).
+*Changes:* Method (escalation designs and latency accounting); Results, subsection "Confidence-based
+escalation" (Table escalation, Figure escalation).
 
 **R1.2 — No runtime budget control without retraining.**
 The decision rule is now $\arg\max_p \hat{q}_p - \lambda c_p$, where the router predicts per-path quality and the
@@ -111,9 +112,10 @@ measurements, router overhead included.
 *Changes:* Setup (cost model, Table hardware); Results (Tables main_results, router_ce_tests).
 
 **R2.2 — Constrained cost minimisation is not equivalent to maximising the quality/cost ratio.**
-We agree. The ratio objective is replaced by a Lagrangian penalty, $\arg\max_p \hat{q}_p - \lambda c_p$, the
-Lagrangian relaxation of the constrained problem. [AUTHOR ACTION: write the derivation, its assumptions, and an
-example where the ratio rule and the constrained rule disagree.]
+We agree. The ratio objective is replaced by a Lagrangian penalty: the router picks argmax over paths p of
+q̂_p − λ·c_p. The Method section now derives this as the Lagrangian relaxation of the budget-constrained problem,
+states when it is exact (randomised policies, strong duality), and gives an example where the ratio rule and the
+constrained rule disagree. [AUTHOR ACTION: check the derivation.]
 *Changes:* Method, problem formulation.
 
 **R2.3 — How are labels produced, and how many samples are in each class?**
@@ -133,8 +135,9 @@ Table escalation). [AUTHOR ACTION: add a reliability diagram if the reviewer req
 
 **R2 minor 1 — Table 5 columns reversed.** The table is removed; targets are no longer reported.
 **R2 minor 2 — "79" vs "+79.9 pp".** The sentence is removed with the withdrawn results.
-**R2 minor 3 — "Two orders of magnitude" is about 50×.** [AUTHOR ACTION: fix in the manuscript.] Router overhead is
-now reported as measured: 11.7 ms (CAVR) and 24.8 ms (CAVR-CE) per query.
+**R2 minor 3 — "Two orders of magnitude" is about 50×.** Router overhead is now reported as measured:
+11.7 ms (CAVR) and 24.8 ms (CAVR-CE) per query. [AUTHOR ACTION: fix the phrase wherever it
+remains in the manuscript.]
 **R2 minor 4 — "volto brio" and other garbled text.** [AUTHOR ACTION: full copy-edit pass.]
 **R2 minor 5 — "Production-ready" is too strong.** Reworded to "deployable system design".
 [AUTHOR ACTION: Reviewer 2's attachment was not available to us; address any further comments it contains.]

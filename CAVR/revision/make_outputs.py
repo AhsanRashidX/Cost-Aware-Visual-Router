@@ -79,10 +79,10 @@ def t_hardware():
     hw = meta["hardware"]
     g = hw["gpus"][0]
     pk = hw.get("packages", {})
-    rows = [["GPU", f"1 $\\times$ {g['name']} ({g['memory_gb']:.0f}\\,GB, power limit {g['power_limit_w']:.0f}\\,W)"],
+    rows = [["GPU", f"1 $\\times$ {g['name']} ({g['memory_gb']:.0f}\\,GiB, power limit {g['power_limit_w']:.0f}\\,W)"],
             ["Driver / CUDA / cuDNN", f"{hw['driver']} / {hw['cuda_runtime']} / "
                                       f"{hw['cudnn'] // 10000}.{hw['cudnn'] // 100 % 100}.{hw['cudnn'] % 100}"],
-            ["CPU threads / RAM", f"{hw['cpu_threads']} / {hw['ram_gb']:.0f}\\,GB"],
+            ["CPU threads / RAM", f"{hw['cpu_threads']} / {hw['ram_gb']:.0f}\\,GiB"],
             ["OS / Python", f"{os_name(hw['os'])} / {hw['python']}"],
             ["PyTorch / Transformers", f"{pk.get('torch', '?')} / {pk.get('transformers', '?')}"],
             ["colpali-engine / docTR", f"{pk.get('colpali-engine', '?')} / {pk.get('python-doctr', '?')}"],
@@ -271,7 +271,7 @@ def index_scaling():
            f"per page {ix['vectors_per_page']}$\\to${pr['vectors_per_page_pooled']}; R@1 on the real corpus "
            f"{pr['full']:.3f}$\\to${pr['pooled2x2']:.3f}. Sharded latency is emulated (shards timed one by one on one GPU).")
     table("index_scaling", cap, "tab:index_scaling",
-          ["Pages", "Index GB", "GPU", "CPU stream", "Pooled GB", "Pooled GPU", "GPUs / sharded"], rows)
+          ["Pages", "Index GiB", "GPU", "CPU stream", "Pooled GiB", "Pooled GPU", "GPUs / sharded"], rows)
 
     fig, ax = plt.subplots(figsize=(4.6, 3.2))
     for k, color, mk, lab in (("gpu_bf16", COLOR["cavr"], "o", "GPU-resident"),

@@ -13,6 +13,7 @@ otherwise, policy results are means ($\pm$ standard deviation) over the 5 seeds;
 ``seed 1'' show the first split.
 
 \input{tables/hardware}
+\input{tables/data}
 
 \subsection{Cost and answer quality of each path}
 \label{sec:res-paths}
@@ -126,11 +127,16 @@ service times and measured batching curves, gives the highest arrival rate one G
 the number of GPUs needed for a given load (Table~\ref{tab:load_test}, mean over seeds; Figure~\ref{fig:gpus},
 seed 1). Serving 100 queries/s at p95 $\le$ 2\,s needs 106.0 $\pm$ 0.6 GPUs for always-hybrid,
 72.4 $\pm$ 3.9 for CAVR-CE (32\% fewer), 64.4 $\pm$ 0.5 for always-visual and
-41.6 $\pm$ 0.8 for the oracle. With HF Transformers generation, one GPU serves at most 3.88 (text),
-3.06 (visual) and 1.80 (hybrid) queries/s at the best batch size within memory.
+41.6 $\pm$ 0.8 for the oracle. The saving depends on the target: at p95 $\le$ 5\,s, seed 1 needs
+63 GPUs for always-hybrid and 49 for CAVR-CE (22\% fewer). With HF Transformers
+generation (no serving engine such as vLLM~\cite{vllm}), one GPU serves at most 3.88 (text), 3.06
+(visual) and 1.80 (hybrid) queries/s at the best batch size within memory. The simulation keeps the
+evaluation index (1,786 pages) on every GPU; routing saves generation compute, not index memory, because
+CAVR-CE reads ColPali scores for every query.
 
 \paragraph{Visual index scaling.} ColPali stores 1,031 vectors per page. At 100k pages the index needs
-24.6\,GiB in bf16, more than the 24\,GiB of one GPU before any model weights or activations
+24.6\,GiB in bf16, more than our 24\,GiB GPU holds before any model weights or activations, and a
+million pages (about 246\,GiB) would exceed any single accelerator
 (Table~\ref{tab:index_scaling}, Figure~\ref{fig:index}). Streaming it from pinned host memory costs
 1044\,ms per query; 2$\times$2 pooling shrinks it to 6.3\,GiB and 10.3\,ms
 but lowers recall@1 on the real corpus from 0.577 to 0.525 (both measured with the same batched
@@ -168,7 +174,8 @@ batch. CAVR-CE takes 24.8\,ms and 1.74\,J per query at batch 1, and its cross-en
 
 All measurements use one consumer GPU (GeForce RTX 4090) under Windows; caps on visual tokens and OCR length keep memory
 below the point where the driver spills to system RAM. Generation uses HF Transformers rather than a serving
-engine such as vLLM, so absolute capacity is pessimistic; the comparison between policies is the main result.
+engine such as vLLM~\cite{vllm}, so absolute capacity is pessimistic; the comparison between policies is the main
+result. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. Indexes of 10k--100k pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that

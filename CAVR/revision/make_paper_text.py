@@ -12,6 +12,7 @@ import re
 import numpy as np
 
 from common import DATA, RESULTS, ROOT
+from paper_sections import write_sections
 
 OUT = ROOT / "paper_out" / "text"
 
@@ -134,6 +135,10 @@ def values():
         V[f"g100_{n}"] = f"{gd['mean']:.0f}"
         V[f"g100_{n}_pm"] = f"{gd['mean']:.1f} $\\pm$ {gd['std']:.1f}"
     V["g100_save"] = f"{100 * (1 - ss['cavr_ce_valsel']['gpus_needed']['100']['mean'] / ss['always_hybrid']['gpus_needed']['100']['mean']):.0f}"
+    P1 = lt["policies"]
+    V["g100_5s_hyb"], V["g100_5s_ce"] = P1["always_hybrid"]["gpus_needed"]["5.0"]["100"], P1["cavr_ce_valsel"]["gpus_needed"]["5.0"]["100"]
+    V["g100_5s_save"] = f"{100 * (1 - V['g100_5s_ce'] / V['g100_5s_hyb']):.0f}"
+    V["ix1m_gb"] = f"{10 * ix['scaling']['100000']['index_gb_bf16']:.0f}"
     for p, d in bj["paths"].items():
         V[f"bq_{p}"] = f"{max(x['queries_per_s'] for x in d.values() if 'note' not in x):.2f}"
     s100, s1k, s50k = ix["scaling"]["100000"], ix["scaling"]["1000"], ix["scaling"]["50000"]
@@ -171,6 +176,7 @@ otherwise, policy results are means ($\pm$ standard deviation) over the <<n_seed
 ``seed 1'' show the first split.
 
 \input{tables/hardware}
+\input{tables/data}
 
 \subsection{Cost and answer quality of each path}
 \label{sec:res-paths}
@@ -284,11 +290,16 @@ service times and measured batching curves, gives the highest arrival rate one G
 the number of GPUs needed for a given load (Table~\ref{tab:load_test}, mean over seeds; Figure~\ref{fig:gpus},
 seed 1). Serving 100 queries/s at p95 $\le$ 2\,s needs <<g100_always_hybrid_pm>> GPUs for always-hybrid,
 <<g100_cavr_ce_valsel_pm>> for CAVR-CE (<<g100_save>>\% fewer), <<g100_always_visual_pm>> for always-visual and
-<<g100_oracle_pm>> for the oracle. With HF Transformers generation, one GPU serves at most <<bq_text>> (text),
-<<bq_visual>> (visual) and <<bq_hybrid>> (hybrid) queries/s at the best batch size within memory.
+<<g100_oracle_pm>> for the oracle. The saving depends on the target: at p95 $\le$ 5\,s, seed 1 needs
+<<g100_5s_hyb>> GPUs for always-hybrid and <<g100_5s_ce>> for CAVR-CE (<<g100_5s_save>>\% fewer). With HF Transformers
+generation (no serving engine such as vLLM~\cite{vllm}), one GPU serves at most <<bq_text>> (text), <<bq_visual>>
+(visual) and <<bq_hybrid>> (hybrid) queries/s at the best batch size within memory. The simulation keeps the
+evaluation index (<<n_pages>> pages) on every GPU; routing saves generation compute, not index memory, because
+CAVR-CE reads ColPali scores for every query.
 
 \paragraph{Visual index scaling.} ColPali stores 1,031 vectors per page. At 100k pages the index needs
-<<ix100_gb>>\,GiB in bf16, more than the <<gpu_mem>>\,GiB of one GPU before any model weights or activations
+<<ix100_gb>>\,GiB in bf16, more than our <<gpu_mem>>\,GiB GPU holds before any model weights or activations, and a
+million pages (about <<ix1m_gb>>\,GiB) would exceed any single accelerator
 (Table~\ref{tab:index_scaling}, Figure~\ref{fig:index}). Streaming it from pinned host memory costs
 <<ix100_stream_ms>>\,ms per query; 2$\times$2 pooling shrinks it to <<ix100_pool_gb>>\,GiB and <<ix100_pool_ms>>\,ms
 but lowers recall@1 on the real corpus from <<pool_r1_full>> to <<pool_r1>> (both measured with the same batched
@@ -326,7 +337,8 @@ batch. CAVR-CE takes <<ce_ms>>\,ms and <<ce_j>>\,J per query at batch 1, and its
 
 All measurements use one consumer GPU (<<gpu>>) under Windows; caps on visual tokens and OCR length keep memory
 below the point where the driver spills to system RAM. Generation uses HF Transformers rather than a serving
-engine such as vLLM, so absolute capacity is pessimistic; the comparison between policies is the main result.
+engine such as vLLM~\cite{vllm}, so absolute capacity is pessimistic; the comparison between policies is the main
+result. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. Indexes of 10k--100k pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that
@@ -389,9 +401,10 @@ withdrawn; we list them first so that nothing is hidden behind the new results.
 **E.1 — Justify the need for supercomputing, real-time and parallel or distributed computing throughout.**
 The revised paper frames CAVR as a scheduler for GPU resources in multimodal RAG serving. Late-interaction visual
 retrieval stores 1,031 vectors per page, so index memory and scoring time grow with the corpus: at 100k pages the
-ColPali index needs <<ix100_gb>> GiB, more than one <<gpu_mem>> GiB GPU holds. It must then be streamed from host
-memory (<<ix100_stream_ms>> ms per query), pooled (recall@1 drops from <<pool_r1_full>> to <<pool_r1>>) or sharded
-over <<ix100_shards>> GPUs. In a simulated Poisson load test with dynamic batching, driven by measured service
+ColPali index needs <<ix100_gb>> GiB, more than our <<gpu_mem>> GiB GPU holds, and a million pages (about <<ix1m_gb>>
+GiB) would exceed any single accelerator. Such an index must be streamed from host memory (<<ix100_stream_ms>> ms per
+query on our hardware), pooled (recall@1 drops from <<pool_r1_full>> to <<pool_r1>>) or sharded (emulated over
+<<ix100_shards>> GPUs). Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
 times, serving 100 queries/s at p95 ≤ 2 s needs <<g100_always_hybrid>> GPUs for always-hybrid and
 <<g100_cavr_ce_valsel>> for CAVR-CE (<<g100_save>>% fewer; means over <<n_seeds>> seeds). We added these
 experiments, a hardware table, energy per query, router throughput up to batch 1,024, and serial versus
@@ -422,8 +435,8 @@ log-probabilities) require the first answer, and a serial cascade has p95 <<ser_
 launches the hybrid path alongside the routed path cuts p95 to <<spe_p95>> s but costs <<spe_gpu>> GPU-s per query,
 <<spe_vs_hyb>>% more than always-hybrid. The paper gives both designs and their latency accounting, and recommends
 pre-generation escalation.
-*Changes:* Method (escalation designs and latency accounting) [AUTHOR ACTION: write the formula]; Results,
-subsection "Confidence-based escalation" (Table escalation, Figure escalation).
+*Changes:* Method (escalation designs and latency accounting); Results, subsection "Confidence-based
+escalation" (Table escalation, Figure escalation).
 
 **R1.2 — No runtime budget control without retraining.**
 The decision rule is now $\arg\max_p \hat{q}_p - \lambda c_p$, where the router predicts per-path quality and the
@@ -448,9 +461,10 @@ measurements, router overhead included.
 *Changes:* Setup (cost model, Table hardware); Results (Tables main_results, router_ce_tests).
 
 **R2.2 — Constrained cost minimisation is not equivalent to maximising the quality/cost ratio.**
-We agree. The ratio objective is replaced by a Lagrangian penalty, $\arg\max_p \hat{q}_p - \lambda c_p$, the
-Lagrangian relaxation of the constrained problem. [AUTHOR ACTION: write the derivation, its assumptions, and an
-example where the ratio rule and the constrained rule disagree.]
+We agree. The ratio objective is replaced by a Lagrangian penalty: the router picks argmax over paths p of
+q̂_p − λ·c_p. The Method section now derives this as the Lagrangian relaxation of the budget-constrained problem,
+states when it is exact (randomised policies, strong duality), and gives an example where the ratio rule and the
+constrained rule disagree. [AUTHOR ACTION: check the derivation.]
 *Changes:* Method, problem formulation.
 
 **R2.3 — How are labels produced, and how many samples are in each class?**
@@ -470,8 +484,9 @@ Table escalation). [AUTHOR ACTION: add a reliability diagram if the reviewer req
 
 **R2 minor 1 — Table 5 columns reversed.** The table is removed; targets are no longer reported.
 **R2 minor 2 — "79" vs "+79.9 pp".** The sentence is removed with the withdrawn results.
-**R2 minor 3 — "Two orders of magnitude" is about 50×.** [AUTHOR ACTION: fix in the manuscript.] Router overhead is
-now reported as measured: <<cavr_router_ms>> ms (CAVR) and <<ce_ms>> ms (CAVR-CE) per query.
+**R2 minor 3 — "Two orders of magnitude" is about 50×.** Router overhead is now reported as measured:
+<<cavr_router_ms>> ms (CAVR) and <<ce_ms>> ms (CAVR-CE) per query. [AUTHOR ACTION: fix the phrase wherever it
+remains in the manuscript.]
 **R2 minor 4 — "volto brio" and other garbled text.** [AUTHOR ACTION: full copy-edit pass.]
 **R2 minor 5 — "Production-ready" is too strong.** Reworded to "deployable system design".
 [AUTHOR ACTION: Reviewer 2's attachment was not available to us; address any further comments it contains.]
@@ -529,7 +544,9 @@ def main():
     (OUT / "results_section.tex").write_text(fill(RESULTS_TEX, V), encoding="utf-8")
     md = fill(RESPONSE_MD, V).replace(" $\\pm$ ", " ± ")
     (OUT / "response_to_reviewers.md").write_text(md, encoding="utf-8")
-    print(f"wrote {OUT / 'results_section.tex'} and {OUT / 'response_to_reviewers.md'}")
+    write_sections(V, OUT, fill)
+    print(f"wrote results_section, abstract, introduction, method, conclusion (.tex), "
+          f"response_to_reviewers.md and citations_needed.md to {OUT}")
 
 
 if __name__ == "__main__":
