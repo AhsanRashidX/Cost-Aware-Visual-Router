@@ -121,14 +121,19 @@ def main():
             signals["all_pre"] = pre
             signals["all"] = pre + POST
             res = {"none": outcome(np.ones(len(qids)), 0.0, False, "serial")}
+            eces = {}
             for name, cols in signals.items():
                 p_good = calibrate(cols)
+                pt, gt = p_good[te], good[te]          # calibration error on test, 10 equal-width bins
+                bins = np.clip((pt * 10).astype(int), 0, 9)
+                eces[name] = float(sum(abs(pt[bins == b].mean() - gt[bins == b].mean()) * (bins == b).mean()
+                                       for b in range(10) if (bins == b).any()))
                 post = any(c in POST for c in cols)
                 sig_v = any(c.startswith("colpali") for c in cols)
                 sig_t = any(c.startswith("bm25") for c in cols)
                 modes = ("serial", "speculative") if post else ("reroute",)
                 res[name] = {m: {str(tau): outcome(p_good, tau, post, m, sig_v, sig_t) for tau in TAUS} for m in modes}
-            return res
+            return res, eces
 
         # Base router 1: CAVR (question embedding), lambda = LAMBDA_DEFAULT
         util = R["cavr_qhat"] - LAMBDA_DEFAULT * cost
@@ -138,7 +143,8 @@ def main():
         feats = {"conf_head": R["cavr_conf"], "path_entropy": -(probs * np.log(probs + 1e-12)).sum(1),
                  "quality_margin": srt[:, -1] - srt[:, -2], **shared,
                  "answer_logprob_mean": LPm[idx, route], "answer_logprob_min": LPn[idx, route]}
-        entry = {"run": f.name, "results": analyse(route, feats, False, ovh_cavr)}
+        res_c, ece_c = analyse(route, feats, False, ovh_cavr)
+        entry = {"run": f.name, "results": res_c, "ece": ece_c}
 
         # Base router 2: content-aware CAVR-CE, lambda chosen on val in evaluate.py
         ce_file = RESULTS / "router_ce" / f.name
@@ -150,7 +156,7 @@ def main():
             srt = np.sort(util, 1)
             feats = {"conf_head": qce[idx, route], "quality_margin": srt[:, -1] - srt[:, -2], **shared,
                      "answer_logprob_mean": LPm[idx, route], "answer_logprob_min": LPn[idx, route]}
-            entry["results_ce"] = analyse(route, feats, True, ovh_ce)
+            entry["results_ce"], entry["ece_ce"] = analyse(route, feats, True, ovh_ce)
             entry["ce_lambda"] = lam
         per_seed.append(entry)
         print(f.name, "cavr none", round(entry["results"]["none"]["anls"], 3),

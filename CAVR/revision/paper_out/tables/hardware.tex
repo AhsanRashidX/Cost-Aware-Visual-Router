@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Hardware and software used for every measurement in this paper.}
+\label{tab:hardware}
+\begin{tabular}{ll}
+\toprule
+\textbf{Component} & \textbf{Value} \\
+\midrule
+GPU & 1 $\times$ NVIDIA GeForce RTX 4090 (24\,GB, power limit 450\,W) \\
+Driver / CUDA / cuDNN & 572.61 / 12.8 / 9.19.0 \\
+CPU threads / RAM & 32 / 64\,GB \\
+OS / Python & Windows 11 (build 26200) / 3.11.17 \\
+PyTorch / Transformers & 2.11.0+cu128 / 5.18.0 \\
+colpali-engine / docTR & 0.3.18 / 1.1.0 \\
+Interconnect & single GPU (multi-GPU sharding emulated) \\
+\bottomrule
+\end{tabular}
+\end{table}

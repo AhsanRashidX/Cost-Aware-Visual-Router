@@ -26,7 +26,7 @@ LABEL = {"always_text": "Always text", "always_visual": "Always visual", "always
          "logreg": "Logistic regression", "knn": "kNN quality", "cavr": "CAVR", "cavr_cls_head": "CAVR (class head only)",
          "oracle": "Per-query oracle", "random_equal_budget": "Random (equal budget)",
          "cavr_bm25": "CAVR + BM25 scores", "cavr_rf": "CAVR + BM25 + ColPali scores",
-         "cavr_ce": "CAVR-CE (content-aware)", "cavr_ce_valsel": "CAVR-CE, val-chosen lambda"}
+         "cavr_ce": "CAVR-CE (content-aware)", "cavr_ce_valsel": "CAVR-CE, val-chosen $\lambda$"}
 INK, INK2, GRID = "#0b0b0b", "#52514e", "#e4e3df"
 # Per-policy annotation offsets (points) so neighbouring labels don't collide.
 OFFSET = {"always_text": (8, -4), "keyword_submitted": (8, 6), "always_visual": (6, -12), "always_hybrid": (-20, -16),
@@ -62,6 +62,33 @@ def table(name, caption, label, header, rows, align=None):
 
 def pm(d, k, fmt="{:.3f}"):
     return (fmt + r" $\pm$ " + fmt).format(d[k]["mean"], d[k]["std"])
+
+
+def os_name(platform_str):
+    """platform.platform() calls Windows 11 'Windows-10-10.0.<build>'; builds >= 22000 are Windows 11."""
+    parts = platform_str.split("-")
+    if parts[0] == "Windows" and len(parts) > 2 and int(parts[2].split(".")[-1]) >= 22000:
+        return f"Windows 11 (build {parts[2].split('.')[-1]})"
+    return " ".join(parts[:2])
+
+
+def t_hardware():
+    meta = load("path_outputs_meta.json")
+    if not meta:
+        return
+    hw = meta["hardware"]
+    g = hw["gpus"][0]
+    pk = hw.get("packages", {})
+    rows = [["GPU", f"1 $\\times$ {g['name']} ({g['memory_gb']:.0f}\\,GB, power limit {g['power_limit_w']:.0f}\\,W)"],
+            ["Driver / CUDA / cuDNN", f"{hw['driver']} / {hw['cuda_runtime']} / "
+                                      f"{hw['cudnn'] // 10000}.{hw['cudnn'] // 100 % 100}.{hw['cudnn'] % 100}"],
+            ["CPU threads / RAM", f"{hw['cpu_threads']} / {hw['ram_gb']:.0f}\\,GB"],
+            ["OS / Python", f"{os_name(hw['os'])} / {hw['python']}"],
+            ["PyTorch / Transformers", f"{pk.get('torch', '?')} / {pk.get('transformers', '?')}"],
+            ["colpali-engine / docTR", f"{pk.get('colpali-engine', '?')} / {pk.get('python-doctr', '?')}"],
+            ["Interconnect", "single GPU (multi-GPU sharding emulated)"]]
+    table("hardware", "Hardware and software used for every measurement in this paper.", "tab:hardware",
+          ["Component", "Value"], rows, "ll")
 
 
 def t_data():
@@ -118,9 +145,9 @@ def t_main(ev):
         rows.append([str(int(s["run"].replace(".npz", "").replace("seed", "")) + 1), f"{p['lambda']:g}", f"{p['anls']:.3f}",
                      f"{h['anls']:.3f}", f"{p['gpu_s']:.3f}", f"{h['gpu_s']:.3f}",
                      f"{100 * (1 - p['gpu_s'] / h['gpu_s']):.0f}\\%",
-                     f"{bh['mean_diff']:+.3f} [{bh['ci95'][0]:+.3f}, {bh['ci95'][1]:+.3f}]",
+                     f"${bh['mean_diff']:+.3f}$ [${bh['ci95'][0]:+.3f}$, ${bh['ci95'][1]:+.3f}$]",
                      f"{t['always_hybrid']['mcnemar_em']['p_value']:.2g}",
-                     f"{bv['mean_diff']:+.3f}", f"{t['always_visual']['mcnemar_em']['p_value']:.2g}"])
+                     f"${bv['mean_diff']:+.3f}$", f"{t['always_visual']['mcnemar_em']['p_value']:.2g}"])
     if rows:
         table("router_ce_tests", "CAVR-CE with $\lambda$ chosen on each seed's validation split (cheapest "
               "$\lambda$ within " + str(ev.get("valsel_delta", 0.005)) + " ANLS of always-hybrid on val), against "
@@ -165,7 +192,7 @@ def t_labels():
     th = lb["threshold_labels"]["counts"]
     rows += [[f"{s} (threshold)"] + [th[s].get(p, 0) for p in ("text", "visual", "hybrid")] for s in ("train", "val", "test")]
     kw = lb["keyword_rule_vs_outcome"]["keyword_submitted"]
-    cap = (f"Outcome-based route labels (utility label at $\\lambda$={lb['lambda_default']}; threshold label = cheapest path "
+    cap = (f"Outcome-based route labels on the seed-1 split (utility label at $\\lambda$={lb['lambda_default']}; threshold label = cheapest path "
            f"with ANLS $\\geq$ 0.5). The submitted keyword labels agree with the utility labels on "
            f"{100*kw['agreement_with_utility_label']:.1f}\\% of queries (Cohen's $\\kappa$ = {kw['kappa_with_utility_label']:.2f}).")
     table("labels", cap, "tab:labels", ["Split", "Text", "Visual", "Hybrid"], rows)
@@ -176,23 +203,30 @@ def t_escalation():
     if not es:
         return
     s0 = es["per_seed"][0]
+    S = es["per_seed"]
     rows = []
-    for key, base in (("results", "CAVR"), ("results_ce", "CAVR-CE")):
+
+    def mean_of(get):
+        return {k: sum(get(x)[k] for x in S) / len(S) for k in ("anls", "gpu_s", "latency_p95_s", "escalation_rate")}
+    for key, base, ece_key in (("results", "CAVR", "ece"), ("results_ce", "CAVR-CE", "ece_ce")):
         if key not in s0:
             continue
-        r = s0[key]
-        rows.append([base, "none", "--", f"{r['none']['anls']:.3f}", f"{r['none']['gpu_s']:.3f}",
-                     f"{r['none']['latency_p95_s']:.2f}", "0.0"])
-        for sig, modes in r.items():
+        v = mean_of(lambda x: x[key]["none"])
+        rows.append([base, "none", "--", f"{v['anls']:.3f}", f"{v['gpu_s']:.3f}", f"{v['latency_p95_s']:.2f}", "0.0", "--"])
+        for sig, modes in s0[key].items():
             if sig == "none":
                 continue
-            for mode, by_tau in modes.items():
-                v = by_tau["0.5"]
+            ece = sum(x[ece_key][sig] for x in S) / len(S) if ece_key in s0 else None
+            for mode in modes:
+                v = mean_of(lambda x: x[key][sig][mode]["0.5"])
                 rows.append([base, sig.replace("_", " "), mode, f"{v['anls']:.3f}", f"{v['gpu_s']:.3f}",
-                             f"{v['latency_p95_s']:.2f}", f"{100*v['escalation_rate']:.1f}"])
-    table("escalation", "Escalation to hybrid when calibrated P(good answer) < $\tau$ = 0.5 (seed 1); "
-          "cost includes router overhead.", "tab:escalation",
-          ["Base router", "Signal", "Mode", "ANLS", "GPU-s", "p95 (s)", "Escalated \\%"], rows, "lllrrrr")
+                             f"{v['latency_p95_s']:.2f}", f"{100 * v['escalation_rate']:.1f}",
+                             f"{ece:.3f}" if ece is not None else "--"])
+    table("escalation", "Escalation to hybrid when the calibrated probability of a good answer is $<\\tau = 0.5$ "
+          f"(mean over {len(S)} seeds). Probabilities are calibrated on the validation split by logistic regression; "
+          "ECE is measured on test (10 bins). Costs include router overhead; serial and speculative latencies are "
+          "computed from measured per-stage times (speculative assumes two concurrent workers).", "tab:escalation",
+          ["Base router", "Signal", "Mode", "ANLS", "GPU-s", "p95 (s)", "Escalated \\%", "ECE"], rows, "lllrrrrr")
     r = s0.get("results_ce", s0["results"])
     base_name = "CAVR-CE" if "results_ce" in s0 else "CAVR"
     fig, ax = plt.subplots(figsize=(4.6, 3.2))
@@ -264,12 +298,18 @@ def load_test():
         return
     pol = {n: v for n, v in lt["policies"].items() if "@" not in n}
     ops = {n: v for n, v in lt["policies"].items() if "@" in n}
-    rows = [[LABEL[n], f"{v['max_rate_1gpu']['2.0']:g}", f"{v['max_rate_1gpu']['5.0']:g}"]
-            + [str(v["gpus_needed"]["2.0"][str(l)] or ">256") for l in (10, 25, 50, 100)] for n, v in pol.items()]
-    table("load_test", "Serving capacity from a Poisson load test with dynamic batching (simulated from measured service "
-          "times on one RTX 4090): highest arrival rate one GPU sustains at the p95 target, and GPUs needed to hold "
-          "p95 $\\leq$ 2\\,s at a given load.", "tab:load_test",
-          ["Policy", "QPS@p95$\\leq$2s", "QPS@p95$\\leq$5s", "GPUs@10", "GPUs@25", "GPUs@50", "GPUs@100"], rows)
+    ss = lt.get("seeds_summary", {}).get("policies", {})
+
+    def mstd(d, fmt="{:.1f}"):
+        return "--" if not d else (fmt + r" $\pm$ " + fmt).format(d["mean"], d["std"])
+    rows = [[LABEL[n], mstd(v["max_rate_1gpu"], "{:.2f}")] + [mstd(v["gpus_needed"][str(l)]) for l in (10, 25, 50, 100)]
+            for n, v in ss.items()]
+    n_seeds = len(next(iter(ss.values()))["anls_test"]["per_seed"]) if ss else 0
+    table("load_test", "Serving capacity from a Poisson load test with dynamic batching, simulated from measured "
+          "per-query service times and measured batching curves on one RTX 4090 (mean $\\pm$ std over "
+          f"{n_seeds} seeds): highest arrival rate one GPU sustains at p95 $\\leq$ 2\\,s, and GPUs needed to hold "
+          "p95 $\\leq$ 2\\,s at a given load (queries/s).", "tab:load_test",
+          ["Policy", "QPS per GPU", "GPUs@10", "GPUs@25", "GPUs@50", "GPUs@100"], rows)
     fig, ax = plt.subplots(figsize=(4.6, 3.2))
     for n, v in pol.items():
         pts = [(float(r), x["p95_s"]) for r, x in v["latency_vs_rate_1gpu"].items()]
@@ -339,6 +379,7 @@ def main():
     TAB.mkdir(parents=True, exist_ok=True)
     FIG.mkdir(parents=True, exist_ok=True)
     style()
+    t_hardware()
     t_data()
     t_retrieval()
     t_labels()

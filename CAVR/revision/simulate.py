@@ -111,13 +111,10 @@ def main():
             ce_names.append("cavr_ce_valsel")
     choices["oracle"] = np.take_along_axis(cheap, np.argmax(np.take_along_axis(u, cheap, 1) >= u.max(1, keepdims=True) - 1e-12, 1)[:, None], 1)[:, 0]
 
-    out = {"service_model": "measured per-query times + measured batching curves", "batch_curve": batch_curve,
-           "bmax": bmax, "router_latency_s": router_lat, "policies": {}, "hardware": hardware_info()}
-    names = POLICIES + [f"{m}@{lam}" for m in ("cavr", "cavr_rf") for lam in OPERATING_LAMBDAS] + ce_names
-    for name in names:
+    def make_reqs(name, choice, te_idx):
         reqs = []
-        for i in te:
-            p = PATHS[choices[name][i]]
+        for i in te_idx:
+            p = PATHS[choice[i]]
             r = rows[qids[i]][p]
             learned = name.startswith("cavr") and not name.startswith("cavr_ce")
             cpu = r["preprocess_s"] + r["text_retrieval_cpu_s"] + (router_lat if learned else 0.0)
@@ -127,6 +124,9 @@ def main():
             if name.startswith("cavr_ce"):        # cross-encoder runs on the GPU, so it occupies the GPU
                 gpu_ret = gpu_ret + ce_gpu
             reqs.append((p, r["generate_s"], gpu_ret, cpu))
+        return reqs
+
+    def capacity(reqs, targets=P95_TARGETS):
         rng = np.random.default_rng(SEED)
         curve = {}
         for rate in RATES:
@@ -134,9 +134,9 @@ def main():
             curve[str(rate)] = {"p50_s": float(np.percentile(lat, 50)), "p95_s": float(np.percentile(lat, 95))}
             if curve[str(rate)]["p95_s"] > 60:
                 break
-        cap = {str(t): max([float(r) for r, v in curve.items() if v["p95_s"] <= t], default=0.0) for t in P95_TARGETS}
+        cap = {str(t): max([float(r) for r, v in curve.items() if v["p95_s"] <= t], default=0.0) for t in targets}
         gpus = {}
-        for t in P95_TARGETS:
+        for t in targets:
             gpus[str(t)] = {}
             for load_qps in TARGET_LOADS:
                 def ok(n):
@@ -157,10 +157,51 @@ def main():
                             lo = mid + 1
                     n = hi
                 gpus[str(t)][str(load_qps)] = n if n <= 256 else None
+        return curve, cap, gpus
+
+    out = {"service_model": "measured per-query times + measured batching curves", "batch_curve": batch_curve,
+           "bmax": bmax, "router_latency_s": router_lat, "policies": {},
+           "policies_note": "policies = seed-1 test split (curves for figures); seeds_summary = all seeds",
+           "hardware": hardware_info()}
+    names = POLICIES + [f"{m}@{lam}" for m in ("cavr", "cavr_rf") for lam in OPERATING_LAMBDAS] + ce_names
+    for name in names:
+        curve, cap, gpus = capacity(make_reqs(name, choices[name], te))
         out["policies"][name] = {"anls_test": float(A[te, choices[name][te]].mean()),
                                  "latency_vs_rate_1gpu": curve, "max_rate_1gpu": cap, "gpus_needed": gpus,
                                  "path_mix": {p: float((choices[name][te] == k).mean()) for k, p in enumerate(PATHS)}}
         print(name, "max QPS@p95<=2s:", cap["2.0"], "| GPUs for 25 QPS:", gpus["2.0"]["25"], flush=True)
+
+    # All seeds, main policies only: capacity at p95 <= 2 s and GPUs needed, so headline numbers are means.
+    ev_all = json.load(open(RESULTS / "eval_main.json"))["per_seed"]
+    main_names = ["always_text", "always_visual", "always_hybrid", "keyword_submitted", "cavr", "cavr_ce_valsel", "oracle"]
+    per = {n: {"anls_test": [], "max_rate": [], "gpus": {str(l): [] for l in TARGET_LOADS}} for n in main_names}
+    for k, f in enumerate(sorted(Path(args.runs).glob("seed*.npz"))):
+        Rk = np.load(f, allow_pickle=True)
+        te_k = np.where(Rk["split"] == "test")[0]
+        cost_k = Rk["cost"]
+        ch = {"always_text": np.zeros(len(qids), int), "always_visual": np.ones(len(qids), int),
+              "always_hybrid": np.full(len(qids), 2), "keyword_submitted": choices["keyword_submitted"],
+              "cavr": np.argmax(Rk["cavr_qhat"] - LAMBDA_DEFAULT * cost_k, 1), "oracle": choices["oracle"]}
+        ce_k = RESULTS / "router_ce" / f.name
+        lam_k = ev_all[k]["policies"].get("cavr_ce_valsel", {}).get("lambda")
+        if ce_k.exists() and lam_k is not None:
+            ch["cavr_ce_valsel"] = np.argmax(np.load(ce_k, allow_pickle=True)["qhat_ce_full"] - lam_k * cost_k, 1)
+        for n in main_names:
+            if n not in ch:
+                continue
+            _, cap_k, gpus_k = capacity(make_reqs(n, ch[n], te_k), targets=[2.0])
+            per[n]["anls_test"].append(float(A[te_k, ch[n][te_k]].mean()))
+            per[n]["max_rate"].append(cap_k["2.0"])
+            for l in TARGET_LOADS:
+                per[n]["gpus"][str(l)].append(gpus_k["2.0"][str(l)])
+        print(f"seeds summary: {f.name} done", flush=True)
+
+    def ms(xs):
+        xs = [x for x in xs if x is not None]
+        return {"mean": float(np.mean(xs)), "std": float(np.std(xs)), "per_seed": xs} if xs else None
+    out["seeds_summary"] = {"p95_target_s": 2.0, "policies": {
+        n: {"anls_test": ms(v["anls_test"]), "max_rate_1gpu": ms(v["max_rate"]),
+            "gpus_needed": {l: ms(x) for l, x in v["gpus"].items()}} for n, v in per.items() if v["anls_test"]}}
     write_json(args.out, out)
 
 

@@ -1,40 +1,40 @@
 \begin{table}[t]
 \centering
-\caption{Escalation to hybrid when calibrated P(good answer) < $	au$ = 0.5 (seed 1); cost includes router overhead.}
+\caption{Escalation to hybrid when the calibrated probability of a good answer is $<\tau = 0.5$ (mean over 5 seeds). Probabilities are calibrated on the validation split by logistic regression; ECE is measured on test (10 bins). Costs include router overhead; serial and speculative latencies are computed from measured per-stage times (speculative assumes two concurrent workers).}
 \label{tab:escalation}
-\begin{tabular}{lllrrrr}
+\begin{tabular}{lllrrrrr}
 \toprule
-\textbf{Base router} & \textbf{Signal} & \textbf{Mode} & \textbf{ANLS} & \textbf{GPU-s} & \textbf{p95 (s)} & \textbf{Escalated \%} \\
+\textbf{Base router} & \textbf{Signal} & \textbf{Mode} & \textbf{ANLS} & \textbf{GPU-s} & \textbf{p95 (s)} & \textbf{Escalated \%} & \textbf{ECE} \\
 \midrule
-CAVR & none & -- & 0.550 & 0.656 & 1.08 & 0.0 \\
-CAVR & conf head & reroute & 0.560 & 0.775 & 1.30 & 32.9 \\
-CAVR & path entropy & reroute & 0.558 & 0.738 & 1.26 & 23.3 \\
-CAVR & quality margin & reroute & 0.550 & 0.671 & 1.15 & 3.9 \\
-CAVR & bm25 top & reroute & 0.559 & 0.814 & 1.32 & 44.5 \\
-CAVR & bm25 margin & reroute & 0.565 & 0.843 & 1.35 & 51.4 \\
-CAVR & colpali top & reroute & 0.557 & 0.711 & 1.25 & 14.6 \\
-CAVR & colpali margin & reroute & 0.570 & 0.840 & 1.35 & 49.6 \\
-CAVR & answer logprob mean & serial & 0.562 & 0.838 & 1.76 & 19.6 \\
-CAVR & answer logprob mean & speculative & 0.562 & 1.564 & 1.41 & 19.6 \\
-CAVR & answer logprob min & serial & 0.572 & 0.931 & 2.01 & 28.0 \\
-CAVR & answer logprob min & speculative & 0.572 & 1.564 & 1.41 & 28.0 \\
-CAVR & all pre & reroute & 0.565 & 0.783 & 1.31 & 35.0 \\
-CAVR & all & serial & 0.568 & 1.001 & 2.08 & 35.8 \\
-CAVR & all & speculative & 0.568 & 1.564 & 1.41 & 35.8 \\
-CAVR-CE & none & -- & 0.566 & 0.731 & 1.27 & 0.0 \\
-CAVR-CE & conf head & reroute & 0.574 & 0.844 & 1.36 & 26.0 \\
-CAVR-CE & quality margin & reroute & 0.566 & 0.732 & 1.28 & 0.2 \\
-CAVR-CE & bm25 top & reroute & 0.571 & 0.844 & 1.36 & 28.4 \\
-CAVR-CE & bm25 margin & reroute & 0.573 & 0.858 & 1.37 & 31.1 \\
-CAVR-CE & colpali top & reroute & 0.566 & 0.735 & 1.29 & 1.0 \\
-CAVR-CE & colpali margin & reroute & 0.573 & 0.860 & 1.37 & 30.2 \\
-CAVR-CE & answer logprob mean & serial & 0.566 & 0.859 & 1.65 & 14.0 \\
-CAVR-CE & answer logprob mean & speculative & 0.566 & 1.434 & 1.41 & 14.0 \\
-CAVR-CE & answer logprob min & serial & 0.575 & 0.926 & 1.92 & 20.1 \\
-CAVR-CE & answer logprob min & speculative & 0.575 & 1.434 & 1.41 & 20.1 \\
-CAVR-CE & all pre & reroute & 0.573 & 0.843 & 1.36 & 26.0 \\
-CAVR-CE & all & serial & 0.575 & 0.985 & 1.94 & 26.3 \\
-CAVR-CE & all & speculative & 0.575 & 1.434 & 1.41 & 26.3 \\
+CAVR & none & -- & 0.542 & 0.645 & 1.06 & 0.0 & -- \\
+CAVR & conf head & reroute & 0.546 & 0.780 & 1.30 & 34.8 & 0.047 \\
+CAVR & path entropy & reroute & 0.549 & 0.740 & 1.26 & 25.4 & 0.074 \\
+CAVR & quality margin & reroute & 0.545 & 0.689 & 1.19 & 10.6 & 0.040 \\
+CAVR & bm25 top & reroute & 0.551 & 0.795 & 1.30 & 40.5 & 0.037 \\
+CAVR & bm25 margin & reroute & 0.555 & 0.828 & 1.33 & 47.3 & 0.047 \\
+CAVR & colpali top & reroute & 0.550 & 0.709 & 1.22 & 16.6 & 0.035 \\
+CAVR & colpali margin & reroute & 0.562 & 0.840 & 1.35 & 49.5 & 0.084 \\
+CAVR & answer logprob mean & serial & 0.553 & 0.826 & 1.75 & 19.2 & 0.057 \\
+CAVR & answer logprob mean & speculative & 0.553 & 1.549 & 1.41 & 19.2 & 0.057 \\
+CAVR & answer logprob min & serial & 0.561 & 0.928 & 1.98 & 28.7 & 0.061 \\
+CAVR & answer logprob min & speculative & 0.561 & 1.549 & 1.41 & 28.7 & 0.061 \\
+CAVR & all pre & reroute & 0.551 & 0.798 & 1.31 & 39.0 & 0.041 \\
+CAVR & all & serial & 0.561 & 1.028 & 2.07 & 39.4 & 0.033 \\
+CAVR & all & speculative & 0.561 & 1.549 & 1.41 & 39.4 & 0.033 \\
+CAVR-CE & none & -- & 0.557 & 0.716 & 1.24 & 0.0 & -- \\
+CAVR-CE & conf head & reroute & 0.562 & 0.834 & 1.34 & 28.5 & 0.039 \\
+CAVR-CE & quality margin & reroute & 0.558 & 0.725 & 1.26 & 2.2 & 0.038 \\
+CAVR-CE & bm25 top & reroute & 0.562 & 0.827 & 1.34 & 28.8 & 0.032 \\
+CAVR-CE & bm25 margin & reroute & 0.564 & 0.846 & 1.35 & 32.8 & 0.047 \\
+CAVR-CE & colpali top & reroute & 0.558 & 0.727 & 1.26 & 3.3 & 0.027 \\
+CAVR-CE & colpali margin & reroute & 0.564 & 0.856 & 1.36 & 34.2 & 0.078 \\
+CAVR-CE & answer logprob mean & serial & 0.558 & 0.835 & 1.62 & 13.0 & 0.061 \\
+CAVR-CE & answer logprob mean & speculative & 0.558 & 1.460 & 1.42 & 13.0 & 0.061 \\
+CAVR-CE & answer logprob min & serial & 0.563 & 0.920 & 1.91 & 20.9 & 0.047 \\
+CAVR-CE & answer logprob min & speculative & 0.563 & 1.460 & 1.42 & 20.9 & 0.047 \\
+CAVR-CE & all pre & reroute & 0.562 & 0.835 & 1.35 & 28.7 & 0.035 \\
+CAVR-CE & all & serial & 0.564 & 1.001 & 1.98 & 29.6 & 0.029 \\
+CAVR-CE & all & speculative & 0.564 & 1.460 & 1.42 & 29.6 & 0.029 \\
 \bottomrule
 \end{tabular}
 \end{table}
