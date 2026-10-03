@@ -1,0 +1,237 @@
+{
+  "n_queries": 8150,
+  "split_seed": 1234,
+  "split_sizes": {
+    "train": 4889,
+    "val": 1655,
+    "test": 1606
+  },
+  "path_cost_gpu_s_train": {
+    "text": 0.43502996351016887,
+    "visual": 0.6186874815901888,
+    "hybrid": 1.0132223769072448
+  },
+  "mean_anls_per_path": {
+    "text": 0.3665695561441841,
+    "visual": 0.5464460564037823,
+    "hybrid": 0.5704727752964003
+  },
+  "lambda_default": 0.1,
+  "utility_labels_by_lambda": {
+    "0.0": {
+      "counts": {
+        "train": {
+          "text": 3376,
+          "visual": 1392,
+          "hybrid": 121
+        },
+        "val": {
+          "text": 1199,
+          "visual": 410,
+          "hybrid": 46
+        },
+        "test": {
+          "text": 1098,
+          "visual": 458,
+          "hybrid": 50
+        }
+      },
+      "oracle_anls": 0.6294301222434966,
+      "oracle_cost": 0.4943889892878342
+    },
+    "0.02": {
+      "counts": {
+        "train": {
+          "text": 3376,
+          "visual": 1392,
+          "hybrid": 121
+        },
+        "val": {
+          "text": 1199,
+          "visual": 410,
+          "hybrid": 46
+        },
+        "test": {
+          "text": 1098,
+          "visual": 458,
+          "hybrid": 50
+        }
+      },
+      "oracle_anls": 0.6294301222434966,
+      "oracle_cost": 0.4943889892878342
+    },
+    "0.05": {
+      "counts": {
+        "train": {
+          "text": 3376,
+          "visual": 1393,
+          "hybrid": 120
+        },
+        "val": {
+          "text": 1199,
+          "visual": 410,
+          "hybrid": 46
+        },
+        "test": {
+          "text": 1098,
+          "visual": 458,
+          "hybrid": 50
+        }
+      },
+      "oracle_anls": 0.6294278071607324,
+      "oracle_cost": 0.494338671901339
+    },
+    "0.1": {
+      "counts": {
+        "train": {
+          "text": 3377,
+          "visual": 1398,
+          "hybrid": 114
+        },
+        "val": {
+          "text": 1199,
+          "visual": 410,
+          "hybrid": 46
+        },
+        "test": {
+          "text": 1099,
+          "visual": 457,
+          "hybrid": 50
+        }
+      },
+      "oracle_anls": 0.6293984736257942,
+      "oracle_cost": 0.49408406802403104
+    },
+    "0.2": {
+      "counts": {
+        "train": {
+          "text": 3385,
+          "visual": 1400,
+          "hybrid": 104
+        },
+        "val": {
+          "text": 1201,
+          "visual": 410,
+          "hybrid": 44
+        },
+        "test": {
+          "text": 1099,
+          "visual": 463,
+          "hybrid": 44
+        }
+      },
+      "oracle_anls": 0.6292360443984536,
+      "oracle_cost": 0.49292834168045774
+    },
+    "0.3": {
+      "counts": {
+        "train": {
+          "text": 3387,
+          "visual": 1401,
+          "hybrid": 101
+        },
+        "val": {
+          "text": 1204,
+          "visual": 413,
+          "hybrid": 38
+        },
+        "test": {
+          "text": 1104,
+          "visual": 460,
+          "hybrid": 42
+        }
+      },
+      "oracle_anls": 0.6290485855353866,
+      "oracle_cost": 0.4921936305025392
+    },
+    "0.5": {
+      "counts": {
+        "train": {
+          "text": 3407,
+          "visual": 1390,
+          "hybrid": 92
+        },
+        "val": {
+          "text": 1208,
+          "visual": 410,
+          "hybrid": 37
+        },
+        "test": {
+          "text": 1114,
+          "visual": 456,
+          "hybrid": 36
+        }
+      },
+      "oracle_anls": 0.6284530382970084,
+      "oracle_cost": 0.49061545837981957
+    },
+    "1.0": {
+      "counts": {
+        "train": {
+          "text": 3448,
+          "visual": 1378,
+          "hybrid": 63
+        },
+        "val": {
+          "text": 1223,
+          "visual": 405,
+          "hybrid": 27
+        },
+        "test": {
+          "text": 1129,
+          "visual": 448,
+          "hybrid": 29
+        }
+      },
+      "oracle_anls": 0.6255855853238951,
+      "oracle_cost": 0.4866716672265202
+    }
+  },
+  "threshold_labels": {
+    "tau": 0.5,
+    "counts": {
+      "train": {
+        "text": 3583,
+        "visual": 1235,
+        "hybrid": 71
+      },
+      "val": {
+        "text": 1270,
+        "visual": 357,
+        "hybrid": 28
+      },
+      "test": {
+        "text": 1176,
+        "visual": 401,
+        "hybrid": 29
+      }
+    }
+  },
+  "ties": {
+    "all_paths_fail(anls=0)": 2875,
+    "single_best_path": 829,
+    "tied_best": 4446
+  },
+  "keyword_rule_vs_outcome": {
+    "keyword_submitted": {
+      "distribution": {
+        "text": 7917,
+        "visual": 170,
+        "hybrid": 63
+      },
+      "agreement_with_utility_label": 0.6853987730061349,
+      "kappa_with_utility_label": 0.009416577053264819,
+      "agreement_with_threshold_label": 0.7271165644171779
+    },
+    "keyword_regex": {
+      "distribution": {
+        "text": 7898,
+        "visual": 184,
+        "hybrid": 68
+      },
+      "agreement_with_utility_label": 0.6842944785276074,
+      "kappa_with_utility_label": 0.009464197737302782,
+      "agreement_with_threshold_label": 0.7256441717791411
+    }
+  }
+}

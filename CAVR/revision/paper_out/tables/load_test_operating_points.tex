@@ -1,0 +1,26 @@
+\begin{table}[t]
+\centering
+\caption{CAVR operating points ($\lambda$ is set at run time): test ANLS, capacity of one GPU and GPUs needed at p95 $\leq$ 2\,s (seed 1).}
+\label{tab:load_test_ops}
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Policy} & \textbf{ANLS} & \textbf{QPS/GPU} & \textbf{GPUs@10} & \textbf{GPUs@25} & \textbf{GPUs@50} & \textbf{GPUs@100} \\
+\midrule
+CAVR, $\lambda$=0.0 & 0.577 & 0.25 & 13 & 28 & 52 & 101 \\
+CAVR, $\lambda$=0.02 & 0.571 & 0.25 & 12 & 26 & 49 & 93 \\
+CAVR, $\lambda$=0.05 & 0.555 & 0.25 & 10 & 22 & 41 & 79 \\
+CAVR, $\lambda$=0.1 & 0.550 & 0.75 & 8 & 19 & 35 & 67 \\
+CAVR, $\lambda$=0.2 & 0.551 & 0.75 & 8 & 18 & 32 & 64 \\
+CAVR + ret. scores, $\lambda$=0.0 & 0.578 & 0 & 14 & 30 & 55 & 106 \\
+CAVR + ret. scores, $\lambda$=0.02 & 0.578 & 0.25 & 13 & 29 & 53 & 102 \\
+CAVR + ret. scores, $\lambda$=0.05 & 0.574 & 0.25 & 11 & 24 & 46 & 86 \\
+CAVR + ret. scores, $\lambda$=0.1 & 0.550 & 0.5 & 8 & 18 & 35 & 67 \\
+CAVR + ret. scores, $\lambda$=0.2 & 0.545 & 0.75 & 8 & 17 & 31 & 61 \\
+CAVR-CE, $\lambda$=0.0 & 0.576 & 0.25 & 11 & 26 & 47 & 91 \\
+CAVR-CE, $\lambda$=0.02 & 0.574 & 0.25 & 10 & 23 & 43 & 83 \\
+CAVR-CE, $\lambda$=0.05 & 0.569 & 0.25 & 9 & 21 & 40 & 78 \\
+CAVR-CE, $\lambda$=0.1 & 0.565 & 0.5 & 9 & 19 & 38 & 71 \\
+CAVR-CE, $\lambda$=0.2 & 0.554 & 0.75 & 8 & 18 & 34 & 66 \\
+\bottomrule
+\end{tabular}
+\end{table}

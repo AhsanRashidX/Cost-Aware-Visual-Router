@@ -1,0 +1,114 @@
+{
+  "sources": {
+    "docvqa": {
+      "hf_dataset": "lmms-lab-encoder/DocVQA",
+      "config": "DocVQA",
+      "split": "validation",
+      "fingerprint": "0078b73872afed88",
+      "rows": 5349
+    },
+    "infovqa": {
+      "hf_dataset": "lmms-lab-encoder/DocVQA",
+      "config": "InfographicVQA",
+      "split": "validation",
+      "fingerprint": "4b07c0e18f160d80",
+      "rows": 2801
+    }
+  },
+  "pages": {
+    "total": 1786,
+    "by_dataset": {
+      "docvqa": 1286,
+      "infovqa": 500
+    },
+    "total_bytes": 1038250420,
+    "median_megapixels": 3.7554
+  },
+  "natural": {
+    "queries": 8150,
+    "by_dataset": {
+      "docvqa": 5349,
+      "infovqa": 2801
+    },
+    "by_dataset_qtype": {
+      "docvqa/Image/Photo": 56,
+      "docvqa/Yes/No": 28,
+      "docvqa/figure/diagram": 265,
+      "docvqa/form": 811,
+      "docvqa/free_text": 743,
+      "docvqa/handwritten": 304,
+      "docvqa/layout": 1470,
+      "docvqa/others": 30,
+      "docvqa/table/list": 1642,
+      "infovqa/arithmetic": 292,
+      "infovqa/comparison": 339,
+      "infovqa/counting": 286,
+      "infovqa/multi-span": 165,
+      "infovqa/non-extractive": 3,
+      "infovqa/question span": 77,
+      "infovqa/single span": 1639
+    }
+  },
+  "stratified": {
+    "queries": 1844,
+    "by_dataset": {
+      "docvqa": 1014,
+      "infovqa": 830
+    },
+    "by_dataset_qtype": {
+      "docvqa/Image/Photo": 56,
+      "docvqa/Yes/No": 28,
+      "docvqa/figure/diagram": 150,
+      "docvqa/form": 150,
+      "docvqa/free_text": 150,
+      "docvqa/handwritten": 150,
+      "docvqa/layout": 150,
+      "docvqa/others": 30,
+      "docvqa/table/list": 150,
+      "infovqa/arithmetic": 150,
+      "infovqa/comparison": 150,
+      "infovqa/counting": 150,
+      "infovqa/multi-span": 150,
+      "infovqa/non-extractive": 3,
+      "infovqa/question span": 77,
+      "infovqa/single span": 150
+    }
+  },
+  "notes": [
+    "DocVQA page_id = ucsf_document_id + '_' + page_no; InfoVQA page_id = sha1(image_url)[:16].",
+    "Bundled InfoVQA Textract OCR is dropped; all pages are OCR'd with docTR in ocr_pages.py.",
+    "qtype: DocVQA first question_type; InfoVQA reasoning type if any, else first answer_type."
+  ],
+  "hardware": {
+    "timestamp": "2026-10-02T14:54:13",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.17",
+    "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+    "cpu_threads": 32,
+    "ram_gb": 63.9,
+    "git_commit": "3527684554cd3e5ba33c9f0af08308c098effc91",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4090",
+        "memory_gb": 24.0,
+        "power_limit_w": 450.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "572.61"
+  }
+}

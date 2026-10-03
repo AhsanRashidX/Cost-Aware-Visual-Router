@@ -1,0 +1,63 @@
+{
+  "per_query_batch1": {
+    "gpu_s": 0.024787650007056072,
+    "latency_s": 0.024787650007056072,
+    "energy_j": 1.7373033333333334
+  },
+  "batch1_p95_s": 0.025516775000141934,
+  "cross_encoder_throughput": {
+    "1": {
+      "batch_latency_s": 0.012026865039047152,
+      "queries_per_s": 83.14718729721662
+    },
+    "8": {
+      "batch_latency_s": 0.021082889063109178,
+      "queries_per_s": 379.45463622433005
+    },
+    "32": {
+      "batch_latency_s": 0.0821777250021114,
+      "queries_per_s": 389.3999255781031
+    },
+    "128": {
+      "batch_latency_s": 0.3315885500051081,
+      "queries_per_s": 386.02056674764
+    },
+    "256": {
+      "batch_latency_s": 0.6598604666651227,
+      "queries_per_s": 387.96080828088054
+    }
+  },
+  "note": "mpnet embedding + window scoring + tokenization + cross-encoder; ColPali charged separately",
+  "hardware": {
+    "timestamp": "2026-10-03T03:53:48",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.17",
+    "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+    "cpu_threads": 32,
+    "ram_gb": 63.9,
+    "git_commit": "3527684554cd3e5ba33c9f0af08308c098effc91",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4090",
+        "memory_gb": 24.0,
+        "power_limit_w": 450.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "572.61"
+  }
+}

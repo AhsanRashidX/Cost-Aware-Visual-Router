@@ -1,0 +1,15 @@
+\begin{table}[t]
+\centering
+\caption{ColPali index scaling on one RTX 4090: p50 query latency (ms, batch 1). Pooling 2$\times$2 cuts vectors per page 1031$\to$263; R@1 on the real corpus 0.577$\to$0.525. Sharded latency is emulated (shards timed one by one on one GPU).}
+\label{tab:index_scaling}
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Pages} & \textbf{Index GB} & \textbf{GPU} & \textbf{CPU stream} & \textbf{Pooled GB} & \textbf{Pooled GPU} & \textbf{GPUs / sharded} \\
+\midrule
+1,000 & 0.2 & 0.5 & -- & 0.1 & 0.3 & 1 / -- \\
+10,000 & 2.5 & 4.1 & 104.5 & 0.6 & 2.4 & 1 / -- \\
+50,000 & 12.3 & 19.8 & 522.4 & 3.1 & 5.3 & 1 / -- \\
+100,000 & 24.6 & -- & 1044.1 & 6.3 & 10.3 & 2 / 19.8 \\
+\bottomrule
+\end{tabular}
+\end{table}

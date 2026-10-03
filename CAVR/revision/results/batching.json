@@ -1,0 +1,144 @@
+{
+  "n_queries": 32,
+  "hardware": {
+    "timestamp": "2026-10-02T20:37:42",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.17",
+    "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+    "cpu_threads": 32,
+    "ram_gb": 63.9,
+    "git_commit": "3527684554cd3e5ba33c9f0af08308c098effc91",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4090",
+        "memory_gb": 24.0,
+        "power_limit_w": 450.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "572.61"
+  },
+  "paths": {
+    "text": {
+      "1": {
+        "mean_batch_s": 0.4241788812469167,
+        "per_query_s": 0.4241788812469167,
+        "queries_per_s": 2.3574959626947924,
+        "energy_j_per_query": 138.04671875,
+        "peak_reserved_gb": 17.5
+      },
+      "2": {
+        "mean_batch_s": 0.5533056249987567,
+        "per_query_s": 0.27665281249937834,
+        "queries_per_s": 3.6146388354618555,
+        "energy_j_per_query": 99.71134375000001,
+        "peak_reserved_gb": 16.560546875
+      },
+      "4": {
+        "mean_batch_s": 1.0314343124919105,
+        "per_query_s": 0.25785857812297763,
+        "queries_per_s": 3.8780947575189106,
+        "energy_j_per_query": 104.46021875,
+        "peak_reserved_gb": 17.806640625
+      },
+      "8": {
+        "mean_batch_s": 2.1678928999899654,
+        "per_query_s": 0.27098661249874567,
+        "queries_per_s": 3.690219198576198,
+        "energy_j_per_query": 112.57000000000001,
+        "peak_reserved_gb": 20.146484375
+      },
+      "16": {
+        "mean_batch_s": 15.926328150031622,
+        "per_query_s": 0.9953955093769764,
+        "queries_per_s": 1.00462579002984,
+        "energy_j_per_query": 198.0835625,
+        "peak_reserved_gb": 24.8125,
+        "note": "near VRAM limit; larger batches skipped"
+      }
+    },
+    "visual": {
+      "1": {
+        "mean_batch_s": 0.4994198624990531,
+        "per_query_s": 0.4994198624990531,
+        "queries_per_s": 2.0023232456075895,
+        "energy_j_per_query": 149.9108125,
+        "peak_reserved_gb": 16.2421875
+      },
+      "2": {
+        "mean_batch_s": 0.7783096875027695,
+        "per_query_s": 0.38915484375138476,
+        "queries_per_s": 2.5696712145740617,
+        "energy_j_per_query": 119.25815624999998,
+        "peak_reserved_gb": 16.439453125
+      },
+      "4": {
+        "mean_batch_s": 1.4193291250048787,
+        "per_query_s": 0.3548322812512197,
+        "queries_per_s": 2.8182328746239533,
+        "energy_j_per_query": 119.14328125,
+        "peak_reserved_gb": 17.51171875
+      },
+      "8": {
+        "mean_batch_s": 2.616008850003709,
+        "per_query_s": 0.32700110625046364,
+        "queries_per_s": 3.0580936299159145,
+        "energy_j_per_query": 113.3863125,
+        "peak_reserved_gb": 19.498046875
+      },
+      "16": {
+        "mean_batch_s": 23.27946734998841,
+        "per_query_s": 1.4549667093742755,
+        "queries_per_s": 0.6873009489200348,
+        "energy_j_per_query": 234.26646875,
+        "peak_reserved_gb": 23.455078125,
+        "note": "near VRAM limit; larger batches skipped"
+      }
+    },
+    "hybrid": {
+      "1": {
+        "mean_batch_s": 0.8745046406238544,
+        "per_query_s": 0.8745046406238544,
+        "queries_per_s": 1.1435045093489953,
+        "energy_j_per_query": 298.99834375000006,
+        "peak_reserved_gb": 19.599609375
+      },
+      "2": {
+        "mean_batch_s": 1.123049562494998,
+        "per_query_s": 0.561524781247499,
+        "queries_per_s": 1.7808653035372228,
+        "energy_j_per_query": 207.913875,
+        "peak_reserved_gb": 17.25390625
+      },
+      "4": {
+        "mean_batch_s": 2.2186639874998946,
+        "per_query_s": 0.5546659968749736,
+        "queries_per_s": 1.8028867924734322,
+        "energy_j_per_query": 207.5084375,
+        "peak_reserved_gb": 19.21875
+      },
+      "8": {
+        "mean_batch_s": 4.604758274988853,
+        "per_query_s": 0.5755947843736067,
+        "queries_per_s": 1.7373333239776556,
+        "energy_j_per_query": 219.4734375,
+        "peak_reserved_gb": 23.05078125,
+        "note": "near VRAM limit; larger batches skipped"
+      }
+    }
+  }
+}

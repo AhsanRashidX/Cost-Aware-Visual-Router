@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Serving capacity from a Poisson load test with dynamic batching (simulated from measured service times on one RTX 4090): highest arrival rate one GPU sustains at the p95 target, and GPUs needed to hold p95 $\leq$ 2\,s at a given load.}
+\label{tab:load_test}
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Policy} & \textbf{QPS@p95$\leq$2s} & \textbf{QPS@p95$\leq$5s} & \textbf{GPUs@10} & \textbf{GPUs@25} & \textbf{GPUs@50} & \textbf{GPUs@100} \\
+\midrule
+Always text & 2 & 3 & 4 & 10 & 21 & 39 \\
+Always visual & 0.75 & 1.75 & 8 & 18 & 34 & 65 \\
+Always hybrid & 0.25 & 1 & 14 & 30 & 55 & 106 \\
+Keyword rule (submitted) & 1.75 & 2.75 & 5 & 10 & 20 & 40 \\
+CAVR & 0.75 & 1.5 & 8 & 19 & 35 & 67 \\
+Per-query oracle & 1.25 & 2.5 & 5 & 11 & 22 & 42 \\
+CAVR-CE, val-chosen lambda & 0.5 & 1.25 & 9 & 21 & 39 & 74 \\
+\bottomrule
+\end{tabular}
+\end{table}

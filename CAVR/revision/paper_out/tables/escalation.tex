@@ -1,0 +1,40 @@
+\begin{table}[t]
+\centering
+\caption{Escalation to hybrid when calibrated P(good answer) < $	au$ = 0.5 (seed 1); cost includes router overhead.}
+\label{tab:escalation}
+\begin{tabular}{lllrrrr}
+\toprule
+\textbf{Base router} & \textbf{Signal} & \textbf{Mode} & \textbf{ANLS} & \textbf{GPU-s} & \textbf{p95 (s)} & \textbf{Escalated \%} \\
+\midrule
+CAVR & none & -- & 0.550 & 0.656 & 1.08 & 0.0 \\
+CAVR & conf head & reroute & 0.560 & 0.775 & 1.30 & 32.9 \\
+CAVR & path entropy & reroute & 0.558 & 0.738 & 1.26 & 23.3 \\
+CAVR & quality margin & reroute & 0.550 & 0.671 & 1.15 & 3.9 \\
+CAVR & bm25 top & reroute & 0.559 & 0.814 & 1.32 & 44.5 \\
+CAVR & bm25 margin & reroute & 0.565 & 0.843 & 1.35 & 51.4 \\
+CAVR & colpali top & reroute & 0.557 & 0.711 & 1.25 & 14.6 \\
+CAVR & colpali margin & reroute & 0.570 & 0.840 & 1.35 & 49.6 \\
+CAVR & answer logprob mean & serial & 0.562 & 0.838 & 1.76 & 19.6 \\
+CAVR & answer logprob mean & speculative & 0.562 & 1.564 & 1.41 & 19.6 \\
+CAVR & answer logprob min & serial & 0.572 & 0.931 & 2.01 & 28.0 \\
+CAVR & answer logprob min & speculative & 0.572 & 1.564 & 1.41 & 28.0 \\
+CAVR & all pre & reroute & 0.565 & 0.783 & 1.31 & 35.0 \\
+CAVR & all & serial & 0.568 & 1.001 & 2.08 & 35.8 \\
+CAVR & all & speculative & 0.568 & 1.564 & 1.41 & 35.8 \\
+CAVR-CE & none & -- & 0.566 & 0.731 & 1.27 & 0.0 \\
+CAVR-CE & conf head & reroute & 0.574 & 0.844 & 1.36 & 26.0 \\
+CAVR-CE & quality margin & reroute & 0.566 & 0.732 & 1.28 & 0.2 \\
+CAVR-CE & bm25 top & reroute & 0.571 & 0.844 & 1.36 & 28.4 \\
+CAVR-CE & bm25 margin & reroute & 0.573 & 0.858 & 1.37 & 31.1 \\
+CAVR-CE & colpali top & reroute & 0.566 & 0.735 & 1.29 & 1.0 \\
+CAVR-CE & colpali margin & reroute & 0.573 & 0.860 & 1.37 & 30.2 \\
+CAVR-CE & answer logprob mean & serial & 0.566 & 0.859 & 1.65 & 14.0 \\
+CAVR-CE & answer logprob mean & speculative & 0.566 & 1.434 & 1.41 & 14.0 \\
+CAVR-CE & answer logprob min & serial & 0.575 & 0.926 & 1.92 & 20.1 \\
+CAVR-CE & answer logprob min & speculative & 0.575 & 1.434 & 1.41 & 20.1 \\
+CAVR-CE & all pre & reroute & 0.573 & 0.843 & 1.36 & 26.0 \\
+CAVR-CE & all & serial & 0.575 & 0.985 & 1.94 & 26.3 \\
+CAVR-CE & all & speculative & 0.575 & 1.434 & 1.41 & 26.3 \\
+\bottomrule
+\end{tabular}
+\end{table}

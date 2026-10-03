@@ -1,0 +1,13 @@
+\begin{table}[t]
+\centering
+\caption{Page retrieval over each dataset's page pool. ColPali per query: encode 46\,ms + score 1.1\,ms (p50); index build 210\,s for 1786 pages, 450\,MB.}
+\label{tab:retrieval}
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Retriever} & \textbf{R@1} & \textbf{R@3} & \textbf{R@5} & \textbf{R@10} & \textbf{MRR} \\
+\midrule
+BM25 (docTR text) & 0.439 & 0.546 & 0.586 & 0.633 & 0.507 \\
+ColPali v1.3 & 0.573 & 0.697 & 0.749 & 0.798 & 0.651 \\
+\bottomrule
+\end{tabular}
+\end{table}

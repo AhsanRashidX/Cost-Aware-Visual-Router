@@ -1,0 +1,61 @@
+{
+  "model": "vidore/colpali-v1.3",
+  "index": {
+    "pages": 1786,
+    "page_batch": 8,
+    "wall_s": 209.96994719997747,
+    "gpu_s": 158.6881301997346,
+    "preprocess_s": 51.21131940052146,
+    "energy_j": 54638.17,
+    "peak_mem_gb": 26.088382244110107,
+    "vectors_per_page": 1031,
+    "dim": 128,
+    "index_bytes_bf16": 471389696
+  },
+  "query": {
+    "n": 8150,
+    "encode_p50_s": 0.046472499991068617,
+    "score_p50_s": 0.0010924999951384962,
+    "total_s": 397.87196179578314,
+    "energy_j": 22485.192
+  },
+  "recall": {
+    "@1": 0.572638036809816,
+    "@3": 0.6968098159509203,
+    "@5": 0.7488343558282209,
+    "@10": 0.7984049079754602
+  },
+  "mrr": 0.651111089979689,
+  "hardware": {
+    "timestamp": "2026-10-02T15:25:44",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.17",
+    "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+    "cpu_threads": 32,
+    "ram_gb": 63.9,
+    "git_commit": "3527684554cd3e5ba33c9f0af08308c098effc91",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4090",
+        "memory_gb": 24.0,
+        "power_limit_w": 450.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "572.61"
+  }
+}

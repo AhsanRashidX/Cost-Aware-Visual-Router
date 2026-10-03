@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{CAVR-CE with $\lambda$ chosen on each seed's validation split (cheapest $\lambda$ within 0.005 ANLS of always-hybrid on val), against always-hybrid and always-visual on test. GPU-s include ColPali for every query and the router's measured overhead.}
+\label{tab:router_ce_tests}
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+\textbf{Seed} & \textbf{$\lambda$} & \textbf{ANLS} & \textbf{Hybrid ANLS} & \textbf{GPU-s} & \textbf{Hybrid GPU-s} & \textbf{Saving} & \textbf{$\Delta$ANLS vs hybrid [95\% CI]} & \textbf{McNemar p} & \textbf{$\Delta$ANLS vs visual} & \textbf{McNemar p} \\
+\midrule
+1 & 0.075 & 0.566 & 0.578 & 0.731 & 1.007 & 27\% & -0.012 [-0.023, +0.000] & 0.12 & +0.017 & 0.004 \\
+2 & 0.1 & 0.577 & 0.592 & 0.705 & 1.012 & 30\% & -0.015 [-0.026, -0.005] & 0.11 & +0.015 & 0.029 \\
+3 & 0.01 & 0.538 & 0.540 & 0.739 & 1.006 & 27\% & -0.002 [-0.015, +0.009] & 0.56 & +0.012 & 0.0018 \\
+4 & 0.03 & 0.552 & 0.552 & 0.757 & 1.007 & 25\% & +0.001 [-0.010, +0.011] & 0.74 & +0.016 & 0.029 \\
+5 & 0.2 & 0.554 & 0.567 & 0.646 & 1.012 & 36\% & -0.013 [-0.025, +0.001] & 0.098 & +0.018 & 0.0046 \\
+\bottomrule
+\end{tabular}
+\end{table}

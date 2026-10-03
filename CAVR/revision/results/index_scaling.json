@@ -1,0 +1,305 @@
+{
+  "hardware": {
+    "timestamp": "2026-10-02T20:47:27",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.17",
+    "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+    "cpu_threads": 32,
+    "ram_gb": 63.9,
+    "git_commit": "3527684554cd3e5ba33c9f0af08308c098effc91",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4090",
+        "memory_gb": 24.0,
+        "power_limit_w": 450.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "572.61"
+  },
+  "vectors_per_page": 1031,
+  "dim": 128,
+  "build": {
+    "by_batch": {
+      "1": {
+        "pages_per_s": 11.03653574448087,
+        "energy_j_per_page": 27.856234375,
+        "peak_mem_gb": 8.101295471191406
+      },
+      "2": {
+        "pages_per_s": 15.14260345693288,
+        "energy_j_per_page": 26.1670625,
+        "peak_mem_gb": 10.675972938537598
+      },
+      "4": {
+        "pages_per_s": 16.17551444132403,
+        "energy_j_per_page": 24.89959375,
+        "peak_mem_gb": 15.809395790100098
+      }
+    },
+    "best_batch": 4,
+    "extrapolated_build_hours": {
+      "1000": 0.017172732204926437,
+      "10000": 0.17172732204926433,
+      "50000": 0.8586366102463217,
+      "100000": 1.7172732204926433
+    }
+  },
+  "pooling_recall_at1": {
+    "full": 0.5770552147239264,
+    "pooled2x2": 0.5249079754601227,
+    "vectors_per_page_pooled": 263
+  },
+  "scaling": {
+    "1000": {
+      "index_gb_bf16": 0.24580955505371094,
+      "host_index_pinned": false,
+      "gpu_bf16": {
+        "p50_s": 0.0005452500190585852,
+        "p95_s": 0.0006138450058642774,
+        "throughput": {
+          "1": {
+            "batch_latency_s": 0.0004955500007781666,
+            "queries_per_s": 2017.959839430312
+          },
+          "4": {
+            "batch_latency_s": 0.0010819250019267201,
+            "queries_per_s": 3697.113933846335
+          },
+          "16": {
+            "batch_latency_s": 0.0035131500044371933,
+            "queries_per_s": 4554.317344773669
+          },
+          "64": {
+            "batch_latency_s": 0.012618199980352074,
+            "queries_per_s": 5072.038808994551
+          }
+        }
+      },
+      "index_gb_pooled2x2": 0.06270408630371094,
+      "gpu_pooled2x2": {
+        "p50_s": 0.00029379999614320695,
+        "p95_s": 0.0003290900029242039,
+        "throughput": {
+          "1": {
+            "batch_latency_s": 0.00022773749878979288,
+            "queries_per_s": 4391.0203866910115
+          },
+          "4": {
+            "batch_latency_s": 0.00029172499489504844,
+            "queries_per_s": 13711.543645545518
+          },
+          "16": {
+            "batch_latency_s": 0.0008836500055622309,
+            "queries_per_s": 18106.716346162237
+          },
+          "64": {
+            "batch_latency_s": 0.0031407499918714166,
+            "queries_per_s": 20377.298468721983
+          }
+        }
+      }
+    },
+    "10000": {
+      "index_gb_bf16": 2.4580955505371094,
+      "host_index_pinned": true,
+      "gpu_bf16": {
+        "p50_s": 0.004087499983143061,
+        "p95_s": 0.00451496499881614,
+        "throughput": {
+          "1": {
+            "batch_latency_s": 0.004687706252298085,
+            "queries_per_s": 213.32394697508263
+          },
+          "4": {
+            "batch_latency_s": 0.010164999999688007,
+            "queries_per_s": 393.5071323288511
+          },
+          "16": {
+            "batch_latency_s": 0.03438004999770783,
+            "queries_per_s": 465.3861760255365
+          },
+          "64": {
+            "batch_latency_s": 0.122321800008649,
+            "queries_per_s": 523.2100900695931
+          }
+        }
+      },
+      "cpu_stream": {
+        "p50_s": 0.10450960000162013,
+        "p95_s": 0.10493003001902253,
+        "throughput": {
+          "1": {
+            "batch_latency_s": 0.10520528124834527,
+            "queries_per_s": 9.50522624087114
+          },
+          "4": {
+            "batch_latency_s": 0.11090509999485221,
+            "queries_per_s": 36.066871588282815
+          },
+          "16": {
+            "batch_latency_s": 0.1374395500170067,
+            "queries_per_s": 116.41481653585281
+          }
+        }
+      },
+      "index_gb_pooled2x2": 0.6270408630371094,
+      "gpu_pooled2x2": {
+        "p50_s": 0.0024293500173371285,
+        "p95_s": 0.0026903550256974994,
+        "throughput": {
+          "1": {
+            "batch_latency_s": 0.0025421000027563423,
+            "queries_per_s": 393.375555216444
+          },
+          "4": {
+            "batch_latency_s": 0.005290925008011982,
+            "queries_per_s": 756.011471329276
+          },
+          "16": {
+            "batch_latency_s": 0.017736150010023266,
+            "queries_per_s": 902.1123519454835
+          },
+          "64": {
+            "batch_latency_s": 0.05522335000569001,
+            "queries_per_s": 1158.930053924756
+          }
+        }
+      }
+    },
+    "50000": {
+      "index_gb_bf16": 12.290477752685547,
+      "host_index_pinned": true,
+      "gpu_bf16": {
+        "p50_s": 0.019792849983787164,
+        "p95_s": 0.022151155010215005,
+        "throughput": {
+          "1": {
+            "batch_latency_s": 0.02337825624999823,
+            "queries_per_s": 42.77478992899976
+          },
+          "4": {
+            "batch_latency_s": 0.05034654999326449,
+            "queries_per_s": 79.4493366583238
+          },
+          "16": {
+            "batch_latency_s": 0.17135270001017489,
+            "queries_per_s": 93.37465939579548
+          },
+          "64": {
+            "batch_latency_s": 0.6088682000117842,
+            "queries_per_s": 105.11306059137483
+          }
+        }
+      },
+      "cpu_stream": {
+        "p50_s": 0.5223629499960225,
+        "p95_s": 0.5268124499940313,
+        "throughput": {
+          "1": {
+            "batch_latency_s": 0.5270515125012025,
+            "queries_per_s": 1.8973477473849738
+          },
+          "4": {
+            "batch_latency_s": 0.5553359250043286,
+            "queries_per_s": 7.202847537675186
+          },
+          "16": {
+            "batch_latency_s": 0.6867601000121795,
+            "queries_per_s": 23.297800789120167
+          }
+        }
+      },
+      "index_gb_pooled2x2": 3.135204315185547,
+      "gpu_pooled2x2": {
+        "p50_s": 0.005271250003715977,
+        "p95_s": 0.005821824999293312,
+        "throughput": {
+          "1": {
+            "batch_latency_s": 0.006201681251695845,
+            "queries_per_s": 161.24659740075333
+          },
+          "4": {
+            "batch_latency_s": 0.012704950000625104,
+            "queries_per_s": 314.83791748910414
+          },
+          "16": {
+            "batch_latency_s": 0.04120814998168498,
+            "queries_per_s": 388.2727083625744
+          },
+          "64": {
+            "batch_latency_s": 0.15495440000086091,
+            "queries_per_s": 413.0247350165237
+          }
+        }
+      }
+    },
+    "100000": {
+      "index_gb_bf16": 24.580955505371094,
+      "host_index_pinned": true,
+      "cpu_stream": {
+        "p50_s": 1.0440980999846943,
+        "p95_s": 1.048615924976184,
+        "throughput": {
+          "1": {
+            "batch_latency_s": 1.0558797812518605,
+            "queries_per_s": 0.9470775155997314
+          },
+          "4": {
+            "batch_latency_s": 1.1119941499928245,
+            "queries_per_s": 3.5971412259909923
+          },
+          "16": {
+            "batch_latency_s": 1.3780493999947794,
+            "queries_per_s": 11.610614249431562
+          }
+        }
+      },
+      "index_gb_pooled2x2": 6.270408630371094,
+      "gpu_pooled2x2": {
+        "p50_s": 0.010322449990781024,
+        "p95_s": 0.011458554997807367,
+        "throughput": {
+          "1": {
+            "batch_latency_s": 0.012295687502046349,
+            "queries_per_s": 81.32932785040055
+          },
+          "4": {
+            "batch_latency_s": 0.025643799992394634,
+            "queries_per_s": 155.98312267239288
+          },
+          "16": {
+            "batch_latency_s": 0.08224454999435693,
+            "queries_per_s": 194.54176600270551
+          },
+          "64": {
+            "batch_latency_s": 0.30971145001240075,
+            "queries_per_s": 206.64395842464805
+          }
+        }
+      },
+      "sharded": {
+        "gpus_needed": 2,
+        "per_shard_p50_s": [
+          0.01984665001509711,
+          0.019740650022868067
+        ],
+        "emulated_parallel_p50_s": 0.01984665001509711
+      }
+    }
+  }
+}

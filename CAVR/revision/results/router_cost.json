@@ -1,0 +1,129 @@
+{
+  "hardware": {
+    "timestamp": "2026-10-02T20:33:08",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.17",
+    "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+    "cpu_threads": 32,
+    "ram_gb": 63.9,
+    "git_commit": "3527684554cd3e5ba33c9f0af08308c098effc91",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4090",
+        "memory_gb": 24.0,
+        "power_limit_w": 450.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "572.61"
+  },
+  "cuda": {
+    "batch1_p50_s": 0.011745200026780367,
+    "batch1_p95_s": 0.012137274982524104,
+    "batch1_energy_j_per_query": 0.967012,
+    "throughput": {
+      "1": {
+        "latency_s": 0.011657697216776342,
+        "queries_per_s": 85.7802344155003
+      },
+      "2": {
+        "latency_s": 0.013302588378905966,
+        "queries_per_s": 150.34668013718428
+      },
+      "4": {
+        "latency_s": 0.013202778710933671,
+        "queries_per_s": 302.9665260304229
+      },
+      "8": {
+        "latency_s": 0.013325294140713595,
+        "queries_per_s": 600.3619819210674
+      },
+      "16": {
+        "latency_s": 0.013906587499604939,
+        "queries_per_s": 1150.5338747161754
+      },
+      "32": {
+        "latency_s": 0.014631289061981079,
+        "queries_per_s": 2187.0936910918495
+      },
+      "64": {
+        "latency_s": 0.015319968748372048,
+        "queries_per_s": 4177.554213797
+      },
+      "128": {
+        "latency_s": 0.01705915624916088,
+        "queries_per_s": 7503.301929501712
+      },
+      "256": {
+        "latency_s": 0.021980924997478724,
+        "queries_per_s": 11646.461649332954
+      },
+      "512": {
+        "latency_s": 0.041111124999588355,
+        "queries_per_s": 12454.049846729484
+      },
+      "1024": {
+        "latency_s": 0.08505843333356704,
+        "queries_per_s": 12038.782750491759
+      }
+    }
+  },
+  "cpu": {
+    "batch1_p50_s": 0.025009250006405637,
+    "batch1_p95_s": 0.02891269998217467,
+    "batch1_energy_j_per_query": null,
+    "throughput": {
+      "1": {
+        "latency_s": 0.02819564443359468,
+        "queries_per_s": 35.466470800309686
+      },
+      "2": {
+        "latency_s": 0.03303547363276493,
+        "queries_per_s": 60.54098155918003
+      },
+      "4": {
+        "latency_s": 0.03933334687496881,
+        "queries_per_s": 101.69488024283903
+      },
+      "8": {
+        "latency_s": 0.05470785351553786,
+        "queries_per_s": 146.23129013328733
+      },
+      "16": {
+        "latency_s": 0.07716873359368037,
+        "queries_per_s": 207.33785893449337
+      },
+      "32": {
+        "latency_s": 0.1582271953129748,
+        "queries_per_s": 202.24083436923542
+      },
+      "64": {
+        "latency_s": 0.2902301875001285,
+        "queries_per_s": 220.51462169134857
+      },
+      "128": {
+        "latency_s": 0.6065495937509695,
+        "queries_per_s": 211.0297349445639
+      }
+    }
+  },
+  "per_query_batch1": {
+    "gpu_s": 0.011745200026780367,
+    "latency_s": 0.011745200026780367,
+    "energy_j": 0.967012
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "method": "BM25Okapi (rank-bm25 defaults) over docTR text, per-dataset corpus",
+  "build": {
+    "docvqa": {
+      "pages": 1286,
+      "seconds": 0.10445739998249337
+    },
+    "infovqa": {
+      "pages": 500,
+      "seconds": 0.07392240001354367
+    }
+  },
+  "recall": {
+    "@1": 0.4391411042944785,
+    "@3": 0.5456441717791412,
+    "@5": 0.5857668711656442,
+    "@10": 0.6325153374233129
+  },
+  "mrr": 0.5071221448204947,
+  "hardware": {
+    "timestamp": "2026-10-02T15:13:40",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.17",
+    "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+    "cpu_threads": 32,
+    "ram_gb": 63.9,
+    "git_commit": "3527684554cd3e5ba33c9f0af08308c098effc91",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4090",
+        "memory_gb": 24.0,
+        "power_limit_w": 450.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "572.61"
+  }
+}

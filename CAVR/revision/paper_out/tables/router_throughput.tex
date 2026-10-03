@@ -1,0 +1,22 @@
+\begin{table}[t]
+\centering
+\caption{Router (mpnet embedding + CAVR MLP) on one RTX 4090: batch-1 p50 11.7\,ms; throughput by batch size. CAVR-CE (embedding + passage selection + cross-encoder): batch-1 p50 24.8\,ms, 1.74\,J per query; cross-encoder throughput up to 389 queries/s.}
+\label{tab:router_throughput}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Batch} & \textbf{Latency (ms)} & \textbf{Queries/s} \\
+\midrule
+1 & 11.66 & 86 \\
+2 & 13.30 & 150 \\
+4 & 13.20 & 303 \\
+8 & 13.33 & 600 \\
+16 & 13.91 & 1,151 \\
+32 & 14.63 & 2,187 \\
+64 & 15.32 & 4,178 \\
+128 & 17.06 & 7,503 \\
+256 & 21.98 & 11,646 \\
+512 & 41.11 & 12,454 \\
+1024 & 85.06 & 12,039 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,7 @@
+data/pages/
+logs/
+__pycache__/
+*.pyc
+data/colpali_index.pt
+data/embeddings.npz
+data/ocr_windows.npz

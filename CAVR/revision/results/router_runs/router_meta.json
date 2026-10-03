@@ -1,0 +1,122 @@
+{
+  "hyperparameters": {
+    "hidden": [
+      256,
+      128
+    ],
+    "dropout": 0.2,
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "batch": 128,
+    "max_epochs": 100,
+    "patience": 10,
+    "w_cls": 1.0,
+    "w_quality": 1.0,
+    "w_conf": 0.5
+  },
+  "lambda_default": 0.1,
+  "features": {
+    "cavr": "all-mpnet-base-v2 (normalized) + dataset one-hot",
+    "cavr_bm25": "cavr features + BM25 top score and margin (standardized)",
+    "cavr_rf": "cavr_bm25 features + ColPali top score and margin"
+  },
+  "seeds": [
+    {
+      "seed": 1234,
+      "sizes": {
+        "train": 4889,
+        "val": 1655,
+        "test": 1606
+      },
+      "cavr_epochs": 19,
+      "cavr_val_utility": 0.46900800024425093,
+      "cavr_bm25_val_utility": 0.470581142398761,
+      "cavr_rf_val_utility": 0.4734910829512506,
+      "knn_k": 50
+    },
+    {
+      "seed": 1235,
+      "sizes": {
+        "train": 4863,
+        "val": 1657,
+        "test": 1630
+      },
+      "cavr_epochs": 14,
+      "cavr_val_utility": 0.4737468605495234,
+      "cavr_bm25_val_utility": 0.47215588689512866,
+      "cavr_rf_val_utility": 0.47680585795826846,
+      "knn_k": 100
+    },
+    {
+      "seed": 1236,
+      "sizes": {
+        "train": 4792,
+        "val": 1705,
+        "test": 1653
+      },
+      "cavr_epochs": 15,
+      "cavr_val_utility": 0.467870250508556,
+      "cavr_bm25_val_utility": 0.4687053950523417,
+      "cavr_rf_val_utility": 0.4728324890067047,
+      "knn_k": 50
+    },
+    {
+      "seed": 1237,
+      "sizes": {
+        "train": 4899,
+        "val": 1633,
+        "test": 1618
+      },
+      "cavr_epochs": 14,
+      "cavr_val_utility": 0.5138204106774141,
+      "cavr_bm25_val_utility": 0.5138512241155678,
+      "cavr_rf_val_utility": 0.5187351309050403,
+      "knn_k": 100
+    },
+    {
+      "seed": 1238,
+      "sizes": {
+        "train": 4977,
+        "val": 1625,
+        "test": 1548
+      },
+      "cavr_epochs": 16,
+      "cavr_val_utility": 0.48435597826239346,
+      "cavr_bm25_val_utility": 0.4832986541890985,
+      "cavr_rf_val_utility": 0.49093718450773194,
+      "knn_k": 50
+    }
+  ],
+  "hardware": {
+    "timestamp": "2026-10-02T20:53:22",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.17",
+    "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+    "cpu_threads": 32,
+    "ram_gb": 63.9,
+    "git_commit": "3527684554cd3e5ba33c9f0af08308c098effc91",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4090",
+        "memory_gb": 24.0,
+        "power_limit_w": 450.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "572.61"
+  }
+}
