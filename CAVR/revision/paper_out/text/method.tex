@@ -2,6 +2,22 @@
 \section{Method}
 \label{sec:method}
 
+Figure~\ref{fig:method} shows the pipeline as built: every path is run once on every query and cached, routers are
+trained on the cached outcomes, and the trained router dispatches queries on a GPU pool at serving time.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/method.pdf}
+  \caption{CAVR as built. (1) Offline, every query is answered by all three paths with one shared generator; answer
+  quality and measured cost are cached and turned into outcome labels (costs shown are mean GPU-seconds per query).
+  (2) Two routers are trained on page-grouped splits: CAVR on the question embedding, and the content-aware CAVR-CE
+  on the retrieved passages and retrieval features. (3) At serving time the router picks the path that maximises
+  predicted quality minus $\lambda$ times its mean cost, optionally escalates to the hybrid path, and dispatches the
+  query to per-path batching queues on the GPU pool. Dashed boxes are deployment options; load-adaptive $\lambda$ is
+  not evaluated.}
+  \label{fig:method}
+\end{figure*}
+
 \subsection{Problem formulation}
 \label{sec:method-formulation}
 
@@ -126,8 +142,8 @@ cascade or speculative execution.
 \subsection{Deployment on a GPU cluster}
 \label{sec:method-deployment}
 
-We envisage CAVR as a dispatcher in front of a GPU pool, with text retrieval on the CPU [AUTHOR ACTION: redraw the
-method figure as this deployment]. BM25 retrieval, OCR text lookup and, optionally, the CAVR MLP run on CPU workers;
+We envisage CAVR as a dispatcher in front of a GPU pool, with text retrieval on the CPU (Figure~\ref{fig:method},
+band 3). BM25 retrieval, OCR text lookup and, optionally, the CAVR MLP run on CPU workers;
 ColPali query encoding and scoring, CAVR-CE and generation run on GPUs, with one dynamic-batching queue per path. Our
 load test models the GPU pool and its per-path queues; the dispatcher logic itself is not simulated. The visual index
 is placed according to corpus size: GPU-resident while it fits, then sharded across GPUs, streamed from pinned host

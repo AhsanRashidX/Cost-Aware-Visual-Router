@@ -62,7 +62,8 @@ experiments, a hardware table, energy per query, router throughput up to batch 1
 speculative-parallel escalation.
 *Changes:* Abstract; Introduction (new subsection on why routing is a supercomputing problem; research question
 and contribution); Related work (inference serving and late-interaction retrieval) [AUTHOR ACTION: write and verify
-these citations]; Method (deployment figure) [AUTHOR ACTION]; Results, subsection "Scalability, throughput and
+these citations]; Method (Figure method: the pipeline as built and its deployment); Results, subsection
+"Scalability, throughput and
 energy" (Tables hardware, load_test, load_test_operating_points, index_scaling, router_throughput; Figures
 gpus_vs_quality, index_scaling); Conclusion.
 All experiments ran on one GeForce RTX 4090. Multi-GPU sharding is emulated by timing shards on one GPU, and capacity
