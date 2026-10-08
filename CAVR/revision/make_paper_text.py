@@ -142,7 +142,7 @@ def values():
     for p, d in bj["paths"].items():
         V[f"bq_{p}"] = f"{max(x['queries_per_s'] for x in d.values() if 'note' not in x):.2f}"
     s100, s1k, s50k = ix["scaling"]["100000"], ix["scaling"]["1000"], ix["scaling"]["50000"]
-    V["ix100_gb"], V["ix100_stream_ms"] = f"{s100['index_gb_bf16']:.1f}", f"{1000 * s100['cpu_stream']['p50_s']:.0f}"
+    V["ix100_gb"], V["ix100_stream_ms"] = f"{s100['index_gb_bf16']:.1f}", f"{1000 * s100['cpu_stream']['p50_s']:,.0f}"
     V["ix100_pool_gb"], V["ix100_pool_ms"] = f"{s100['index_gb_pooled2x2']:.1f}", f"{1000 * s100['gpu_pooled2x2']['p50_s']:.1f}"
     V["ix100_shards"], V["ix100_shard_ms"] = s100["sharded"]["gpus_needed"], f"{1000 * s100['sharded']['emulated_parallel_p50_s']:.1f}"
     V["ix1k_ms"], V["ix50k_ms"] = f"{1000 * s1k['gpu_bf16']['p50_s']:.2f}", f"{1000 * s50k['gpu_bf16']['p50_s']:.1f}"

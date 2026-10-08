@@ -53,7 +53,7 @@ withdrawn; we list them first so that nothing is hidden behind the new results.
 The revised paper frames CAVR as a scheduler for GPU resources in multimodal RAG serving. Late-interaction visual
 retrieval stores 1,031 vectors per page, so index memory and scoring time grow with the corpus: at 100k pages the
 ColPali index needs 24.6 GiB, more than our 24 GiB GPU holds, and a million pages (about 246
-GiB) would exceed any single accelerator. Such an index must be streamed from host memory (1044 ms per
+GiB) would exceed any single accelerator. Such an index must be streamed from host memory (1,044 ms per
 query on our hardware), pooled (recall@1 drops from 0.577 to 0.525) or sharded (emulated over
 2 GPUs). Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
 times, serving 100 queries/s at p95 ≤ 2 s needs 106 GPUs for always-hybrid and
