@@ -114,12 +114,13 @@ def stage_costs(qids, rows):
 
 
 def select_on_val(points, val_target):
-    """points: list of (param, val_anls, test_anls, test_gpu). Cheapest param whose val ANLS reaches the target."""
+    """points: list of (param, val_anls, val_gpu, test_anls, test_gpu). Cheapest param on VALIDATION cost whose val
+    ANLS reaches the target; test values are only reported."""
     ok = [p for p in points if p[1] >= val_target]
     if not ok:
         return None
-    best = min(ok, key=lambda p: p[3])
-    return {"param": best[0], "val_anls": best[1], "test_anls": best[2], "test_gpu_s": best[3]}
+    best = min(ok, key=lambda p: p[2])
+    return {"param": best[0], "val_anls": best[1], "test_anls": best[3], "test_gpu_s": best[4]}
 
 
 def main():
@@ -169,9 +170,9 @@ def main():
             pts = []
             for lam in LAMBDAS:
                 fn = lambda m, lam=lam: np.argmax(qhat[m] - lam * cost, 1)
-                va_a, _ = evaluate(fn, va, pre_col)
+                va_a, va_g = evaluate(fn, va, pre_col)
                 te_a, te_g = evaluate(fn, te, pre_col)
-                pts.append((lam, va_a, te_a, te_g))
+                pts.append((lam, va_a, va_g, te_a, te_g))
             probe3[fs] = {"auc_success": auc, "sweep": pts,
                           "match_hybrid": select_on_val(pts, target_h), "match_visual": select_on_val(pts, target_v)}
         res["probe3_router"] = probe3
@@ -199,12 +200,12 @@ def main():
                         need_col_first = (first != TXT) or cols == 3
                         gpu = G[m, first] + need_col_first * VR[m] + esc * (G[m, second] + (not need_col_first) * VR[m])
                         return float(A[m, :][np.arange(m.sum()), final].mean()), float(gpu.mean()), float(esc.mean())
-                    va_a, _, _ = run(va)
+                    va_a, va_g, _ = run(va)
                     te_a, te_g, te_e = run(te)
-                    pts.append((tau, va_a, te_a, te_g, te_e))
+                    pts.append((tau, va_a, va_g, te_a, te_g, te_e))
                 probe1[f"{name} [{sig}]"] = {"sweep": pts,
-                                             "match_hybrid": select_on_val([p[:4] for p in pts], target_h),
-                                             "match_visual": select_on_val([p[:4] for p in pts], target_v)}
+                                             "match_hybrid": select_on_val([p[:5] for p in pts], target_h),
+                                             "match_visual": select_on_val([p[:5] for p in pts], target_v)}
         res["probe1_cascade"] = probe1
 
         # ---- Probe 2: hypothetical cheap text path (cost factor s, keeps fraction r of correct answers) --------
@@ -234,9 +235,9 @@ def main():
                         ch = np.argmax(qh[msk] - lam * cost2, 1)
                         g = C2[msk][np.arange(msk.sum()), ch] + pre_col * (ch == TXT) * VR[msk]
                         return float(A2[msk][np.arange(msk.sum()), ch].mean()), float(g.mean())
-                    va_a, _ = run(va)
+                    va_a, va_g = run(va)
                     te_a, te_g = run(te)
-                    pts.append((lam, va_a, te_a, te_g))
+                    pts.append((lam, va_a, va_g, te_a, te_g))
                 u = A2[te] - 1e-6 * C2[te]
                 orc = np.argmax(u, 1)
                 probe2[f"s={s_cost},r={r}"] = {

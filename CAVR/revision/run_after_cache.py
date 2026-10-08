@@ -22,6 +22,7 @@ STEPS = [
     ("bench_index (GPU)", ["bench_index.py"]),
     ("make_outputs", ["make_outputs.py"]),
     ("make_method_figure", ["make_method_figure.py"]),
+    ("make_training_figure", ["make_training_figure.py"]),
     ("make_summary", ["make_summary.py"]),
     ("make_paper_text", ["make_paper_text.py"]),
 ]

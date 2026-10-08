@@ -35,6 +35,15 @@ def oracle(A, C, lam):
     return np.take_along_axis(cheap, np.argmax(hit, 1)[:, None], 1)[:, 0]
 
 
+def cluster_boot_means(values, groups, rng, n=N_BOOT):
+    """Bootstrap the mean by resampling whole pages (questions about one page are not independent)."""
+    uniq, inv = np.unique(groups, return_inverse=True)
+    sums = np.bincount(inv, weights=values, minlength=len(uniq))
+    cnts = np.bincount(inv, minlength=len(uniq)).astype(float)
+    pick = rng.integers(0, len(uniq), (n, len(uniq)))
+    return sums[pick].sum(1) / cnts[pick].sum(1)
+
+
 def metrics(choice, M, overhead, rng, pre=None):
     idx = np.arange(len(choice))
     anls, em = M["A"][idx, choice], M["EM"][idx, choice]
@@ -45,9 +54,9 @@ def metrics(choice, M, overhead, rng, pre=None):
     elif pre == "text":   # BM25 ran for routing (CPU only): latency for the visual path
         xl = (choice == 1) * M["TR"]
     lat = M["W"][idx, choice] + overhead["latency_s"] + xl
-    boot = rng.integers(0, len(choice), (N_BOOT, len(choice)))
     return {
-        "anls": float(anls.mean()), "anls_ci95": [float(x) for x in np.percentile(anls[boot].mean(1), [2.5, 97.5])],
+        "anls": float(anls.mean()),
+        "anls_ci95": [float(x) for x in np.percentile(cluster_boot_means(anls, M["PG"], rng), [2.5, 97.5])],
         "em": float(em.mean()),
         "gpu_s": float((M["C"][idx, choice] + xg).mean() + overhead["gpu_s"]),
         "energy_j": float((M["E"][idx, choice] + xe).mean() + overhead["energy_j"]),
@@ -62,10 +71,11 @@ def mcnemar(em_a, em_b):
             "p_value": float(binomtest(b, b + c, 0.5).pvalue) if b + c else 1.0}
 
 
-def paired_boot(x, y, rng):
+def paired_boot(x, y, rng, groups):
+    """Paired difference of means with a page-cluster bootstrap 95% interval."""
     d = x - y
-    boot = rng.integers(0, len(d), (N_BOOT, len(d)))
-    return {"mean_diff": float(d.mean()), "ci95": [float(v) for v in np.percentile(d[boot].mean(1), [2.5, 97.5])]}
+    return {"mean_diff": float(d.mean()),
+            "ci95": [float(v) for v in np.percentile(cluster_boot_means(d, groups, rng), [2.5, 97.5])]}
 
 
 def main():
@@ -83,7 +93,8 @@ def main():
             "W": np.array([[rows[q][p]["wall_s"] for p in PATHS] for q in qids]),
             "VR": np.array([rows[q]["hybrid"]["visual_retrieval_gpu_s"] for q in qids]),
             "VRE": np.array([rows[q]["hybrid"]["visual_retrieval_energy_j"] for q in qids]),
-            "TR": np.array([rows[q]["hybrid"]["text_retrieval_cpu_s"] for q in qids])}
+            "TR": np.array([rows[q]["hybrid"]["text_retrieval_cpu_s"] for q in qids]),
+            "PG": np.array([f"{q['dataset']}/{q['page_id']}" for q in Q])}
     kw_sub = np.array([PATHS.index(keyword_submitted(q["question"])) for q in Q])
     kw_re = np.array([PATHS.index(keyword_regex(q["question"])) for q in Q])
 
@@ -125,6 +136,7 @@ def main():
                 val_pts.append((lam, float(Av[np.arange(va.sum()), ch].mean()), float(g.mean())))
             ok = [p for p in val_pts if p[1] >= target]
             ce_lam = min(ok, key=lambda p: p[2])[0] if ok else max(val_pts, key=lambda p: p[1])[0]
+            ce_fallback = not ok   # no lambda reached the validation target: highest validation ANLS used
 
         def choose(name, lam=LAMBDA_DEFAULT):
             return {
@@ -149,6 +161,7 @@ def main():
         res = {n: metrics(choose(n), M, overhead(n), rng, PRE_RETRIEVAL.get(n)) for n in names}
         if ce_qhat is not None:
             res["cavr_ce_valsel"]["lambda"] = ce_lam
+            res["cavr_ce_valsel"]["lambda_fallback"] = bool(ce_fallback)
 
         # Random routing at CAVR's budget: iid paths drawn with CAVR's path mix.
         mix = np.array([res["cavr"]["path_mix"][p] for p in PATHS])
@@ -159,13 +172,14 @@ def main():
         cavr_choice = choose("cavr")
         idx = np.arange(te.sum())
         tests = {n: {"mcnemar_em": mcnemar(M["EM"][idx, cavr_choice], M["EM"][idx, choose(n)]),
-                     "paired_boot_anls": paired_boot(M["A"][idx, cavr_choice], M["A"][idx, choose(n)], rng)}
+                     "paired_boot_anls": paired_boot(M["A"][idx, cavr_choice], M["A"][idx, choose(n)], rng, M["PG"])}
                  for n in names if n != "cavr"}
         tests_ce = {}
         if ce_qhat is not None:
             ce_choice = choose("cavr_ce_valsel")
             tests_ce = {n: {"mcnemar_em": mcnemar(M["EM"][idx, ce_choice], M["EM"][idx, choose(n)]),
-                            "paired_boot_anls": paired_boot(M["A"][idx, ce_choice], M["A"][idx, choose(n)], rng)}
+                            "paired_boot_anls": paired_boot(M["A"][idx, ce_choice], M["A"][idx, choose(n)], rng,
+                                                            M["PG"])}
                         for n in ("always_hybrid", "always_visual", "cavr", "cavr_rf")}
 
         sweep_names = ["logreg", "knn", "cavr", "cavr_bm25", "cavr_rf", "oracle"] + (["cavr_ce"] if ce_qhat is not None else [])
@@ -186,11 +200,14 @@ def main():
     agg = {}
     for n in per_seed[0]["policies"]:
         agg[n] = {k: {"mean": float(np.mean([s["policies"][n][k] for s in per_seed])),
-                      "std": float(np.std([s["policies"][n][k] for s in per_seed]))}
+                      "std": float(np.std([s["policies"][n][k] for s in per_seed], ddof=1))}
                   for k in ("anls", "em", "gpu_s", "energy_j", "latency_p50_s", "latency_p95_s")}
     write_json(args.out, {"lambda_default": LAMBDA_DEFAULT, "n_seeds": len(per_seed),
                           "router_overhead_included": rc is not None, "router_overhead": router_overhead,
                           "router_ce_overhead": ce_overhead, "valsel_delta": VALSEL_DELTA,
+                          "valsel_lambdas": VALSEL_LAMBDAS,
+                          "stats": {"bootstrap": "page-cluster, %d resamples, 95%% percentile" % N_BOOT,
+                                    "std": "sample (ddof=1) over splits", "mcnemar": "exact binomial on EM"},
                           "aggregate": agg, "per_seed": per_seed, "hardware": hardware_info()})
     print(f"{'policy':22s} {'ANLS':>6s} {'EM':>6s} {'GPU-s':>7s} {'J':>7s} {'p95 s':>6s}")
     for n, m in agg.items():

@@ -98,7 +98,8 @@ class CrossRouter(nn.Module):
         return self.head(torch.cat([pooled.float(), tab], 1))
 
 
-def train_ce(enc, tab, A, tr, va, seed):
+def train_ce(enc, tab, A, tr, va, seed, log=None):
+    """log: optional dict; if given, per-epoch train/val BCE and val AUC are appended to it."""
     set_seed(seed)
     dev = "cuda"
     model = CrossRouter(tab.shape[1]).to(dev)
@@ -132,11 +133,15 @@ def train_ce(enc, tab, A, tr, va, seed):
     for ep in range(HP["epochs"]):
         model.train()
         perm = rng.permutation(tr_idx)
+        ep_sum, ep_n = 0.0, 0
         for i in range(0, len(perm), HP["batch"]):
             b = perm[i:i + HP["batch"]]
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 logits = model(ids[b].to(dev), mask[b].to(dev), tab_t[b].to(dev))
             loss = loss_fn(logits.float(), A_t[b].to(dev))
+            if log is not None:
+                ep_sum += len(b) * loss.item()
+                ep_n += len(b)
             opt.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -145,10 +150,18 @@ def train_ce(enc, tab, A, tr, va, seed):
         pv = predict(va_idx)
         auc = float(np.mean([roc_auc_score(A[va_idx, p] >= ANLS_OK, pv[:, p]) for p in range(3)]))
         history.append(auc)
+        if log is not None:
+            p = np.clip(pv, 1e-6, 1 - 1e-6)
+            t = A[va_idx]
+            log.setdefault("train_bce", []).append(ep_sum / max(ep_n, 1))
+            log.setdefault("val_bce", []).append(float(-(t * np.log(p) + (1 - t) * np.log(1 - p)).mean()))
+            log.setdefault("val_auc", []).append(auc)
         if auc > best_auc:
             best_auc = auc
             best_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
     model.load_state_dict(best_state)
+    if log is not None:
+        log["best_epoch"] = int(np.argmax(history))   # 0-based; the epoch whose weights are kept
     qhat = predict(np.arange(len(A)))
 
     # router latency at batch 1 (tokenized input of a real query; tokenization excluded, measured separately)
@@ -174,8 +187,8 @@ def evaluate(qhat, A, EM, C, VR, cost, va, te, overhead_s, pre_col=True):
         g = C[mask][i, ch] + pre_col * (ch == TXT) * VR[mask] + overhead_s
         return ch, float(A[mask][i, ch].mean()), float(g.mean())
 
-    pts = [(lam, run(va, lam)[1], *run(te, lam)[1:]) for lam in LAMBDAS]   # (lam, val_anls, test_anls, test_gpu)
-    srt = sorted((p[3], p[2]) for p in pts)
+    pts = [(lam, *run(va, lam)[1:], *run(te, lam)[1:]) for lam in LAMBDAS]   # (lam, val_anls, val_gpu, test_anls, test_gpu)
+    srt = sorted((p[4], p[3]) for p in pts)
     xs, ys = np.array([s[0] for s in srt]), np.maximum.accumulate([s[1] for s in srt])
     curve = [float(np.interp(b, xs, ys)) if b >= xs[0] else None for b in BUDGETS]
     auc = {p: float(roc_auc_score(A[te, k] >= ANLS_OK, qhat[te, k])) for k, p in enumerate(PATHS)}
@@ -184,7 +197,7 @@ def evaluate(qhat, A, EM, C, VR, cost, va, te, overhead_s, pre_col=True):
         ok = [p for p in pts if p[1] >= target]
         if not ok:
             return None
-        lam = min(ok, key=lambda p: p[3])[0]
+        lam = min(ok, key=lambda p: p[2])[0]   # cheapest on VALIDATION cost
         ch, a, g = run(te, lam)
         i = np.arange(te.sum())
         em_r, em_h = EM[te][i, ch], EM[te][:, HYB]

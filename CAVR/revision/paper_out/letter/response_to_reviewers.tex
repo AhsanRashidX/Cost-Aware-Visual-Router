@@ -81,11 +81,11 @@ New material: a hardware table, energy per query from NVML, router throughput up
 \section*{Reviewer 3}
 \subsection*{Comment 1: Answer correctness and escalation switched off}
 \reviewer{Answer correctness is never checked, and there is no comparison with escalation switched off.}
-\textbf{Response.} This was the central gap and is now the core experiment. Every path is run on every query, answers are scored with ANLS and exact match, and every policy is evaluated on the answers it produces (main-results table). With $\lambda$ chosen on validation data, CAVR-CE uses 0.716 instead of 1.009 GPU-s per query (29\% less than always-hybrid); its ANLS is 0.557 against 0.566, lower on 4 of 5 splits with the 95\% interval excluding zero on 1, and the exact-match difference is not significant on 5 of 5. Escalation switched off is the ``none'' row of the escalation table.
+\textbf{Response.} This was the central gap and is now the core experiment. Every path is run on every query, answers are scored with ANLS and exact match, and every policy is evaluated on the answers it produces (main-results table). With $\lambda$ chosen on validation data, CAVR-CE uses 0.716 instead of 1.009 GPU-s per query (29\% less than always-hybrid); its ANLS is 0.557 against 0.566, lower on 4 of 5 splits with the 95\% interval excluding zero on 2, and the exact-match difference is not significant on 5 of 5. Escalation switched off is the ``none'' row of the escalation table.
 
 \subsection*{Comment 2: Inconsistent numbers}
 \reviewer{The paper reports 231/268 where the confusion matrix gives 229/268, and the rule-based baseline, path counts, training curve and calibration differ between sections.}
-\textbf{Response.} All of these came from results that could not be reproduced, and they have been removed. Every number in the revision comes from one cached run, and tables and figures are generated from the results files. Policy results are mean $\pm$ standard deviation over five splits, and figures that show a single split are labelled ``seed 1''.
+\textbf{Response.} All of these came from results that could not be reproduced, and they have been removed. Every number in the revision comes from one cached run, and tables and figures are generated from the results files. Policy results are mean $\pm$ sample standard deviation over five splits, compared with McNemar tests and a paired bootstrap that resamples whole pages; figures that show a single split are labelled ``seed 1''.
 
 \subsection*{Comment 3: Cost ratios}
 \reviewer{Visual retrieval is about 33$\times$ more expensive than text, not 100$\times$, and Table 8 even shows visual cheaper than text.}

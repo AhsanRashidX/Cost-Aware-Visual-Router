@@ -1,5 +1,8 @@
 # Phase 0 verdict (generated from results/phase0/*.json)
 
+> **Note (added later):** in this exploratory report, the "match hybrid" operating points were chosen as the cheapest setting by *test* GPU cost among those meeting the validation target. The selection key has since been changed to validation cost in the code. These numbers are exploratory and are not used in the paper; the paper's operating point comes from evaluate.py, which selects on validation data only.
+
+
 Go/no-go criteria were fixed before running. Curves = test ANLS at a GPU-s budget, mean over 5 seeds.
 
 ## Probe 2 - cheaper text path (hypothetical s = cost factor, r = share of correct answers kept)

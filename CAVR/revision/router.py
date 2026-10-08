@@ -55,7 +55,8 @@ def utility(A, C, choice, lam):
     return float((A[idx, choice] - lam * C[idx, choice]).mean())
 
 
-def train_cavr(X, A, C, y, cost, tr, va, seed, device):
+def train_cavr(X, A, C, y, cost, tr, va, seed, device, log=None):
+    """log: optional dict; if given, per-epoch train/val losses and val utility are appended to it."""
     set_seed(seed)
     model = CAVR(X.shape[1]).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=HP["lr"], weight_decay=HP["weight_decay"])
@@ -67,8 +68,19 @@ def train_cavr(X, A, C, y, cost, tr, va, seed, device):
     gen = torch.Generator().manual_seed(seed)
     tr_idx = torch.tensor(np.where(tr)[0])
     best, best_state, bad, history = -np.inf, None, 0, []
+    va_t = torch.tensor(np.where(va)[0], device=device)
+
+    def losses(logits, q, c, idx):
+        with torch.no_grad():
+            chosen = torch.argmax(q - LAMBDA_DEFAULT * cost_t, dim=1)
+            conf_target = (At[idx].gather(1, chosen[:, None]).squeeze(1) >= ANLS_OK).float()
+        parts = (HP["w_cls"] * ce(logits, yt[idx]), HP["w_quality"] * ((q - At[idx]) ** 2).mean(),
+                 HP["w_conf"] * bce(c, conf_target))
+        return parts[0] + parts[1] + parts[2], parts
+
     for epoch in range(HP["max_epochs"]):
         model.train()
+        ep_sum, ep_n = np.zeros(4), 0
         for b in tr_idx[torch.randperm(len(tr_idx), generator=gen)].split(HP["batch"]):
             b = b.to(device)
             logits, q, c = model(Xt[b])
@@ -77,6 +89,11 @@ def train_cavr(X, A, C, y, cost, tr, va, seed, device):
                 conf_target = (At[b].gather(1, chosen[:, None]).squeeze(1) >= ANLS_OK).float()
             loss = (HP["w_cls"] * ce(logits, yt[b]) + HP["w_quality"] * ((q - At[b]) ** 2).mean()
                     + HP["w_conf"] * bce(c, conf_target))
+            if log is not None:
+                with torch.no_grad():
+                    _, parts = losses(logits, q, c, b)
+                ep_sum += len(b) * np.array([loss.item()] + [p.item() for p in parts])
+                ep_n += len(b)
             opt.zero_grad()
             loss.backward()
             opt.step()
@@ -85,6 +102,14 @@ def train_cavr(X, A, C, y, cost, tr, va, seed, device):
             qv = model(Xt[torch.tensor(np.where(va)[0], device=device)])[1].cpu().numpy()
         u = utility(A[va], C[va], decide(qv, cost, LAMBDA_DEFAULT), LAMBDA_DEFAULT)
         history.append(u)
+        if log is not None:
+            with torch.no_grad():
+                vl, vparts = losses(*model(Xt[va_t]), va_t)
+            for k, v in zip(("train_total", "train_cls", "train_quality", "train_conf"), ep_sum / max(ep_n, 1)):
+                log.setdefault(k, []).append(float(v))
+            for k, v in zip(("val_total", "val_cls", "val_quality", "val_conf"), [vl] + list(vparts)):
+                log.setdefault(k, []).append(float(v.item()))
+            log.setdefault("val_utility", []).append(float(u))
         if u > best + 1e-6:
             best, bad = u, 0
             best_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
@@ -93,6 +118,8 @@ def train_cavr(X, A, C, y, cost, tr, va, seed, device):
             if bad >= HP["patience"]:
                 break
     model.load_state_dict(best_state)
+    if log is not None:
+        log["best_epoch"] = int(np.argmax(history))   # 0-based; the epoch whose weights are kept
     model.eval()
     with torch.no_grad():
         logits, q, c = model(Xt)

@@ -1,0 +1,46 @@
+{
+  "hardware": {
+    "timestamp": "2026-10-08T12:19:23",
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.17",
+    "cpu": "AMD Ryzen 9 5950X 16-Core Processor",
+    "cpu_threads": 32,
+    "ram_gb": 63.9,
+    "git_commit": "adf3d4a4ffd7077e75c4038839c323729886f7a9",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "qwen-vl-utils": "0.0.14",
+      "accelerate": "1.15.0"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4090",
+        "memory_gb": 24.0,
+        "power_limit_w": 450.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "572.61"
+  },
+  "model_revisions": {
+    "Qwen/Qwen2.5-VL-7B-Instruct": "cc594898137f460bfe9f0759e9844b3ce807cfb5",
+    "vidore/colpali-v1.3": "b5c6dd62125326e6f0b540c1f7b36e901cdc0a11",
+    "vidore/colpaligemma-3b-pt-448-base": "30ab955d073de4a91dc5a288e8c97226647e3e5a",
+    "sentence-transformers/all-mpnet-base-v2": "e8c3b32edf5434bc2275fc9bab85f82640a19130"
+  },
+  "dataset": {
+    "name": "lmms-lab-encoder/DocVQA",
+    "revision": "539088ef8a8ada01ac8e2e6d4e372586748a265e"
+  }
+}

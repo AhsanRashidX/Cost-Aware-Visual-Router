@@ -11,7 +11,7 @@ generator, and measure answer quality (ANLS), GPU-seconds, energy and latency pe
 held-out pages of five splits (about 1,600 questions each). A content-aware router, CAVR-CE, that reads the
 retrieved passages before generation uses 29\% less GPU compute than always using both contexts. Its ANLS
 is lower by 0.008 on average (paired; lower on 4 of 5 splits, significant on
-1), and the exact-match difference is not significant on 5 of 5. In a load test
+2), and the exact-match difference is not significant on 5 of 5. In a load test
 simulated from measured service times, it cuts the GPUs needed for 100 queries/s at a p95 latency of 2\,s from
 106 to 72. We also show that the keyword-derived labels of our earlier
 version are uncorrelated with which path actually answers correctly, that a per-query oracle leaves large headroom,

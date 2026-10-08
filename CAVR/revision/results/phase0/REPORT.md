@@ -1,5 +1,8 @@
 # Phase 0 probes (from cache; lambda/tau picked on val, reported on test, mean over seeds)
 
+> **Note (added later):** in this exploratory report, the "match hybrid" operating points were chosen as the cheapest setting by *test* GPU cost among those meeting the validation target. The selection key has since been changed to validation cost in the code. These numbers are exploratory and are not used in the paper; the paper's operating point comes from evaluate.py, which selects on validation data only.
+
+
 Reference: always-hybrid ANLS 0.566 at 1.009 GPU-s; always-visual ANLS 0.542 at 0.621 GPU-s.
 'Match hybrid' = cheapest setting whose val ANLS >= val(hybrid) - 0.005. n = seeds where such a setting exists.
 

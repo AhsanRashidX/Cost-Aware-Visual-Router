@@ -16,7 +16,16 @@ RESULTS = ROOT / "results"
 SEED = 1234
 
 PACKAGES = ["torch", "transformers", "sentence-transformers", "colpali-engine", "python-doctr",
-            "datasets", "scikit-learn", "numpy", "rank-bm25", "nvidia-ml-py"]
+            "datasets", "scikit-learn", "numpy", "rank-bm25", "nvidia-ml-py", "qwen-vl-utils", "accelerate"]
+
+
+def cpu_name():
+    try:
+        import winreg
+        k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DESCRIPTION\System\CentralProcessor\0")
+        return winreg.QueryValueEx(k, "ProcessorNameString")[0].strip()
+    except Exception:
+        return platform.processor()
 
 
 def set_seed(seed=SEED):
@@ -34,7 +43,10 @@ def set_seed(seed=SEED):
 
 def _git_commit():
     try:
-        return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        top = subprocess.check_output(["git", "-c", f"safe.directory={ROOT.parent.parent.as_posix()}", "rev-parse",
+                                       "--show-toplevel"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL).strip()
+        return subprocess.check_output(["git", "-c", f"safe.directory={top}", "rev-parse", "HEAD"], cwd=ROOT,
+                                       text=True, stderr=subprocess.DEVNULL).strip()
     except Exception:
         return None
 
@@ -45,7 +57,7 @@ def hardware_info():
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "os": platform.platform(),
         "python": platform.python_version(),
-        "cpu": platform.processor(),
+        "cpu": cpu_name(),
         "cpu_threads": psutil.cpu_count(),
         "ram_gb": round(psutil.virtual_memory().total / 2**30, 1),
         "git_commit": _git_commit(),

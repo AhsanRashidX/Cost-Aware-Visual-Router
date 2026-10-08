@@ -87,6 +87,16 @@ def t_hardware():
             ["PyTorch / Transformers", f"{pk.get('torch', '?')} / {pk.get('transformers', '?')}"],
             ["colpali-engine / docTR", f"{pk.get('colpali-engine', '?')} / {pk.get('python-doctr', '?')}"],
             ["Interconnect", "single GPU (multi-GPU sharding emulated)"]]
+    si = load("system_info.json")
+    if si:
+        sh, sp = si["hardware"], si["hardware"]["packages"]
+        rows.insert(2, ["CPU", sh["cpu"]])
+        rows.insert(-1, ["sentence-transformers / scikit-learn",
+                         f"{sp.get('sentence-transformers', '?')} / {sp.get('scikit-learn', '?')}"])
+        rows.insert(-1, ["rank-bm25 / qwen-vl-utils / datasets",
+                         f"{sp.get('rank-bm25', '?')} / {sp.get('qwen-vl-utils', '?')} / {sp.get('datasets', '?')}"])
+        for m, r in si["model_revisions"].items():
+            rows.insert(-1, [f"\\texttt{{{m.split('/')[-1]}}} revision", f"\\texttt{{{(r or '?')[:7]}}}"])
     table("hardware", "Hardware and software used for every measurement in this paper.", "tab:hardware",
           ["Component", "Value"], rows, "ll")
 

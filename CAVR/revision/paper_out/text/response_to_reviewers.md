@@ -179,7 +179,7 @@ FrugalGPT do model cost.]
 
 With λ chosen on validation data, CAVR-CE uses 0.716 instead of 1.009 GPU-s per query
 (29% less than always-hybrid). Its ANLS is 0.557 against 0.566: lower on
-4 of 5 seeds, with the 95% interval excluding zero on 1 seed. On exact match the
+4 of 5 seeds, with the 95% interval excluding zero on 2 of 5 splits. On exact match the
 difference is not significant on 5 of 5 seeds. CAVR-CE beats always-visual by
 +0.012 to +0.018 ANLS for 15% more GPU. At 100 queries/s and p95 ≤ 2 s it needs
 72 GPUs instead of 106 (simulated). The per-query oracle (ANLS 0.630

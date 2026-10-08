@@ -1,5 +1,8 @@
 # Phase 1: content-aware router (generated from results/router_ce/summary.json)
 
+> **Note (added later):** in this exploratory report, the "match hybrid" operating points were chosen as the cheapest setting by *test* GPU cost among those meeting the validation target. The selection key has since been changed to validation cost in the code. These numbers are exploratory and are not used in the paper; the paper's operating point comes from evaluate.py, which selects on validation data only.
+
+
 Always-hybrid ANLS 0.566 at 1.009 GPU-s; always-visual 0.542 at 0.621. Router overhead charged: cross-encoder latency + tokenization; ColPali charged to text-routed queries.
 
 Go criteria (fixed before running): mean test success AUC >= 0.87 AND hybrid-matching operating point (lambda chosen on val) at >= 30% less GPU than always-hybrid.

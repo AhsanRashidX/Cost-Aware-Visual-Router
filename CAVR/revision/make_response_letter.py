@@ -179,8 +179,8 @@ COMMENTS = [
      "training curve and calibration differ between sections.",
      ["All of these came from results that could not be reproduced, and they have been removed. Every number in the "
       "revision comes from one cached run, and tables and figures are generated from the results files. Policy "
-      "results are mean ± standard deviation over five splits, and figures that show a single split are labelled "
-      "\"seed 1\"."]),
+      "results are mean ± sample standard deviation over five splits, compared with McNemar tests and a paired "
+      "bootstrap that resamples whole pages; figures that show a single split are labelled \"seed 1\"."]),
     (None, "Comment 3: Cost ratios",
      "Visual retrieval is about 33× more expensive than text, not 100×, and Table 8 even shows visual cheaper than "
      "text.",
