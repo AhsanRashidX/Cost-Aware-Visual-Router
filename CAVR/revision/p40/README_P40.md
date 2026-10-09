@@ -1,4 +1,4 @@
-# Multi-GPU index sharding on the 3x Tesla P40 server (Dell R740, Windows)
+# Multi-GPU index sharding on a multi-GPU server (tested setup: 3x Tesla P40 or 3x Tesla T4)
 
 This measures what the paper currently only emulates: a ColPali index of up to 200k pages split across 1, 2 and 3
 GPUs, queried on all shards in parallel, with the top results merged on the host. No model is needed. The package
@@ -20,11 +20,12 @@ Expected run time: about 30-60 minutes. Nothing else should run on the GPUs mean
    pip install numpy psutil nvidia-ml-py
    pip install torch --index-url https://download.pytorch.org/whl/cu126
    ```
-4. **Check PyTorch supports the P40** (compute capability 6.1):
+4. **Check that PyTorch supports the GPUs**:
    ```
    python check_env.py
    ```
-   If it prints `WARNING: this PyTorch build has no kernels for compute capability ['6.1']`, the newest builds have
+   On T4s (compute capability 7.5) current builds work. On P40s, if it prints
+   `WARNING: this PyTorch build has no kernels for compute capability ['6.1']`, the newest builds have
    dropped Pascal. Uninstall torch and install an older build from the cu118 index, then re-run `check_env.py` until it
    prints `PyTorch build supports all GPUs.`:
    ```
@@ -42,7 +43,7 @@ python check_env.py
 python shard_bench.py --data .
 ```
 `shard_bench.py` first checks that sharded search returns the same top page as a single GPU (it prints
-`top-1 agreement`; `exact_or_tie` should be 1.0). It then times every corpus size (1k, 10k, 50k, 100k, 200k pages)
+`top-1 agreement`; `exact_or_tie` should be 1.0). It then times every corpus size (1k, 10k, 50k, 100k, 150k, 200k pages)
 on 1, 2 and 3 GPUs and skips any combination that does not fit in GPU memory.
 
 ## 3. Send back
@@ -52,8 +53,10 @@ Two files from this folder: `p40_env.json` and `p40_shard_scaling.json`.
 ## Notes
 
 - 64 GB of RAM is enough: large corpora are built directly on the GPUs, not in host memory.
-- The index is stored in fp16 and scored in fp32, because the P40 has no bf16 and runs fp16 arithmetic very slowly.
-  P40 timings are therefore not directly comparable with the RTX 4090 timings. The point of this run is how latency
+- The index is stored in fp16. It is scored in fp16 on GPUs with fast fp16 (T4 and newer) and in fp32 on the P40,
+  whose fp16 arithmetic is very slow. The per-GPU index budget defaults to 70% of the smallest GPU's memory: about
+  11 GiB on a 16 GB T4, so a 200k-page corpus does not fit on three T4s (150k does). Timings on these GPUs are not
+  directly comparable with the RTX 4090 timings. The point of this run is how latency
   and throughput change with the number of GPUs.
 - The R740 attaches GPUs to two CPU sockets. `check_env.py` records the topology (`nvidia-smi topo -m`) so that
   cross-socket effects can be identified.

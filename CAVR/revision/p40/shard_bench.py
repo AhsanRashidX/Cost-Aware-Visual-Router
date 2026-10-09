@@ -4,7 +4,8 @@ Standalone: needs torch, numpy, psutil, nvidia-ml-py, and two files exported on 
   colpali_index.pt       page embeddings of the 1,786 evaluation pages (1,031 x 128 per page)
   colpali_query_emb.pt   per-token query embeddings of the 8,150 questions
 Larger corpora are built by repeating the real pages (as in the single-GPU study). The index is stored in fp16 on
-each GPU (Pascal has no bf16) and scored in fp32 chunk by chunk. A query is sent to every shard at once (one thread per
+each GPU and scored chunk by chunk in fp16 on GPUs with fast fp16 (compute capability >= 7.0, e.g. T4) or in fp32 on
+older GPUs (e.g. Pascal P40, whose fp16 arithmetic is very slow). A query is sent to every shard at once (one thread per
 GPU); each shard returns its top-k, and the host merges them, so the measured latency includes the merge.
 Before timing, sharded top-1 results on the real corpus are checked against a single GPU.
 
@@ -91,14 +92,18 @@ def build_shards(base, n_pages, n_gpus):
     return shards
 
 
+COMPUTE_DTYPE = torch.float32
+
+
 def shard_topk(q, shard, offset, chunk):
-    """q: (B, Lq, d) fp32 on the shard's GPU; returns (scores, global page ids) of the shard's top-k, on the CPU."""
+    """q: (B, Lq, d) on the shard's GPU; returns (scores, global page ids) of the shard's top-k, on the CPU."""
     s, outs = shard, []
     step = max(16, chunk // q.shape[0])
     with torch.cuda.device(s.device):
+        q = q.to(COMPUTE_DTYPE)
         for i in range(0, s.shape[0], step):
-            c = s[i:i + step].float()
-            outs.append(torch.einsum("bqd,npd->bnqp", q, c).amax(3).sum(2))
+            c = s[i:i + step].to(COMPUTE_DTYPE)
+            outs.append(torch.einsum("bqd,npd->bnqp", q, c).amax(3).float().sum(2))
         scores = torch.cat(outs, 1)
         k = min(TOPK, scores.shape[1])
         v, idx = torch.topk(scores, k, dim=1)
@@ -122,15 +127,18 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True)
     ap.add_argument("--gpus", default=None, help="comma list of GPU counts (default: 1..all)")
-    ap.add_argument("--sizes", default="1000,10000,50000,100000,200000")
+    ap.add_argument("--sizes", default="1000,10000,50000,100000,150000,200000")
     ap.add_argument("--n-lat", type=int, default=50)
     ap.add_argument("--batches", default="1,4,16,64")
     ap.add_argument("--chunk", type=int, default=4096)
-    ap.add_argument("--budget-gib", type=float, default=20.0, help="max index GiB per GPU")
+    ap.add_argument("--budget-gib", type=float, default=None,
+                    help="max index GiB per GPU (default: 70%% of the smallest GPU's memory)")
+    ap.add_argument("--compute-dtype", choices=["auto", "fp16", "fp32"], default="auto",
+                    help="auto: fp16 if every GPU has compute capability >= 7.0, else fp32")
     ap.add_argument("--out", default=str(Path(__file__).with_name("p40_shard_scaling.json")))
     ap.add_argument("--same-device", action="store_true", help="test only: all shards on cuda:0")
     args = ap.parse_args()
-    global SAME_DEVICE
+    global SAME_DEVICE, COMPUTE_DTYPE
     SAME_DEVICE = args.same_device
     torch.manual_seed(1234)
     n_dev = torch.cuda.device_count()
@@ -138,6 +146,13 @@ def main():
     if not SAME_DEVICE and max(gpu_counts) > n_dev:
         raise SystemExit(f"asked for {max(gpu_counts)} GPUs but only {n_dev} are visible")
     sizes = [int(x) for x in args.sizes.split(",")]
+    caps = [torch.cuda.get_device_capability(i) for i in range(n_dev)]
+    if args.compute_dtype == "auto":
+        COMPUTE_DTYPE = torch.float16 if all(c >= (7, 0) for c in caps) else torch.float32
+    else:
+        COMPUTE_DTYPE = torch.float16 if args.compute_dtype == "fp16" else torch.float32
+    if args.budget_gib is None:
+        args.budget_gib = 0.7 * min(torch.cuda.get_device_properties(i).total_memory for i in range(n_dev)) / 2**30
     batches = [int(x) for x in args.batches.split(",")]
 
     saved = torch.load(Path(args.data) / "colpali_index.pt")
@@ -148,7 +163,8 @@ def main():
 
     out = {"torch": torch.__version__, "devices": [torch.cuda.get_device_name(i) for i in range(n_dev)],
            "capability": [".".join(map(str, torch.cuda.get_device_capability(i))) for i in range(n_dev)],
-           "store_dtype": "fp16", "compute_dtype": "fp32", "vectors_per_page": base.shape[1], "topk": TOPK,
+           "store_dtype": "fp16", "compute_dtype": str(COMPUTE_DTYPE).replace("torch.", ""),
+           "vectors_per_page": base.shape[1], "topk": TOPK,
            "n_lat": args.n_lat, "chunk": args.chunk, "budget_gib_per_gpu": args.budget_gib, "checks": {}, "runs": []}
     sampler = PowerSampler(n_dev)
     out["energy_mode"] = sampler.mode
