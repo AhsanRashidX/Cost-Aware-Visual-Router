@@ -54,7 +54,7 @@ Two files from this folder: `p40_env.json` and `p40_shard_scaling.json`.
 
 - 64 GB of RAM is enough: large corpora are built directly on the GPUs, not in host memory.
 - The index is stored in fp16. It is scored in fp16 on GPUs with fast fp16 (T4 and newer) and in fp32 on the P40,
-  whose fp16 arithmetic is very slow. The per-GPU index budget defaults to 70% of the smallest GPU's memory: about
+  whose native fp16 arithmetic is slow. The per-GPU index budget defaults to 70% of the smallest GPU's memory: about
   11 GiB on a 16 GB T4, so a 200k-page corpus does not fit on three T4s (150k does). Timings on these GPUs are not
   directly comparable with the RTX 4090 timings. The point of this run is how latency
   and throughput change with the number of GPUs.

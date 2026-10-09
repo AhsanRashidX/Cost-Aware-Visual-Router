@@ -147,6 +147,37 @@ def values():
     V["ix100_shards"], V["ix100_shard_ms"] = s100["sharded"]["gpus_needed"], f"{1000 * s100['sharded']['emulated_parallel_p50_s']:.1f}"
     V["ix1k_ms"], V["ix50k_ms"] = f"{1000 * s1k['gpu_bf16']['p50_s']:.2f}", f"{1000 * s50k['gpu_bf16']['p50_s']:.1f}"
     V["pool_r1_full"], V["pool_r1"] = f"{ix['pooling_recall_at1']['full']:.3f}", f"{ix['pooling_recall_at1']['pooled2x2']:.3f}"
+    mg = J("multi_gpu_scaling.json")
+    st, sm, ms = mg["strong"], mg["summary"], mg["source"]
+    weak_per, weak = next(iter(mg["weak"].items()))
+    wmax = weak[max(weak, key=int)]
+    V.update({
+        "mg_gpu": ms["devices"][0], "mg_n": mg["n_gpus"], "mg_n_word": {2: "two", 3: "three", 4: "four"}[mg["n_gpus"]],
+        "mg_mem": f"{ms['node']['gpus'][0]['memory_gb']:.1f}", "mg_topk": ms["topk"], "mg_nlat": ms["n_lat"],
+        "mg_ncheck": ms["n_check"], "mg_budget": f"{ms['budget_gib_per_gpu']:.1f}",
+        "mg_batches": ", ".join(ms["batches"][:-1]) + " and " + ms["batches"][-1], "mg_tb": mg["throughput_batch"],
+        "mg_exact": f"{100 * sm['check_exact_min']:.1f}", "mg_tie": f"{sm['check_exact_or_tie_min']:.3f}",
+        "mg_ovh_ms": f"{1000 * sm['max_overhead_s_ge50k']:.1f}",
+        "mg_lat_eff_min": f"{100 * sm['min_latency_efficiency_ge50k']:.1f}",
+        "mg_thr_eff_min": f"{100 * sm['min_throughput_efficiency_ge10k']:.1f}",
+        "mg_idle_w": f"{sm['idle_w_per_gpu']:.0f}", "mg_idle_lo": f"{sm['idle_w_range'][0]:.0f}",
+        "mg_idle_hi": f"{sm['idle_w_range'][1]:.0f}", "mg_min_pages": f"{mg['min_pages_fit'] // 1000}k",
+        "mg_weak_k": f"{int(weak_per) // 1000}k", "mg_weak_eff": f"{100 * wmax['efficiency']:.1f}",
+        "mg_weak_pages": f"{wmax['pages'] // 1000}k", "mg_weak_gib": f"{wmax['index_gib_total']:.1f}",
+        "mg_weak_ms": f"{1000 * wmax['p50_s']:.0f}", "mg_maxpages": f"{max(int(n) for n in st) // 1000}k",
+    })
+    for n in ("1000", "10000", "50000", "100000"):
+        k = f"mg{int(n) // 1000}k"
+        for g, v in st[n]["by_gpus"].items():
+            V[f"{k}_ms{g}"] = f"{1000 * v['p50_s']:.0f}" if v["p50_s"] >= 0.1 else f"{1000 * v['p50_s']:.1f}"
+            V[f"{k}_sp{g}"] = f"{v['latency_speedup']:.2f}"
+            V[f"{k}_eff{g}"] = f"{100 * v['latency_efficiency']:.1f}"
+            V[f"{k}_qps{g}"] = f"{v['throughput_qps']:.1f}"
+            V[f"{k}_teff{g}"] = f"{100 * v['throughput_efficiency']:.0f}"
+            V[f"{k}_e{g}"] = f"{v['energy_j_per_query_node']:.1f}"
+            V[f"{k}_ea{g}"] = f"{v['energy_j_per_query_active']:.1f}"
+    V["gpu_short"] = V["gpu"].replace("GeForce ", "")
+    V["mg_vs_ws"] = f"{st['50000']['by_gpus']['1']['p50_s'] / s50k['gpu_bf16']['p50_s']:.0f}"
     b = ix["build"]
     V["build_h"], V["build_pps"], V["build_b"] = (f"{b['extrapolated_build_hours']['100000']:.1f}",
                                                   f"{b['by_batch'][str(b['best_batch'])]['pages_per_s']:.1f}", b["best_batch"])
@@ -298,12 +329,33 @@ million pages (about <<ix1m_gb>>\,GiB) would exceed any single accelerator
 (Table~\ref{tab:index_scaling}, Figure~\ref{fig:index}). Streaming it from pinned host memory costs
 <<ix100_stream_ms>>\,ms per query; 2$\times$2 pooling shrinks it to <<ix100_pool_gb>>\,GiB and <<ix100_pool_ms>>\,ms
 but lowers recall@1 on the real corpus from <<pool_r1_full>> to <<pool_r1>> (both measured with the same batched
-query encoding); sharding over <<ix100_shards>> GPUs gives <<ix100_shard_ms>>\,ms (emulated by timing the shards one
-after another on one GPU). A GPU-resident index answers in <<ix1k_ms>>\,ms at 1k pages and <<ix50k_ms>>\,ms at
+query encoding); emulated sharding over <<ix100_shards>> GPUs (shards timed one after another on this GPU) gives
+<<ix100_shard_ms>>\,ms. A GPU-resident index answers in <<ix1k_ms>>\,ms at 1k pages and <<ix50k_ms>>\,ms at
 50k pages. Building a 100k-page index would take about <<build_h>> GPU-hours, extrapolated from a 64-page
 benchmark at batch <<build_b>> (<<build_pps>> pages/s); the 1,786-page evaluation index was built at batch
 <<full_build_b>>, which exceeded GPU memory, and ran at <<full_build_pps>> pages per GPU-second. docTR OCR of the
 <<n_pages>> evaluation pages took <<ocr_s>>\,s and <<ocr_kj>>\,kJ.
+
+\paragraph{Multi-GPU index sharding.} On the <<mg_n_word>>-GPU node (Table~\ref{tab:multi_gpu},
+Figure~\ref{fig:multi_gpu}), sharded search returned the same top page as one GPU for all <<mg_ncheck>> check questions
+(<<mg_exact>>\% exactly, the rest exact score ties). Latency is set by the number of pages per GPU. A 50k-page index is
+searched in <<mg50k_ms1>>\,ms on one GPU, <<mg50k_ms2>>\,ms on two and <<mg50k_ms3>>\,ms on three (speedup
+<<mg50k_sp3>>$\times$); from 50k pages up, parallel efficiency is at least <<mg_lat_eff_min>>\% and dispatch and merge
+add at most <<mg_ovh_ms>>\,ms over an ideal split. Throughput at batch <<mg_tb>> scales by the same factor, with
+efficiency of at least <<mg_thr_eff_min>>\% from <<mg_min_pages>> pages up. With <<mg_weak_k>> pages per GPU, a
+<<mg_weak_pages>>-page index of <<mg_weak_gib>>\,GiB, larger than the memory of any one GPU on the node, is searched in
+<<mg_weak_ms>>\,ms, as fast as <<mg_weak_k>> pages on one GPU (weak-scaling efficiency <<mg_weak_eff>>\%). Smaller
+corpora gain less at batch 1 (three GPUs give <<mg1k_sp3>>$\times$ at 1k pages and <<mg10k_sp3>>$\times$ at 10k pages),
+where per-query overheads are a larger share of a short search; their batch-<<mg_tb>> throughput still reaches
+<<mg1k_teff3>>\% and <<mg10k_teff3>>\% of linear scaling. Energy per query for the whole node falls from
+<<mg50k_e1>>\,J on one GPU to <<mg50k_e3>>\,J on three at 50k pages, but not because the GPUs work more efficiently: an
+idle GPU draws about <<mg_idle_w>>\,W (estimated from the runs; <<mg_idle_lo>>--<<mg_idle_hi>>\,W across
+configurations), and without the idle draw the active energy is <<mg50k_ea1>>\,J per query whatever the number of GPUs.
+On a node whose GPUs are powered anyway, spreading the shards over all of them therefore lowers the energy per query.
+These GPUs are much slower than the workstation's: one <<mg_gpu>> takes <<mg50k_ms1>>\,ms for the 50k-page search that
+the <<gpu_short>> completes in <<ix50k_ms>>\,ms in bf16, <<mg_vs_ws>>$\times$ faster. Absolute times therefore do not
+transfer between the machines; the scaling with the number of GPUs does. It also shows that the emulated sharding above
+omitted little: merging the shard results costs well under a millisecond.
 
 \paragraph{Router overhead.} The CAVR router (mpnet embedding and MLP) takes <<cavr_router_ms>>\,ms per query at
 batch 1 on the GPU (<<cavr_router_cpu_ms>>\,ms on the CPU) and reaches <<cavr_router_qps>> queries/s at large
@@ -313,6 +365,7 @@ batch. CAVR-CE takes <<ce_ms>>\,ms and <<ce_j>>\,J per query at batch 1, and its
 \input{tables/load_test}
 \input{tables/load_test_operating_points}
 \input{tables/index_scaling}
+\input{tables/multi_gpu_scaling}
 \input{tables/router_throughput}
 \begin{figure}[t]
   \centering
@@ -326,18 +379,28 @@ batch. CAVR-CE takes <<ce_ms>>\,ms and <<ce_j>>\,J per query at batch 1, and its
   \caption{ColPali MaxSim query latency against index size for a GPU-resident, host-streamed and pooled index.}
   \label{fig:index}
 \end{figure}
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/multi_gpu_scaling.pdf}
+  \caption{Measured multi-GPU sharding of the ColPali index on <<mg_n_word>> <<mg_gpu>> GPUs: (a) p50 latency of single
+  queries and (b) throughput at batch <<mg_tb>>, against the number of GPUs, for each corpus size. Dashed lines show
+  linear scaling from the fewest GPUs that hold the corpus; the dotted line joins runs with <<mg_weak_k>> pages per GPU
+  (weak scaling).}
+  \label{fig:multi_gpu}
+\end{figure*}
 
 \subsection{Limitations}
 \label{sec:res-limits}
 
-All measurements use one consumer GPU (<<gpu>>) under Windows; caps on visual tokens and OCR length keep memory
+All measurements except index sharding use one consumer GPU (<<gpu>>) under Windows; caps on visual tokens and OCR length keep memory
 below the point where the driver spills to system RAM. Generation uses HF Transformers rather than a serving
 engine such as vLLM~\cite{vllm}, so absolute capacity is pessimistic; the comparison between policies is the main
 result. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. Indexes of 10k--100k pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that
-scale, and multi-GPU sharding is emulated on one GPU. Energy covers the GPU only (NVML). The router handles text
+scale. Multi-GPU sharding was measured for retrieval only, on older GPUs (<<mg_gpu>>) whose absolute times do not
+transfer to the workstation, and the load test does not include sharded retrieval. Energy covers the GPU only (NVML). The router handles text
 queries over visual documents; queries that contain an image are out of scope. The router design was developed on the same five splits that we
 report on, and the feasibility analyses that motivated it looked at their test portions; no parameter of the final
 pipeline is selected on test data, but a held-out confirmation set would give a cleaner estimate. Splits group
@@ -401,26 +464,30 @@ The revised paper frames CAVR as a scheduler for GPU resources in multimodal RAG
 retrieval stores 1,031 vectors per page, so index memory and scoring time grow with the corpus: at 100k pages the
 ColPali index needs <<ix100_gb>> GiB, more than our <<gpu_mem>> GiB GPU holds, and a million pages (about <<ix1m_gb>>
 GiB) would exceed any single accelerator. Such an index must be streamed from host memory (<<ix100_stream_ms>> ms per
-query on our hardware), pooled (recall@1 drops from <<pool_r1_full>> to <<pool_r1>>) or sharded (emulated over
-<<ix100_shards>> GPUs). Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
+query on our hardware), pooled (recall@1 drops from <<pool_r1_full>> to <<pool_r1>>) or sharded. We measured sharding on a node
+with <<mg_n_word>> <<mg_gpu>> GPUs: sharded search returns the same top page as one GPU, a 50k-page index is searched in
+<<mg50k_ms1>>, <<mg50k_ms2>> and <<mg50k_ms3>> ms on one, two and three GPUs (parallel efficiency <<mg50k_eff3>>%), and a
+<<mg_weak_pages>>-page index (<<mg_weak_gib>> GiB, more than one GPU holds) is searched in <<mg_weak_ms>> ms, as fast as
+<<mg_weak_k>> pages on one GPU. Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
 times, serving 100 queries/s at p95 ≤ 2 s needs <<g100_always_hybrid>> GPUs for always-hybrid and
 <<g100_cavr_ce_valsel>> for CAVR-CE (<<g100_save>>% fewer; means over <<n_seeds>> seeds). We added these
-experiments, a hardware table, energy per query, router throughput up to batch 1,024, and serial versus
+experiments, a hardware table for each machine, energy per query, router throughput up to batch 1,024, and serial versus
 speculative-parallel escalation.
 *Changes:* Abstract; Introduction (new subsection on why routing is a supercomputing problem; research question
 and contribution); Related work (inference serving and late-interaction retrieval) [AUTHOR ACTION: write and verify
 these citations]; Method (Figure method: the pipeline as built and its deployment); Results, subsection
 "Scalability, throughput and
-energy" (Tables hardware, load_test, load_test_operating_points, index_scaling, router_throughput; Figures
-gpus_vs_quality, index_scaling); Conclusion.
-All experiments ran on one <<gpu>>. Multi-GPU sharding is emulated by timing shards on one GPU, and capacity
-projections come from a simulation driven by measured service times; the paper states both.
+energy" (Tables hardware, hardware_multigpu, load_test, load_test_operating_points, index_scaling,
+multi_gpu_scaling, router_throughput; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling); Conclusion.
+Routing and generation were measured on one <<gpu>>, capacity projections come from a simulation driven by
+measured service times, and multi-GPU sharding was measured on the <<mg_n_word>>-GPU node for retrieval only; the paper
+states all three.
 
 **E.2 — Report results accurately, rewrite overstated conclusions and explain limitations fully.**
 Every number now comes from one cached run, and tables and figures are generated from the results files. The
 withdrawn claims are listed above. A new Limitations subsection covers the single GPU, simulation versus live
-traffic, computed rather than measured escalation latencies, synthetic index scaling, emulated sharding, GPU-only
-energy, text-only queries, and the <<all_fail>>% of queries that no path answers.
+traffic, computed rather than measured escalation latencies, synthetic index scaling, sharding measured on older GPUs for retrieval only,
+GPU-only energy, text-only queries, and the <<all_fail>>% of queries that no path answers.
 
 ## Reviewer 1
 

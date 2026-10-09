@@ -127,8 +127,16 @@ CAVR-CE is the Phase 1 router. Phase 0 probes are in `results/phase0/VERDICT.md`
 **ColPali index at 100k pages** (24.6 GB in bf16) does not fit on one 24 GB GPU:
 - Streamed from host RAM: 1044 ms per query.
 - 2×2 pooled, on the GPU: 6.3 GB and 10.3 ms per query, but R@1 on the real corpus drops from 0.577 to 0.525.
-- Sharded over 2 GPUs (emulated): 19.8 ms per query.
+- Sharded over 2 GPUs, emulated on the 4090 (shards timed one after another): 19.8 ms per query.
 - Building the index takes about 1.7 GPU-hours at 16.2 pages/s.
+
+**Multi-GPU index sharding** (measured on 3× Tesla P40, retrieval only; fp16 index, fp32 scoring, host merge of per-shard top-10):
+- Top-1 agreement with one GPU: 99.8% exact, 100% counting exact score ties (500 questions).
+- 50k pages, p50: 327 / 164 / 109 ms on 1 / 2 / 3 GPUs (efficiency 99.8% on 3). From 50k pages up, dispatch + merge add at most 0.6 ms.
+- Batch-64 throughput efficiency ≥ 99.7% from 10k pages up. Small corpora gain less at batch 1 (1k pages: ×2.51 on 3 GPUs).
+- Weak scaling: 150k pages (36.9 GiB, more than one GPU holds) on 3 GPUs in 328 ms, the same as 50k pages on one GPU (99.9% efficiency).
+- Node energy per query at 50k pages: 28.4 J on 1 GPU → 17.8 J on 3. The drop is the idle draw of unused GPUs (≈51 W each); active energy is 17.8 J per query regardless of GPU count.
+- One P40 is 17× slower than the 4090 on the 50k search, so absolute times don't transfer; the scaling with GPU count does.
 
 ## Limitations to state in the paper
 
@@ -136,6 +144,6 @@ CAVR-CE is the Phase 1 router. Phase 0 probes are in `results/phase0/VERDICT.md`
 - **Generation uses HF transformers `generate`, not a serving engine** (vLLM/TGI), so batching gains are modest. Absolute capacity numbers are therefore pessimistic. The relative comparison between policies is the main result.
 - **The load test is a discrete-event simulation** driven by measured per-query service times and measured batching curves, not live traffic.
 - **10k–100k-page indexes repeat the real page embeddings.** That is valid for latency and memory, not for retrieval quality at that scale.
-- **Multi-GPU sharding is emulated:** shards are timed one after another on one GPU.
+- **Multi-GPU sharding was measured on older GPUs (3× Tesla P40), for retrieval only.** Absolute times don't transfer to the 4090, and the load test doesn't include sharded retrieval. On the 4090 itself, sharding is emulated.
 - **Speculative-escalation latency assumes two concurrent workers.**
 - **Retrieval searches each dataset's own page pool.** DocVQA questions are often generic, so page recall is low and caps every policy (the 35% of queries that fail on every path).

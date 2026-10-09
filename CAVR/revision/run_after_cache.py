@@ -20,6 +20,7 @@ STEPS = [
     ("bench_batching (GPU)", ["bench_batching.py"]),
     ("simulate", ["simulate.py"]),
     ("bench_index (GPU)", ["bench_index.py"]),
+    ("multi_gpu_scaling (results/multi_gpu from the multi-GPU node)", ["multi_gpu_scaling.py"]),
     ("make_outputs", ["make_outputs.py"]),
     ("make_method_figure", ["make_method_figure.py"]),
     ("make_training_figure", ["make_training_figure.py"]),

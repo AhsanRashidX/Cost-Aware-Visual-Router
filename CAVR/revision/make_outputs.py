@@ -86,7 +86,7 @@ def t_hardware():
             ["OS / Python", f"{os_name(hw['os'])} / {hw['python']}"],
             ["PyTorch / Transformers", f"{pk.get('torch', '?')} / {pk.get('transformers', '?')}"],
             ["colpali-engine / docTR", f"{pk.get('colpali-engine', '?')} / {pk.get('python-doctr', '?')}"],
-            ["Interconnect", "single GPU (multi-GPU sharding emulated)"]]
+            ["Interconnect", "single GPU (multi-GPU sharding: Table~\\ref{tab:hardware_multigpu})"]]
     si = load("system_info.json")
     if si:
         sh, sp = si["hardware"], si["hardware"]["packages"]
@@ -97,7 +97,8 @@ def t_hardware():
                          f"{sp.get('rank-bm25', '?')} / {sp.get('qwen-vl-utils', '?')} / {sp.get('datasets', '?')}"])
         for m, r in si["model_revisions"].items():
             rows.insert(-1, [f"\\texttt{{{m.split('/')[-1]}}} revision", f"\\texttt{{{(r or '?')[:7]}}}"])
-    table("hardware", "Hardware and software used for every measurement in this paper.", "tab:hardware",
+    table("hardware", "Workstation used for every measurement except multi-GPU index sharding "
+          "(Table~\\ref{tab:hardware_multigpu}): hardware, software and model revisions.", "tab:hardware",
           ["Component", "Value"], rows, "ll")
 
 
@@ -279,7 +280,8 @@ def index_scaling():
     pr = ix["pooling_recall_at1"]
     cap = (f"ColPali index scaling on one RTX 4090: p50 query latency (ms, batch 1). Pooling 2$\\times$2 cuts vectors "
            f"per page {ix['vectors_per_page']}$\\to${pr['vectors_per_page_pooled']}; R@1 on the real corpus "
-           f"{pr['full']:.3f}$\\to${pr['pooled2x2']:.3f}. Sharded latency is emulated (shards timed one by one on one GPU).")
+           f"{pr['full']:.3f}$\\to${pr['pooled2x2']:.3f}. Sharded latency is emulated here (shards timed one by one "
+           "on one GPU); measured sharding on three GPUs is in Table~\\ref{tab:multi_gpu}.")
     table("index_scaling", cap, "tab:index_scaling",
           ["Pages", "Index GiB", "GPU", "CPU stream", "Pooled GiB", "Pooled GPU", "GPUs / sharded"], rows)
 
@@ -300,6 +302,94 @@ def index_scaling():
     fig.savefig(FIG / "index_scaling.png")
     plt.close(fig)
     print("  figure index_scaling.png")
+
+
+SIZE_STYLE = {1000: ("#eda100", "^"), 10000: ("#1baf7a", "s"), 50000: ("#2a78d6", "o"), 100000: ("#4a3aa7", "D"),
+              150000: ("#eb6834", "*")}
+
+
+def multi_gpu():
+    mg = load("multi_gpu_scaling.json")
+    if not mg:
+        return
+    src, node, G = mg["source"], mg["source"]["node"], mg["n_gpus"]
+    g0 = node["gpus"][0]
+    tf = [g["fp32_tflops"] for g in node["gpus"]]
+    cpu = node["cpu"].replace("(R)", "").replace("(TM)", "")
+    rows = [["GPU", f"{G} $\\times$ {g0['name']} ({g0['memory_gb']:.1f}\\,GiB each, power limit "
+                    f"{g0['power_limit_w']:.0f}\\,W, compute capability {g0['capability']})"],
+            ["Driver / mode", f"{node['driver']} / {node['driver_model']} (compute mode)"],
+            ["fp32 matrix multiply (measured)", f"{min(tf):.1f}--{max(tf):.1f} TFLOPS per GPU"],
+            ["PCIe link width", f"$\\times${g0['pcie_width']} per GPU"
+                                + ("" if node["topology_recorded"] else " (topology not recorded)")],
+            ["CPU", cpu], ["CPU threads / RAM", f"{node['cpu_threads']} / {node['ram_gib']:.0f}\\,GiB"],
+            ["OS / Python", f"Windows (build {node['os'].split('-')[2].split('.')[-1]}) / {node['python']}"],
+            ["PyTorch / CUDA", f"{node['torch']} / {node['cuda_build']}"],
+            ["Energy", f"NVML energy counters, summed over all {G} GPUs"]]
+    table("hardware_multigpu", "Multi-GPU node used for the index-sharding measurements "
+          "(Table~\\ref{tab:multi_gpu}). No model runs on this node: page and query embeddings are exported from "
+          "the workstation of Table~\\ref{tab:hardware}.", "tab:hardware_multigpu", ["Component", "Value"], rows, "ll")
+
+    def num(x):
+        return f"{x:,.0f}" if x >= 100 else f"{x:.1f}" if x >= 10 else f"{x:.2f}"
+    rows = []
+    for n, s in mg["strong"].items():
+        for g, v in s["by_gpus"].items():
+            rows.append([f"{int(n) // 1000}k", g, f"{v['index_gib_per_gpu']:.1f}", f"{1000 * v['p50_s']:.1f}",
+                         f"{1000 * v['p95_s']:.1f}", f"{v['latency_speedup']:.2f}",
+                         f"{100 * v['latency_efficiency']:.0f}", num(v["throughput_qps"]),
+                         num(v["energy_j_per_query_node"])])
+    sm, b = mg["summary"], mg["throughput_batch"]
+    cap = (f"Measured multi-GPU sharding of the ColPali index on {G} {g0['name']} GPUs "
+           f"(Table~\\ref{{tab:hardware_multigpu}}): index stored in {src['store_dtype']} and scored in "
+           f"{src['compute_dtype'].replace('float', 'fp')}, one contiguous shard per GPU, all shards queried in "
+           f"parallel and their top-{src['topk']} merged on the host. p50 and p95 over {src['n_lat']} single queries; "
+           "speedup and parallel efficiency of p50 latency relative to the fewest GPUs that hold the corpus (two for "
+           f"100k pages); throughput and energy at batch {b}. Energy is read for the whole node, so runs on fewer "
+           f"than {G} GPUs include the idle GPUs (about {sm['idle_w_per_gpu']:.0f}\\,W each). Sharded top-1 results "
+           f"matched one GPU for all {src['n_check']} check queries ({100 * sm['check_exact_min']:.1f}\\% exactly, "
+           f"the rest exact score ties). Shards above {src['budget_gib_per_gpu']:.1f}\\,GiB per GPU were not run.")
+    table("multi_gpu_scaling", cap, "tab:multi_gpu",
+          ["Pages", "GPUs", "GiB/GPU", "p50 (ms)", "p95 (ms)", "Speedup", "Eff. (\\%)", "Queries/s", "J/query"],
+          rows)
+
+    fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.0))
+    handles = {}
+    for ax, key, ylab, title in ((axes[0], "p50_s", "p50 query latency (ms)", "(a) Latency, batch 1"),
+                                 (axes[1], "throughput_qps", "Queries/s", f"(b) Throughput, batch {b}")):
+        for n, s in mg["strong"].items():
+            color, mk = SIZE_STYLE.get(int(n), (INK2, "o"))
+            by = s["by_gpus"]
+            gs = [int(g) for g in by]
+            ys = [(1000 if key == "p50_s" else 1) * by[str(g)][key] for g in gs]
+            h, = ax.plot(gs, ys, marker=mk, color=color, markersize=9 if mk == "*" else 6,
+                         label=f"{int(n) // 1000}k pages")
+            handles.setdefault(f"{int(n) // 1000}k pages", h)
+            if len(gs) > 1:
+                g_b = gs[0]
+                ideal = [ys[0] * (g_b / g if key == "p50_s" else g / g_b) for g in gs]
+                ax.plot(gs, ideal, color=color, linestyle="--", linewidth=1, alpha=0.7)
+        for per, d in mg["weak"].items():
+            pts = [(int(g), (1000 if key == "p50_s" else 1) * (v["p50_s"] if key == "p50_s" else
+                   mg["strong"][str(v["pages"])]["by_gpus"][g]["throughput_qps"])) for g, v in d.items()]
+            ax.plot(*zip(*pts), color=INK2, linestyle=":", linewidth=1.5, zorder=0)
+            weak_label = f"{int(per) // 1000}k pages per GPU"
+        ax.set_yscale("log")
+        ax.set_xticks(range(1, G + 1))
+        ax.set_xlabel("GPUs")
+        ax.set_ylabel(ylab)
+        ax.set_title(title, fontsize=9, color=INK, loc="left")
+    from matplotlib.lines import Line2D
+    handles["ideal (linear)"] = Line2D([], [], color=INK2, linestyle="--", linewidth=1)
+    if mg["weak"]:
+        handles[weak_label] = Line2D([], [], color=INK2, linestyle=":", linewidth=1.5)
+    fig.legend(handles.values(), handles.keys(), loc="lower center", ncol=len(handles), fontsize=6.5,
+               handlelength=1.6, columnspacing=1.0)
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
+    fig.savefig(FIG / "multi_gpu_scaling.png")
+    fig.savefig(FIG / "multi_gpu_scaling.pdf")
+    plt.close(fig)
+    print("  figure multi_gpu_scaling.png")
 
 
 def load_test():
@@ -399,6 +489,7 @@ def main():
         f_pareto(ev)
     t_escalation()
     index_scaling()
+    multi_gpu()
     load_test()
     router_cost()
 

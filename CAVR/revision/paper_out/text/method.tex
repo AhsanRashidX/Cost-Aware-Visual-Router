@@ -146,7 +146,7 @@ We envisage CAVR as a dispatcher in front of a GPU pool, with text retrieval on 
 band 3). BM25 retrieval, OCR text lookup and, optionally, the CAVR MLP run on CPU workers;
 ColPali query encoding and scoring, CAVR-CE and generation run on GPUs, with one dynamic-batching queue per path. Our
 load test models the GPU pool and its per-path queues; the dispatcher logic itself is not simulated. The visual index
-is placed according to corpus size: GPU-resident while it fits, then sharded across GPUs, streamed from pinned host
-memory, or pooled. Because $\lambda$ is a run-time input, the dispatcher could raise it when queues grow, shifting load
+is placed according to corpus size: GPU-resident while it fits, then sharded across GPUs (each GPU scores its shard and
+the dispatcher merges the per-shard top-$k$), streamed from pinned host memory, or pooled. Because $\lambda$ is a run-time input, the dispatcher could raise it when queues grow, shifting load
 from the hybrid path to single-context paths instead of violating the latency target; we describe this option but do
 not evaluate it.

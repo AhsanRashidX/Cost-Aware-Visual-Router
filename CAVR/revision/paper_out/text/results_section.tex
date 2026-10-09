@@ -135,12 +135,33 @@ million pages (about 246\,GiB) would exceed any single accelerator
 (Table~\ref{tab:index_scaling}, Figure~\ref{fig:index}). Streaming it from pinned host memory costs
 1,044\,ms per query; 2$\times$2 pooling shrinks it to 6.3\,GiB and 10.3\,ms
 but lowers recall@1 on the real corpus from 0.577 to 0.525 (both measured with the same batched
-query encoding); sharding over 2 GPUs gives 19.8\,ms (emulated by timing the shards one
-after another on one GPU). A GPU-resident index answers in 0.55\,ms at 1k pages and 19.8\,ms at
+query encoding); emulated sharding over 2 GPUs (shards timed one after another on this GPU) gives
+19.8\,ms. A GPU-resident index answers in 0.55\,ms at 1k pages and 19.8\,ms at
 50k pages. Building a 100k-page index would take about 1.7 GPU-hours, extrapolated from a 64-page
 benchmark at batch 4 (16.2 pages/s); the 1,786-page evaluation index was built at batch
 8, which exceeded GPU memory, and ran at 11.3 pages per GPU-second. docTR OCR of the
 1,786 evaluation pages took 471\,s and 29.3\,kJ.
+
+\paragraph{Multi-GPU index sharding.} On the three-GPU node (Table~\ref{tab:multi_gpu},
+Figure~\ref{fig:multi_gpu}), sharded search returned the same top page as one GPU for all 500 check questions
+(99.8\% exactly, the rest exact score ties). Latency is set by the number of pages per GPU. A 50k-page index is
+searched in 327\,ms on one GPU, 164\,ms on two and 109\,ms on three (speedup
+2.99$\times$); from 50k pages up, parallel efficiency is at least 99.6\% and dispatch and merge
+add at most 0.6\,ms over an ideal split. Throughput at batch 64 scales by the same factor, with
+efficiency of at least 99.7\% from 10k pages up. With 50k pages per GPU, a
+150k-page index of 36.9\,GiB, larger than the memory of any one GPU on the node, is searched in
+328\,ms, as fast as 50k pages on one GPU (weak-scaling efficiency 99.9\%). Smaller
+corpora gain less at batch 1 (three GPUs give 2.51$\times$ at 1k pages and 2.52$\times$ at 10k pages),
+where per-query overheads are a larger share of a short search; their batch-64 throughput still reaches
+96\% and 102\% of linear scaling. Energy per query for the whole node falls from
+28.4\,J on one GPU to 17.8\,J on three at 50k pages, but not because the GPUs work more efficiently: an
+idle GPU draws about 51\,W (estimated from the runs; 50--53\,W across
+configurations), and without the idle draw the active energy is 17.8\,J per query whatever the number of GPUs.
+On a node whose GPUs are powered anyway, spreading the shards over all of them therefore lowers the energy per query.
+These GPUs are much slower than the workstation's: one Tesla P40 takes 327\,ms for the 50k-page search that
+the RTX 4090 completes in 19.8\,ms in bf16, 17$\times$ faster. Absolute times therefore do not
+transfer between the machines; the scaling with the number of GPUs does. It also shows that the emulated sharding above
+omitted little: merging the shard results costs well under a millisecond.
 
 \paragraph{Router overhead.} The CAVR router (mpnet embedding and MLP) takes 11.7\,ms per query at
 batch 1 on the GPU (25.0\,ms on the CPU) and reaches 12,454 queries/s at large
@@ -150,6 +171,7 @@ batch. CAVR-CE takes 24.8\,ms and 1.74\,J per query at batch 1, and its cross-en
 \input{tables/load_test}
 \input{tables/load_test_operating_points}
 \input{tables/index_scaling}
+\input{tables/multi_gpu_scaling}
 \input{tables/router_throughput}
 \begin{figure}[t]
   \centering
@@ -163,18 +185,28 @@ batch. CAVR-CE takes 24.8\,ms and 1.74\,J per query at batch 1, and its cross-en
   \caption{ColPali MaxSim query latency against index size for a GPU-resident, host-streamed and pooled index.}
   \label{fig:index}
 \end{figure}
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/multi_gpu_scaling.pdf}
+  \caption{Measured multi-GPU sharding of the ColPali index on three Tesla P40 GPUs: (a) p50 latency of single
+  queries and (b) throughput at batch 64, against the number of GPUs, for each corpus size. Dashed lines show
+  linear scaling from the fewest GPUs that hold the corpus; the dotted line joins runs with 50k pages per GPU
+  (weak scaling).}
+  \label{fig:multi_gpu}
+\end{figure*}
 
 \subsection{Limitations}
 \label{sec:res-limits}
 
-All measurements use one consumer GPU (GeForce RTX 4090) under Windows; caps on visual tokens and OCR length keep memory
+All measurements except index sharding use one consumer GPU (GeForce RTX 4090) under Windows; caps on visual tokens and OCR length keep memory
 below the point where the driver spills to system RAM. Generation uses HF Transformers rather than a serving
 engine such as vLLM~\cite{vllm}, so absolute capacity is pessimistic; the comparison between policies is the main
 result. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. Indexes of 10k--100k pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that
-scale, and multi-GPU sharding is emulated on one GPU. Energy covers the GPU only (NVML). The router handles text
+scale. Multi-GPU sharding was measured for retrieval only, on older GPUs (Tesla P40) whose absolute times do not
+transfer to the workstation, and the load test does not include sharded retrieval. Energy covers the GPU only (NVML). The router handles text
 queries over visual documents; queries that contain an image are out of scope. The router design was developed on the same five splits that we
 report on, and the feasibility analyses that motivated it looked at their test portions; no parameter of the final
 pipeline is selected on test data, but a held-out confirmation set would give a cleaner estimate. Splits group

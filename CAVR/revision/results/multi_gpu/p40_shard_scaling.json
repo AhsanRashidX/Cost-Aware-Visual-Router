@@ -1,0 +1,393 @@
+{
+  "torch": "2.5.1+cu118",
+  "devices": [
+    "Tesla P40",
+    "Tesla P40",
+    "Tesla P40"
+  ],
+  "capability": [
+    "6.1",
+    "6.1",
+    "6.1"
+  ],
+  "store_dtype": "fp16",
+  "compute_dtype": "float32",
+  "vectors_per_page": 1031,
+  "topk": 10,
+  "n_lat": 50,
+  "chunk": 4096,
+  "budget_gib_per_gpu": 15.6801025390625,
+  "checks": {
+    "2": {
+      "exact": 0.9980000257492065,
+      "exact_or_tie": 1.0
+    },
+    "3": {
+      "exact": 0.9980000257492065,
+      "exact_or_tie": 1.0
+    }
+  },
+  "runs": [
+    {
+      "pages": 1000,
+      "gpus": 1,
+      "index_gib_total": 0.24580955505371094,
+      "index_gib_per_gpu": 0.24580955505371094,
+      "p50_s": 0.0069895939668640494,
+      "p95_s": 0.008020617993315677,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.008670081529999152,
+          "queries_per_s": 115.3391691346757,
+          "energy_j_per_query": 2.158125
+        },
+        "4": {
+          "batch_latency_s": 0.013949345127912238,
+          "queries_per_s": 286.75181259915314,
+          "energy_j_per_query": 0.9454375
+        },
+        "16": {
+          "batch_latency_s": 0.03283424764716377,
+          "queries_per_s": 487.2960748769306,
+          "energy_j_per_query": 0.5750416666666667
+        },
+        "64": {
+          "batch_latency_s": 0.13427920263105383,
+          "queries_per_s": 476.61885642742976,
+          "energy_j_per_query": 0.5752239583333333
+        }
+      }
+    },
+    {
+      "pages": 1000,
+      "gpus": 2,
+      "index_gib_total": 0.24580955505371094,
+      "index_gib_per_gpu": 0.12290477752685547,
+      "p50_s": 0.0037956900196149945,
+      "p95_s": 0.004326207906706256,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.00460084615406231,
+          "queries_per_s": 217.35132332496087,
+          "energy_j_per_query": 1.501625
+        },
+        "4": {
+          "batch_latency_s": 0.007346158628934063,
+          "queries_per_s": 544.5022632979006,
+          "energy_j_per_query": 0.7116875
+        },
+        "16": {
+          "batch_latency_s": 0.016934640356339514,
+          "queries_per_s": 944.8089633630967,
+          "energy_j_per_query": 0.4216041666666666
+        },
+        "64": {
+          "batch_latency_s": 0.06861338500554363,
+          "queries_per_s": 932.7626088529098,
+          "energy_j_per_query": 0.3990416666666667
+        }
+      }
+    },
+    {
+      "pages": 1000,
+      "gpus": 3,
+      "index_gib_total": 0.24580955505371094,
+      "index_gib_per_gpu": 0.08210039138793945,
+      "p50_s": 0.002783342497423291,
+      "p95_s": 0.0031957123137544823,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.003349496782902861,
+          "queries_per_s": 298.55230944074657,
+          "energy_j_per_query": 1.281625
+        },
+        "4": {
+          "batch_latency_s": 0.005227246001595631,
+          "queries_per_s": 765.2213036805593,
+          "energy_j_per_query": 0.61084375
+        },
+        "16": {
+          "batch_latency_s": 0.011770484658579031,
+          "queries_per_s": 1359.3323014391124,
+          "energy_j_per_query": 0.3529583333333333
+        },
+        "64": {
+          "batch_latency_s": 0.04675557134517779,
+          "queries_per_s": 1368.8208305169335,
+          "energy_j_per_query": 0.3492916666666666
+        }
+      }
+    },
+    {
+      "pages": 10000,
+      "gpus": 1,
+      "index_gib_total": 2.4580955505371094,
+      "index_gib_per_gpu": 2.4580955505371094,
+      "p50_s": 0.06560691050253808,
+      "p95_s": 0.07558657961781133,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.08198767834255705,
+          "queries_per_s": 12.196954715827507,
+          "energy_j_per_query": 20.1948125
+        },
+        "4": {
+          "batch_latency_s": 0.13451031112344936,
+          "queries_per_s": 29.737497196991278,
+          "energy_j_per_query": 8.7900625
+        },
+        "16": {
+          "batch_latency_s": 0.32127262900273007,
+          "queries_per_s": 49.80193939852884,
+          "energy_j_per_query": 5.4024375000000004
+        },
+        "64": {
+          "batch_latency_s": 1.3584182236809283,
+          "queries_per_s": 47.11362000619967,
+          "energy_j_per_query": 5.6742083333333335
+        }
+      }
+    },
+    {
+      "pages": 10000,
+      "gpus": 2,
+      "index_gib_total": 2.4580955505371094,
+      "index_gib_per_gpu": 1.2290477752685547,
+      "p50_s": 0.03308169997762889,
+      "p95_s": 0.03807362060761077,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.041284544655354694,
+          "queries_per_s": 24.222139503972898,
+          "energy_j_per_query": 13.89609375
+        },
+        "4": {
+          "batch_latency_s": 0.06765291537158191,
+          "queries_per_s": 59.1253160049364,
+          "energy_j_per_query": 6.1784375
+        },
+        "16": {
+          "batch_latency_s": 0.16111805534455925,
+          "queries_per_s": 99.30606452382494,
+          "energy_j_per_query": 3.8187708333333332
+        },
+        "64": {
+          "batch_latency_s": 0.6626186146556089,
+          "queries_per_s": 96.58648064582901,
+          "energy_j_per_query": 3.95821875
+        }
+      }
+    },
+    {
+      "pages": 10000,
+      "gpus": 3,
+      "index_gib_total": 2.4580955505371094,
+      "index_gib_per_gpu": 0.8195290565490723,
+      "p50_s": 0.02600798598723486,
+      "p95_s": 0.02726751825539395,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.027704579784767702,
+          "queries_per_s": 36.09511523974861,
+          "energy_j_per_query": 11.668
+        },
+        "4": {
+          "batch_latency_s": 0.045411222366965376,
+          "queries_per_s": 88.083953514315,
+          "energy_j_per_query": 5.27309375
+        },
+        "16": {
+          "batch_latency_s": 0.1078818526584655,
+          "queries_per_s": 148.31039332122998,
+          "energy_j_per_query": 3.2753333333333337
+        },
+        "64": {
+          "batch_latency_s": 0.4432946230129649,
+          "queries_per_s": 144.37350844683766,
+          "energy_j_per_query": 3.4065
+        }
+      }
+    },
+    {
+      "pages": 50000,
+      "gpus": 1,
+      "index_gib_total": 12.290477752685547,
+      "index_gib_per_gpu": 12.290477752685547,
+      "p50_s": 0.3271092285285704,
+      "p95_s": 0.3781202151963951,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.4119000942191633,
+          "queries_per_s": 2.427773176152568,
+          "energy_j_per_query": 101.75578125
+        },
+        "4": {
+          "batch_latency_s": 0.6740373882494168,
+          "queries_per_s": 5.934388907399694,
+          "energy_j_per_query": 44.22853125
+        },
+        "16": {
+          "batch_latency_s": 1.6595434163076181,
+          "queries_per_s": 9.641206034608611,
+          "energy_j_per_query": 27.920666666666666
+        },
+        "64": {
+          "batch_latency_s": 6.622027274648038,
+          "queries_per_s": 9.664714043842656,
+          "energy_j_per_query": 28.408807291666665
+        }
+      }
+    },
+    {
+      "pages": 50000,
+      "gpus": 2,
+      "index_gib_total": 12.290477752685547,
+      "index_gib_per_gpu": 6.145238876342773,
+      "p50_s": 0.16413955349707976,
+      "p95_s": 0.1900639095401856,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.207076889124437,
+          "queries_per_s": 4.829124120167163,
+          "energy_j_per_query": 71.004875
+        },
+        "4": {
+          "batch_latency_s": 0.33814899474964477,
+          "queries_per_s": 11.82910510487094,
+          "energy_j_per_query": 31.4633125
+        },
+        "16": {
+          "batch_latency_s": 0.8070690440169225,
+          "queries_per_s": 19.824821827343577,
+          "energy_j_per_query": 19.53920833333333
+        },
+        "64": {
+          "batch_latency_s": 3.316398395691067,
+          "queries_per_s": 19.298043348215938,
+          "energy_j_per_query": 20.415526041666666
+        }
+      }
+    },
+    {
+      "pages": 50000,
+      "gpus": 3,
+      "index_gib_total": 12.290477752685547,
+      "index_gib_per_gpu": 4.0969078540802,
+      "p50_s": 0.1092750855605118,
+      "p95_s": 0.12596697337576182,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.13677835925045656,
+          "queries_per_s": 7.311098082181901,
+          "energy_j_per_query": 60.30253125
+        },
+        "4": {
+          "batch_latency_s": 0.2242755588667933,
+          "queries_per_s": 17.83520246348274,
+          "energy_j_per_query": 27.08796875
+        },
+        "16": {
+          "batch_latency_s": 0.5358138716546819,
+          "queries_per_s": 29.86111567173383,
+          "energy_j_per_query": 16.944125
+        },
+        "64": {
+          "batch_latency_s": 2.2138984746610126,
+          "queries_per_s": 28.908281356397584,
+          "energy_j_per_query": 17.802875
+        }
+      }
+    },
+    {
+      "pages": 100000,
+      "gpus": 2,
+      "index_gib_total": 24.580955505371094,
+      "index_gib_per_gpu": 12.290477752685547,
+      "p50_s": 0.32736114400904626,
+      "p95_s": 0.3787984008085912,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.41272432805999415,
+          "queries_per_s": 2.4229247757225463,
+          "energy_j_per_query": 144.6515
+        },
+        "4": {
+          "batch_latency_s": 0.6762536978785647,
+          "queries_per_s": 5.914939929420219,
+          "energy_j_per_query": 64.11046875
+        },
+        "16": {
+          "batch_latency_s": 1.668104823678732,
+          "queries_per_s": 9.591723357477392,
+          "energy_j_per_query": 40.6470625
+        },
+        "64": {
+          "batch_latency_s": 6.616522174328566,
+          "queries_per_s": 9.672755310684744,
+          "energy_j_per_query": 41.627234375
+        }
+      }
+    },
+    {
+      "pages": 100000,
+      "gpus": 3,
+      "index_gib_total": 24.580955505371094,
+      "index_gib_per_gpu": 8.1938157081604,
+      "p50_s": 0.2188235079520382,
+      "p95_s": 0.2531290175567845,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.27571646412616246,
+          "queries_per_s": 3.6269143490191413,
+          "energy_j_per_query": 123.28153125
+        },
+        "4": {
+          "batch_latency_s": 0.4507334556255955,
+          "queries_per_s": 8.874424452137017,
+          "energy_j_per_query": 55.3776875
+        },
+        "16": {
+          "batch_latency_s": 1.1109360770011942,
+          "queries_per_s": 14.40226879947009,
+          "energy_j_per_query": 35.095437499999996
+        },
+        "64": {
+          "batch_latency_s": 4.417315272653165,
+          "queries_per_s": 14.488438349921033,
+          "energy_j_per_query": 36.33834375
+        }
+      }
+    },
+    {
+      "pages": 150000,
+      "gpus": 3,
+      "index_gib_total": 36.87143325805664,
+      "index_gib_per_gpu": 12.290477752685547,
+      "p50_s": 0.32759230851661414,
+      "p95_s": 0.37879150622175056,
+      "throughput": {
+        "1": {
+          "batch_latency_s": 0.41269745462341234,
+          "queries_per_s": 2.4230825482374323,
+          "energy_j_per_query": 185.5411875
+        },
+        "4": {
+          "batch_latency_s": 0.6757726821233518,
+          "queries_per_s": 5.919150190314828,
+          "energy_j_per_query": 83.17596875
+        },
+        "16": {
+          "batch_latency_s": 1.6651858173233147,
+          "queries_per_s": 9.608537277670926,
+          "energy_j_per_query": 52.94945833333333
+        },
+        "64": {
+          "batch_latency_s": 6.612143738971402,
+          "queries_per_s": 9.679160424597177,
+          "energy_j_per_query": 54.46369270833333
+        }
+      }
+    }
+  ],
+  "energy_mode": "counter"
+}

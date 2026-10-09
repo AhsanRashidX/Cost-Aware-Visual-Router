@@ -37,7 +37,7 @@ OPENING = [
     "query on one <<gpu>>. Route labels now come from measured outcomes rather than a keyword rule, and routers "
     "are evaluated on held-out pages of five page-grouped splits. As the editor requested, the paper is now framed "
     "as a GPU resource-scheduling problem, with new experiments on serving capacity under load, the GPUs needed at "
-    "a latency target and visual-index scaling.",
+    "a latency target and visual-index scaling, including index sharding measured on <<mg_n_word>> GPUs.",
     "Several claims of the submitted version are withdrawn, and we list them first so that nothing is hidden "
     "behind the new results. The title, abstract, discussion and conclusion were rewritten around what the new "
     "measurements support. All tables and figures are generated automatically from the released replication code "
@@ -83,13 +83,19 @@ COMMENTS = [
       "pages it needs <<ix100_gb>> GiB, more than our <<gpu_mem>> GiB GPU holds, and a million pages (about "
       "<<ix1m_gb>> GiB) would exceed any single accelerator. Such an index must be streamed from host memory "
       "(<<ix100_stream_ms>> ms per query on our hardware), pooled (recall@1 drops from <<pool_r1_full>> to "
-      "<<pool_r1>>) or sharded. We state that routing saves generation compute rather than index memory.",
-      "New material: a hardware table, energy per query from NVML, router throughput up to batch 1,024, serving "
-      "capacity and GPUs needed per policy, visual-index latency from 1k to 100k pages, and serial versus "
-      "speculative escalation. The method figure was redrawn as the pipeline actually built, including its "
-      "deployment on a GPU pool. We are explicit about scale: all measurements use one GPU, capacity beyond it is "
-      "simulated from measured service times, multi-GPU sharding is emulated, and larger indexes are built from "
-      "replicated page embeddings. [AUTHOR ACTION: write and verify the related-work citations on inference serving "
+      "<<pool_r1>>) or sharded. We now measure sharding on a node with <<mg_n_word>> <<mg_gpu>> GPUs. Sharded search "
+      "returns the same top page as one GPU; a 50k-page index is searched in <<mg50k_ms1>>, <<mg50k_ms2>> and "
+      "<<mg50k_ms3>> ms on one, two and three GPUs (parallel efficiency <<mg50k_eff3>>%); and a <<mg_weak_pages>>-page "
+      "index (<<mg_weak_gib>> GiB, more than any one of these GPUs holds) is searched in <<mg_weak_ms>> ms, as fast as "
+      "<<mg_weak_k>> pages on one GPU. We state that routing saves generation compute rather than index memory.",
+      "New material: a hardware table for each machine, energy per query from NVML, router throughput up to batch "
+      "1,024, serving capacity and GPUs needed per policy, visual-index latency from 1k to 100k pages, index sharding "
+      "measured on one to <<mg_n_word>> GPUs (strong and weak scaling, with energy), and serial versus speculative "
+      "escalation. The method figure was redrawn as the pipeline actually built, including its "
+      "deployment on a GPU pool. We are explicit about scale: routing and generation are measured on one GPU, "
+      "capacity beyond it is simulated from measured service times, sharding is measured for retrieval only on older "
+      "GPUs whose absolute times do not transfer to the workstation, and larger indexes are built from replicated "
+      "page embeddings. [AUTHOR ACTION: write and verify the related-work citations on inference serving "
       "and late-interaction retrieval.]"]),
     (None, "Comment E.2: Accurate reporting and limitations",
      "Report the results accurately, rewrite overstated conclusions and explain the limitations fully.",
@@ -97,8 +103,8 @@ COMMENTS = [
       "generated from the results files. The withdrawn claims are listed above. Policy results are means and "
       "standard deviations over five page-grouped splits, with McNemar and paired-bootstrap tests, and every "
       "comparison states its cost. A new Limitations subsection covers the single GPU, simulated rather than live "
-      "traffic, escalation latencies computed from measured per-stage times, synthetic index scaling, emulated "
-      "sharding, GPU-only energy, text-only queries, and the <<all_fail>>% of queries that no path answers."]),
+      "traffic, escalation latencies computed from measured per-stage times, synthetic index scaling, sharding "
+      "measured on older GPUs for retrieval only, GPU-only energy, text-only queries, and the <<all_fail>>% of queries that no path answers."]),
 
     ("Reviewer 1", "Comment 1: Latency of perplexity-based escalation",
      "Escalation based on generation perplexity forces a generate-then-escalate chain, so escalation can be slower "

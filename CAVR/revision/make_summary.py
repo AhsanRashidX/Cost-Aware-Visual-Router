@@ -16,6 +16,9 @@ def main():
     ocr, tx, vi = J("ocr_cost.json"), J("index_cost_text.json"), J("index_cost_visual.json")
     lb, ev, es = J("labels.json"), J("eval_main.json"), J("escalation.json")
     lt, ix, rc, bj = J("load_test.json"), J("index_scaling.json"), J("router_cost.json"), J("batching.json")
+    mg = J("multi_gpu_scaling.json")
+    mgs, mgw = mg["strong"], next(iter(mg["weak"].items()))
+    mgw_top = mgw[1][max(mgw[1], key=int)]
     hw = meta["hardware"]
     g = hw["gpus"][0]
     a = ev["aggregate"]
@@ -204,8 +207,16 @@ CAVR-CE is the Phase 1 router. Phase 0 probes are in `results/phase0/VERDICT.md`
 **ColPali index at 100k pages** ({s100['index_gb_bf16']:.1f} GB in bf16) does not fit on one 24 GB GPU:
 - Streamed from host RAM: {1000 * s100['cpu_stream']['p50_s']:.0f} ms per query.
 - 2×2 pooled, on the GPU: {s100['index_gb_pooled2x2']:.1f} GB and {1000 * s100['gpu_pooled2x2']['p50_s']:.1f} ms per query, but R@1 on the real corpus drops from {pr['full']:.3f} to {pr['pooled2x2']:.3f}.
-- Sharded over {s100['sharded']['gpus_needed']} GPUs (emulated): {1000 * s100['sharded']['emulated_parallel_p50_s']:.1f} ms per query.
+- Sharded over {s100['sharded']['gpus_needed']} GPUs, emulated on the 4090 (shards timed one after another): {1000 * s100['sharded']['emulated_parallel_p50_s']:.1f} ms per query.
 - Building the index takes about {ix['build']['extrapolated_build_hours']['100000']:.1f} GPU-hours at {ix['build']['by_batch'][str(ix['build']['best_batch'])]['pages_per_s']:.1f} pages/s.
+
+**Multi-GPU index sharding** (measured on {mg['n_gpus']}× {mg['source']['devices'][0]}, retrieval only; fp16 index, fp32 scoring, host merge of per-shard top-{mg['source']['topk']}):
+- Top-1 agreement with one GPU: {100 * mg['summary']['check_exact_min']:.1f}% exact, {100 * mg['summary']['check_exact_or_tie_min']:.0f}% counting exact score ties ({mg['source']['n_check']} questions).
+- 50k pages, p50: {' / '.join(f"{1000 * v['p50_s']:.0f}" for v in mgs['50000']['by_gpus'].values())} ms on {' / '.join(mgs['50000']['by_gpus'])} GPUs (efficiency {100 * mgs['50000']['by_gpus'][str(mg['n_gpus'])]['latency_efficiency']:.1f}% on {mg['n_gpus']}). From 50k pages up, dispatch + merge add at most {1000 * mg['summary']['max_overhead_s_ge50k']:.1f} ms.
+- Batch-{mg['throughput_batch']} throughput efficiency ≥ {100 * mg['summary']['min_throughput_efficiency_ge10k']:.1f}% from {mg['min_pages_fit'] // 1000}k pages up. Small corpora gain less at batch 1 (1k pages: ×{mgs['1000']['by_gpus'][str(mg['n_gpus'])]['latency_speedup']:.2f} on {mg['n_gpus']} GPUs).
+- Weak scaling: {mgw_top['pages'] // 1000}k pages ({mgw_top['index_gib_total']:.1f} GiB, more than one GPU holds) on {max(mgw[1], key=int)} GPUs in {1000 * mgw_top['p50_s']:.0f} ms, the same as {int(mgw[0]) // 1000}k pages on one GPU ({100 * mgw_top['efficiency']:.1f}% efficiency).
+- Node energy per query at 50k pages: {mgs['50000']['by_gpus']['1']['energy_j_per_query_node']:.1f} J on 1 GPU → {mgs['50000']['by_gpus'][str(mg['n_gpus'])]['energy_j_per_query_node']:.1f} J on {mg['n_gpus']}. The drop is the idle draw of unused GPUs (≈{mg['summary']['idle_w_per_gpu']:.0f} W each); active energy is {mgs['50000']['by_gpus']['1']['energy_j_per_query_active']:.1f} J per query regardless of GPU count.
+- One P40 is {mgs['50000']['by_gpus']['1']['p50_s'] / ix['scaling']['50000']['gpu_bf16']['p50_s']:.0f}× slower than the 4090 on the 50k search, so absolute times don't transfer; the scaling with GPU count does.
 
 ## Limitations to state in the paper
 
@@ -213,7 +224,7 @@ CAVR-CE is the Phase 1 router. Phase 0 probes are in `results/phase0/VERDICT.md`
 - **Generation uses HF transformers `generate`, not a serving engine** (vLLM/TGI), so batching gains are modest. Absolute capacity numbers are therefore pessimistic. The relative comparison between policies is the main result.
 - **The load test is a discrete-event simulation** driven by measured per-query service times and measured batching curves, not live traffic.
 - **10k–100k-page indexes repeat the real page embeddings.** That is valid for latency and memory, not for retrieval quality at that scale.
-- **Multi-GPU sharding is emulated:** shards are timed one after another on one GPU.
+- **Multi-GPU sharding was measured on older GPUs ({mg['n_gpus']}× {mg['source']['devices'][0]}), for retrieval only.** Absolute times don't transfer to the 4090, and the load test doesn't include sharded retrieval. On the 4090 itself, sharding is emulated.
 - **Speculative-escalation latency assumes two concurrent workers.**
 - **Retrieval searches each dataset's own page pool.** DocVQA questions are often generic, so page recall is low and caps every policy (the {100 * all_fail:.0f}% of queries that fail on every path).
 """

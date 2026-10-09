@@ -54,26 +54,30 @@ The revised paper frames CAVR as a scheduler for GPU resources in multimodal RAG
 retrieval stores 1,031 vectors per page, so index memory and scoring time grow with the corpus: at 100k pages the
 ColPali index needs 24.6 GiB, more than our 24 GiB GPU holds, and a million pages (about 246
 GiB) would exceed any single accelerator. Such an index must be streamed from host memory (1,044 ms per
-query on our hardware), pooled (recall@1 drops from 0.577 to 0.525) or sharded (emulated over
-2 GPUs). Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
+query on our hardware), pooled (recall@1 drops from 0.577 to 0.525) or sharded. We measured sharding on a node
+with three Tesla P40 GPUs: sharded search returns the same top page as one GPU, a 50k-page index is searched in
+327, 164 and 109 ms on one, two and three GPUs (parallel efficiency 99.8%), and a
+150k-page index (36.9 GiB, more than one GPU holds) is searched in 328 ms, as fast as
+50k pages on one GPU. Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
 times, serving 100 queries/s at p95 ≤ 2 s needs 106 GPUs for always-hybrid and
 72 for CAVR-CE (32% fewer; means over 5 seeds). We added these
-experiments, a hardware table, energy per query, router throughput up to batch 1,024, and serial versus
+experiments, a hardware table for each machine, energy per query, router throughput up to batch 1,024, and serial versus
 speculative-parallel escalation.
 *Changes:* Abstract; Introduction (new subsection on why routing is a supercomputing problem; research question
 and contribution); Related work (inference serving and late-interaction retrieval) [AUTHOR ACTION: write and verify
 these citations]; Method (Figure method: the pipeline as built and its deployment); Results, subsection
 "Scalability, throughput and
-energy" (Tables hardware, load_test, load_test_operating_points, index_scaling, router_throughput; Figures
-gpus_vs_quality, index_scaling); Conclusion.
-All experiments ran on one GeForce RTX 4090. Multi-GPU sharding is emulated by timing shards on one GPU, and capacity
-projections come from a simulation driven by measured service times; the paper states both.
+energy" (Tables hardware, hardware_multigpu, load_test, load_test_operating_points, index_scaling,
+multi_gpu_scaling, router_throughput; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling); Conclusion.
+Routing and generation were measured on one GeForce RTX 4090, capacity projections come from a simulation driven by
+measured service times, and multi-GPU sharding was measured on the three-GPU node for retrieval only; the paper
+states all three.
 
 **E.2 — Report results accurately, rewrite overstated conclusions and explain limitations fully.**
 Every number now comes from one cached run, and tables and figures are generated from the results files. The
 withdrawn claims are listed above. A new Limitations subsection covers the single GPU, simulation versus live
-traffic, computed rather than measured escalation latencies, synthetic index scaling, emulated sharding, GPU-only
-energy, text-only queries, and the 35% of queries that no path answers.
+traffic, computed rather than measured escalation latencies, synthetic index scaling, sharding measured on older GPUs for retrieval only,
+GPU-only energy, text-only queries, and the 35% of queries that no path answers.
 
 ## Reviewer 1
 

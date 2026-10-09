@@ -15,5 +15,7 @@ is lower by 0.008 on average (paired; lower on 4 of 5 splits, significant on
 simulated from measured service times, it cuts the GPUs needed for 100 queries/s at a p95 latency of 2\,s from
 106 to 72. We also show that the keyword-derived labels of our earlier
 version are uncorrelated with which path actually answers correctly, that a per-query oracle leaves large headroom,
-and how visual-index latency scales to 100k pages.
+and how visual-index latency scales to 100k pages. Measured on three GPUs of a second node, sharding the
+visual index scales near-linearly: a 150k-page index (36.9\,GiB) is searched in the time one GPU
+needs for 50k pages.
 \end{abstract}

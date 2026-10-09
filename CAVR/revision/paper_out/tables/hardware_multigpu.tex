@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\caption{Multi-GPU node used for the index-sharding measurements (Table~\ref{tab:multi_gpu}). No model runs on this node: page and query embeddings are exported from the workstation of Table~\ref{tab:hardware}.}
+\label{tab:hardware_multigpu}
+\begin{tabular}{ll}
+\toprule
+\textbf{Component} & \textbf{Value} \\
+\midrule
+GPU & 3 $\times$ Tesla P40 (22.4\,GiB each, power limit 250\,W, compute capability 6.1) \\
+Driver / mode & 581.15 / TCC (compute mode) \\
+fp32 matrix multiply (measured) & 8.2--8.6 TFLOPS per GPU \\
+PCIe link width & $\times$16 per GPU (topology not recorded) \\
+CPU & Intel Xeon Gold 6140 CPU @ 2.30GHz \\
+CPU threads / RAM & 72 / 128\,GiB \\
+OS / Python & Windows (build 17134) / 3.11.0 \\
+PyTorch / CUDA & 2.5.1+cu118 / 11.8 \\
+Energy & NVML energy counters, summed over all 3 GPUs \\
+\bottomrule
+\end{tabular}
+\end{table}

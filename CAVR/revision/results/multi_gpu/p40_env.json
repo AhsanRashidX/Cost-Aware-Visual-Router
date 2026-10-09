@@ -1,0 +1,52 @@
+{
+  "python": "3.11.0",
+  "os": "Windows-10-10.0.17134-SP0",
+  "torch": "2.5.1+cu118",
+  "cuda_build": "11.8",
+  "cuda_available": true,
+  "arch_list": [
+    "sm_37",
+    "sm_50",
+    "sm_60",
+    "sm_61",
+    "sm_70",
+    "sm_75",
+    "sm_80",
+    "sm_86",
+    "sm_90",
+    "compute_37"
+  ],
+  "gpus": [
+    {
+      "index": 0,
+      "name": "Tesla P40",
+      "capability": "6.1",
+      "memory_gb": 22.4,
+      "fp32_tflops": 8.56,
+      "fp16_tflops": 9.291
+    },
+    {
+      "index": 1,
+      "name": "Tesla P40",
+      "capability": "6.1",
+      "memory_gb": 22.4,
+      "fp32_tflops": 8.46,
+      "fp16_tflops": 9.283
+    },
+    {
+      "index": 2,
+      "name": "Tesla P40",
+      "capability": "6.1",
+      "memory_gb": 22.4,
+      "fp32_tflops": 8.18,
+      "fp16_tflops": 9.213
+    }
+  ],
+  "cpu_threads": 72,
+  "ram_gb": 127.5,
+  "cpu": "Intel(R) Xeon(R) Gold 6140 CPU @ 2.30GHz",
+  "smi_gpus": "index, name, driver_version, driver_model.current, pcie.link.gen.current, pcie.link.width.current, power.limit [W], memory.total [MiB]\n0, Tesla P40, 581.15, TCC, 1, 16, 250.00 W, 23040 MiB\n1, Tesla P40, 581.15, TCC, 1, 16, 250.00 W, 23040 MiB\n2, Tesla P40, 581.15, TCC, 1, 16, 250.00 W, 23040 MiB\n",
+  "smi_topology": "nvidia-smi failed: Command '['nvidia-smi', 'topo', '-m']' returned non-zero exit status 255.",
+  "nvml_energy_counter": true,
+  "pytorch_supports_gpus": true
+}

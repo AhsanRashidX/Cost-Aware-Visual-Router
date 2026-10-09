@@ -5,7 +5,7 @@ Standalone: needs torch, numpy, psutil, nvidia-ml-py, and two files exported on 
   colpali_query_emb.pt   per-token query embeddings of the 8,150 questions
 Larger corpora are built by repeating the real pages (as in the single-GPU study). The index is stored in fp16 on
 each GPU and scored chunk by chunk in fp16 on GPUs with fast fp16 (compute capability >= 7.0, e.g. T4) or in fp32 on
-older GPUs (e.g. Pascal P40, whose fp16 arithmetic is very slow). A query is sent to every shard at once (one thread per
+older GPUs (e.g. Pascal P40, whose native fp16 arithmetic is slow). A query is sent to every shard at once (one thread per
 GPU); each shard returns its top-k, and the host merges them, so the measured latency includes the merge.
 Before timing, sharded top-1 results on the real corpus are checked against a single GPU.
 

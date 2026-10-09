@@ -1,6 +1,6 @@
 \begin{table}[t]
 \centering
-\caption{Hardware and software used for every measurement in this paper.}
+\caption{Workstation used for every measurement except multi-GPU index sharding (Table~\ref{tab:hardware_multigpu}): hardware, software and model revisions.}
 \label{tab:hardware}
 \begin{tabular}{ll}
 \toprule
@@ -19,7 +19,7 @@ rank-bm25 / qwen-vl-utils / datasets & 0.2.2 / 0.0.14 / 5.0.1 \\
 \texttt{colpali-v1.3} revision & \texttt{b5c6dd6} \\
 \texttt{colpaligemma-3b-pt-448-base} revision & \texttt{30ab955} \\
 \texttt{all-mpnet-base-v2} revision & \texttt{e8c3b32} \\
-Interconnect & single GPU (multi-GPU sharding emulated) \\
+Interconnect & single GPU (multi-GPU sharding: Table~\ref{tab:hardware_multigpu}) \\
 \bottomrule
 \end{tabular}
 \end{table}

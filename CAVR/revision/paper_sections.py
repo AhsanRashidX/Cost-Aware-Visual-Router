@@ -50,7 +50,9 @@ is lower by <<ce_dh_abs>> on average (paired; lower on <<ce_lower_n>> of <<ce_n>
 simulated from measured service times, it cuts the GPUs needed for 100 queries/s at a p95 latency of 2\,s from
 <<g100_always_hybrid>> to <<g100_cavr_ce_valsel>>. We also show that the keyword-derived labels of our earlier
 version are uncorrelated with which path actually answers correctly, that a per-query oracle leaves large headroom,
-and how visual-index latency scales to 100k pages.
+and how visual-index latency scales to 100k pages. Measured on <<mg_n_word>> GPUs of a second node, sharding the
+visual index scales near-linearly: a <<mg_weak_pages>>-page index (<<mg_weak_gib>>\,GiB) is searched in the time one GPU
+needs for <<mg_weak_k>> pages.
 \end{abstract}
 """
 
@@ -77,7 +79,10 @@ per second at a p95 latency of 2\,s, and 100 queries/s needs <<g100_always_hybri
 as many as content-aware routing.
 \emph{Memory grows with the corpus.} ColPali stores 1,031 vectors per page; at 100k pages the index needs
 <<ix100_gb>>\,GiB in bf16, more than our <<gpu_mem>>\,GiB GPU, and a million pages (about <<ix1m_gb>>\,GiB) exceed any
-single accelerator. Such an index must be sharded, streamed from host memory or compressed at a loss in recall. Routing
+single accelerator. Such an index must be sharded, streamed from host memory or compressed at a loss in recall.
+Measured on <<mg_n_word>> older GPUs (<<mg_gpu>>), sharding keeps exhaustive search at constant latency when the number of GPUs grows with
+the corpus: <<mg50k_ms1>>\,ms for <<mg_weak_k>> pages on one GPU and <<mg_weak_ms>>\,ms for <<mg_weak_pages>> pages on
+<<mg_n_word>>. Routing
 does not shrink the index, since our best router reads ColPali scores for every query; index placement is a separate
 decision that the scaling study quantifies.
 \emph{Latency targets constrain the design.} Interactive systems are judged on tail latency, so routing and
@@ -91,8 +96,9 @@ adaptive retrieval~\cite{adaptiverag}; serving systems batch and schedule model 
 targets~\cite{clipper,orca,vllm}, and efficient engines reduce late-interaction scoring cost~\cite{plaid}. We bring
 these threads together for multimodal document RAG, where the choice is between context modalities that share one
 generator, and evaluate routing end to end on answer quality and measured cost.
-All measurements in this paper use a single GPU with HF Transformers generation; capacity at larger scale is
-simulated from measured service times, and multi-GPU index sharding is emulated.
+Routing, retrieval and generation are measured on a single GPU with HF Transformers generation, and capacity at
+larger scale is simulated from measured service times; multi-GPU index sharding is measured on a second node with
+<<mg_n_word>> older GPUs (<<mg_gpu>>).
 
 \subsection{Research questions}
 
@@ -104,7 +110,7 @@ simulated from measured service times, and multi-GPU index sharding is emulated.
   \item[RQ3] Can the cost--quality trade-off be controlled at run time, and can uncertain queries be escalated
   without adding serial latency?
   \item[RQ4] How does routing change the GPUs needed to meet a latency target, and how does the visual index scale
-  with corpus size?
+  with corpus size and the number of GPUs?
 \end{description}
 
 \subsection{Contributions}
@@ -124,8 +130,9 @@ simulated from measured service times, and multi-GPU index sharding is emulated.
   speculative cascades, with their latency and GPU cost computed from measured per-stage times.
   \item A serving study: capacity per GPU and GPUs needed at a p95 target under Poisson load (simulated from measured
   service times), router throughput (measured), and visual-index latency up to 100k pages with GPU-resident,
-  host-streamed and pooled placement (measured; larger indexes built from replicated page embeddings) and sharded
-  placement (emulated on one GPU).
+  host-streamed and pooled placement (measured; larger indexes built from replicated page embeddings), and
+  multi-GPU sharding measured on one to <<mg_n_word>> GPUs, with near-linear strong and weak scaling up to
+  <<mg_maxpages>> pages.
 \end{itemize}
 
 We also report what does not work. With a shared generator the text path is not cheap; routing on the question text
@@ -282,8 +289,8 @@ We envisage CAVR as a dispatcher in front of a GPU pool, with text retrieval on 
 band 3). BM25 retrieval, OCR text lookup and, optionally, the CAVR MLP run on CPU workers;
 ColPali query encoding and scoring, CAVR-CE and generation run on GPUs, with one dynamic-batching queue per path. Our
 load test models the GPU pool and its per-path queues; the dispatcher logic itself is not simulated. The visual index
-is placed according to corpus size: GPU-resident while it fits, then sharded across GPUs, streamed from pinned host
-memory, or pooled. Because $\lambda$ is a run-time input, the dispatcher could raise it when queues grow, shifting load
+is placed according to corpus size: GPU-resident while it fits, then sharded across GPUs (each GPU scores its shard and
+the dispatcher merges the per-shard top-$k$), streamed from pinned host memory, or pooled. Because $\lambda$ is a run-time input, the dispatcher could raise it when queues grow, shifting load
 from the hybrid path to single-context paths instead of violating the latency target; we describe this option but do
 not evaluate it.
 """
@@ -456,22 +463,35 @@ curves and the $\lambda$ operating points use split 1.
 \emph{Index scaling.} Corpora of 1k, 10k, 50k and 100k pages are built by repeating the real page embeddings. We time
 exhaustive MaxSim with the index resident on the GPU (when it fits within <<gpu_budget>>\,GiB), streamed in chunks from
 pinned host memory, pooled 2$\times$2 over the patch grid (1,024 patch vectors to 256, re-normalised, plus the 7 prompt
-tokens: 263 vectors), and split into shards that each fit one GPU. Sharding is emulated by timing the shards one after
-another and reporting the slowest shard, without the cost of merging results or communication. Latency is the median
+tokens: 263 vectors), and split into shards that each fit one GPU. On this workstation sharding is emulated by timing
+the shards one after another and reporting the slowest shard, without the cost of merging results; it is measured on
+real GPUs below. Latency is the median
 over <<n_lat>> single queries (all from DocVQA); throughput uses query batches of <<qbatches>> (streamed index: 1, 4
 and 16), with at least two repetitions per batch size.
+\emph{Multi-GPU sharding.} Sharding is measured on a second machine with <<mg_n_word>> <<mg_gpu>> GPUs in compute (TCC)
+mode (Table~\ref{tab:hardware_multigpu}). The page embeddings of the evaluation corpus and the per-token embeddings of
+the questions are exported from the workstation, so no model runs on this node. A corpus of 1k to <<mg_maxpages>> pages,
+built by repeating the real pages (page $j$ is real page $j$ modulo the <<n_pages>> evaluation pages), is split into one
+contiguous shard per GPU, stored in fp16 and scored by exhaustive MaxSim in fp32. Each query is sent to all shards at
+once, one host thread per GPU; each shard returns its top-<<mg_topk>> pages and the host merges them, so the measured
+latency includes dispatch and merge. Shards larger than <<mg_budget>>\,GiB (<<mg_budget_pct>>\% of GPU memory) are not
+run. Before timing, the sharded top-1 page on the real corpus is compared with one GPU for <<mg_ncheck>> questions.
+Latency is the median and 95th percentile over <<mg_nlat>> single queries; throughput and energy use query batches of
+<<mg_batches>>. Energy is read from the NVML counters of all <<mg_n_word>> GPUs, so runs on fewer GPUs include the idle
+draw of the unused ones, which we estimate from the runs themselves (Section~\ref{sec:res-scale}).
 
 \subsection{Hardware, software and reproducibility}
 \label{sec:setup-hardware}
 
-All experiments ran on the single workstation of Table~\ref{tab:hardware}, which also lists the library versions and
-model revisions. Seeds are fixed (<<seed_first>> for data sampling and the first split). The CAVR MLP is trained on the
+All experiments except multi-GPU sharding ran on the workstation of Table~\ref{tab:hardware}, which also lists the
+library versions and model revisions; sharding ran on the node of Table~\ref{tab:hardware_multigpu}. Seeds are fixed (<<seed_first>> for data sampling and the first split). The CAVR MLP is trained on the
 CPU and is deterministic; generation, ColPali and CAVR-CE fine-tuning run on the GPU in bf16 and are reproducible up to
 small numerical differences (re-training CAVR-CE changed validation AUC by at most <<ce_rerun_diff>>). Every query's
 outputs are cached, every table and figure in this paper is generated from the cached results by the released code
 [AUTHOR ACTION: cite the release and its DOI], and the hash of the generation script is stored with its outputs.
 
 \input{tables/hardware}
+\input{tables/hardware_multigpu}
 """
 
 CONCLUSION = r"""% Conclusion draft. Generated by make_paper_text.py -- do not edit numbers by hand.
@@ -484,15 +504,17 @@ end with real retrieval and generation on one GPU, the content-aware router CAVR
 than always combining text and image contexts, at a mean ANLS cost of <<ce_dh_abs>>. In a load test simulated from
 measured service times, it reduces the GPUs needed for 100 queries/s at p95 $\le$ 2\,s from <<g100_always_hybrid>> to
 <<g100_cavr_ce_valsel>>. Its cost weight is set at serving time, and pre-generation escalation trades part of the
-saving back for quality without adding a serial step.
+saving back for quality without adding a serial step. On a <<mg_n_word>>-GPU node, sharding the visual index holds
+exhaustive search at constant latency as the corpus grows with the number of GPUs, with parallel efficiency of at
+least <<mg_lat_eff_min>>\% from <<mg_weak_k>> pages up.
 
 The evaluation also corrects the earlier version of this work. Keyword-derived route labels do not reflect which path
 answers correctly, list-price cost estimates do not survive measurement, and with a shared generator the text path is
 not a cheap path. A per-query oracle (ANLS <<oracle_anls>> at <<oracle_gpu>> GPU-s) shows how much remains: the
 bottleneck is predicting, before generation, whether a path will succeed.
 
-These results come from one GPU, simulated load and emulated sharding. Future work should validate them on a
-multi-GPU cluster with a production serving engine, adapt $\lambda$ to measured load, improve per-query success
+The routing results come from one GPU and simulated load, and sharding was measured on older GPUs for retrieval
+only. Future work should validate routing on a multi-GPU cluster with a production serving engine, adapt $\lambda$ to measured load, improve per-query success
 prediction, and extend routing to queries that contain images.
 """
 
@@ -577,6 +599,7 @@ def extra_values(V):
         "fallback_split": ", ".join(str(i + 1) for i in fb) or "none",
         "fallback_lam": ", ".join(f"{vs[i]['lambda']:g}" for i in fb) or "--",
         "rate_step": "0.25", "target_loads": "5, 10, 25, 50 and 100",
+        "mg_budget_pct": f"{100 * float(V['mg_budget']) / float(V['mg_mem']):.0f}",
     })
     tc = json.load(open(RESULTS / "training_curves.json"))
     ce_sum = json.load(open(RESULTS / "router_ce" / "summary.json"))
