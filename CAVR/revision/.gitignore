@@ -8,3 +8,4 @@ data/ocr_windows.npz
 p40_package/
 data/colpali_query_emb.pt
 p40/p40_env.json
+t4_package/
