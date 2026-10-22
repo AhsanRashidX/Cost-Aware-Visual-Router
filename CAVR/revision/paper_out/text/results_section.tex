@@ -131,7 +131,7 @@ CAVR-CE reads ColPali scores for every query.
 
 \paragraph{Visual index scaling.} ColPali stores 1,031 vectors per page. At 100k pages the index needs
 24.6\,GiB in bf16, more than our 24\,GiB GPU holds before any model weights or activations, and a
-million pages (about 246\,GiB) would exceed any single accelerator
+million pages (about 246\,GiB) would exceed the memory of most current accelerators
 (Table~\ref{tab:index_scaling}, Figure~\ref{fig:index}). Streaming it from pinned host memory costs
 1,044\,ms per query; 2$\times$2 pooling shrinks it to 6.3\,GiB and 10.3\,ms
 but lowers recall@1 on the real corpus from 0.577 to 0.525 (both measured with the same batched
@@ -170,13 +170,42 @@ top page as one GPU for all 500 check questions (99.8\% exactly, the rest exact 
 97.6\%); from 50k pages up, dispatch and merge add at most 0.5\,ms, and batch-64
 throughput efficiency is at least 98.6\% from 10k pages up. A 100k-page index
 (24.6\,GiB, more than one A10 holds) is searched in 41.4\,ms on two GPUs, as fast as
-50k pages on one (weak-scaling efficiency 99.2\%), and two A10s hold up to 120k pages
-(49.5\,ms). One A10 is 8$\times$ faster than one P40 on the 50k-page search and uses
+50k pages on one (weak-scaling efficiency 99.2\%), and the largest corpus run on two A10s,
+120k pages, took 49.5\,ms. One A10 is 8$\times$ faster than one P40 on the 50k-page search and uses
 5.6$\times$ less active energy per query (3.2 against 17.8\,J), largely because it
 scores in fp16 on tensor cores, which the P40 lacks; it is still 2.1$\times$ slower than the RTX 4090.
 As on the P40 node, active energy per query does not depend on the number of GPUs (3.2 and
 3.2\,J at 50k pages). Near-linear sharding therefore holds across two GPU generations and two scoring
 precisions; the parallel efficiency transfers between machines, the absolute speed does not.
+
+\paragraph{Host-memory placement at a million pages.} With the index held in host memory, two NVIDIA A10 GPUs
+searched a million pages (246\,GiB). Held in GPU memory within the same 70\% per-GPU budget
+(15.6\,GiB), this index would need 16 A10s, or 8 nodes like this one
+(Table~\ref{tab:host_stream}, Figure~\ref{fig:host_stream}). Streamed search returned the same top page, up to the
+repetition of real pages in the corpus, and the same score as GPU-resident search for all 100 check questions
+on 100k pages. Single queries were bound by the PCIe link: their latency stayed within 4\% of
+the time needed to copy each GPU's shard, and at a million pages it was 10.9\,s on one GPU and
+6.4\,s on two. The workstation shows the same bound, streaming 100k pages from host memory in
+1,044\,ms against 1.10\,s on one A10. One A10 read host memory at 24.2\,GB/s and two
+together at 41.0\,GB/s, 85\% of twice the single-GPU rate, so a second GPU cut single-query latency by
+only 1.7$\times$. The cause of this shortfall was not identified: nvidia-smi reports a path through several PCIe
+bridges between the two GPUs, and the placement of host memory across the two CPU sockets was not controlled.
+
+Batching removes the PCIe bound, because one pass over the index serves every query in the batch. Scoring rather than
+copying sets the pace from about 25--30 queries per batch, a crossover derived from the batch-1 and
+batch-64 times on the assumption that scoring time grows linearly with batch size. At batch 64 and
+a million pages, throughput was 2.25 queries/s on one GPU and 4.50 on two (2.0$\times$),
+or 0.44\,GPU-s per query; GPU-resident search would cost about 0.43\,GPU-s, scaled linearly from
+its 100k-page run. Where both placements were measured on the same corpus (100k pages, two GPUs),
+streamed search reached 94\% of the GPU-resident throughput at batch 64 with a GPU energy of
+6.7 against 6.4\,J per query; the host CPU and memory energy that streaming adds was not measured.
+At batch 1 the comparison reverses: streamed search used 1.29 against 0.083\,GPU-s and
+99 against 15\,J per query. Host-memory placement therefore trades latency for GPU count at about
+the same throughput per GPU, but only for workloads that fill large batches. At 6.4\,s per single query and
+about 14\,s per batch of 64, it misses the 2\,s p95 target of the load test and suits batch or offline
+search. Interactive search over a million pages needs GPU-resident sharding, projected at about
+51\,ms on 16 A10s (linear fit of the resident runs against pages per GPU, without the cost of
+merging results across nodes), or a compressed index.
 
 \paragraph{Router overhead.} The CAVR router (mpnet embedding and MLP) takes 11.7\,ms per query at
 batch 1 on the GPU (25.0\,ms on the CPU) and reaches 12,454 queries/s at large
@@ -187,6 +216,7 @@ batch. CAVR-CE takes 24.8\,ms and 1.74\,J per query at batch 1, and its cross-en
 \input{tables/load_test_operating_points}
 \input{tables/index_scaling}
 \input{tables/multi_gpu_scaling}
+\input{tables/host_stream}
 \input{tables/router_throughput}
 \begin{figure}[t]
   \centering
@@ -209,19 +239,31 @@ batch. CAVR-CE takes 24.8\,ms and 1.74\,J per query at batch 1, and its cross-en
   (weak scaling).}
   \label{fig:multi_gpu}
 \end{figure*}
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/host_stream.pdf}
+  \caption{ColPali index held in host memory and streamed to one and two NVIDIA A10 GPUs: (a) p50 latency of
+  single queries against index size, with the time to copy each GPU's shard over PCIe (black dashes, within
+  4\% of the latency); (b) throughput at batch
+  64, streamed (filled markers) and GPU-resident where the index fits in GPU memory (open markers).}
+  \label{fig:host_stream}
+\end{figure*}
 
 \subsection{Limitations}
 \label{sec:res-limits}
 
-All measurements except index sharding use one consumer GPU (GeForce RTX 4090) under Windows; caps on visual tokens and OCR length keep memory
+All measurements except index sharding and the host-memory index use one consumer GPU (GeForce RTX 4090) under Windows; caps on visual tokens and OCR length keep memory
 below the point where the driver spills to system RAM. Generation uses HF Transformers rather than a serving
 engine such as vLLM~\cite{vllm}, so absolute capacity is pessimistic; the comparison between policies is the main
 result. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
-computed from measured per-stage times rather than measured on concurrent workers. Indexes of 10k--100k pages
+computed from measured per-stage times rather than measured on concurrent workers. Indexes of 10k--1M pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that
 scale. Multi-GPU sharding was measured for retrieval only, on two server nodes with at most three GPUs
-each (Tesla P40, NVIDIA A10), whose absolute times do not transfer to the workstation, and the load test does not include sharded retrieval. Energy covers the GPU only (NVML). The router handles text
+each (Tesla P40, NVIDIA A10), whose absolute times do not transfer to the workstation, and the load test does not include sharded retrieval. The host-memory index was measured in one process on one node, with 5 latency queries and 2
+repetitions per batch (latency varied by at most 0.5\% within the run) and with host memory placed across CPU
+sockets without control; its energy covers the GPUs only, and GPU-resident search at a million pages is
+projected from smaller resident runs, not measured. Energy covers the GPU only (NVML). The router handles text
 queries over visual documents; queries that contain an image are out of scope. The router design was developed on the same five splits that we
 report on, and the feasibility analyses that motivated it looked at their test portions; no parameter of the final
 pipeline is selected on test data, but a held-out confirmation set would give a cleaner estimate. Splits group

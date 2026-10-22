@@ -81,15 +81,15 @@ COMMENTS = [
       "over five splits).",
       "Late-interaction visual retrieval stores 1,031 vectors per page, so the index grows with the corpus: at 100k "
       "pages it needs <<ix100_gb>> GiB, more than our <<gpu_mem>> GiB GPU holds, and a million pages (about "
-      "<<ix1m_gb>> GiB) would exceed any single accelerator. Such an index must be streamed from host memory "
+      "<<ix1m_gb>> GiB) would exceed the memory of most current accelerators. Such an index must be streamed from host memory "
       "(<<ix100_stream_ms>> ms per query on our hardware), pooled (recall@1 drops from <<pool_r1_full>> to "
       "<<pool_r1>>) or sharded. We now measure sharding on a node with <<mg_n_word>> <<mg_gpu>> GPUs. Sharded search "
       "returns the same top page as one GPU; a 50k-page index is searched in <<mg50k_ms1>>, <<mg50k_ms2>> and "
       "<<mg50k_ms3>> ms on one, two and three GPUs (parallel efficiency <<mg50k_eff3>>%); and a <<mg_weak_pages>>-page "
       "index (<<mg_weak_gib>> GiB, more than any one of these GPUs holds) is searched in <<mg_weak_ms>> ms, as fast as "
-      "<<mg_weak_k>> pages on one GPU. We repeated the run, unchanged, on a node with <<a10_n_word>> <<a10_gpu>> GPUs: 50k pages in <<a10_50k_ms1>> and <<a10_50k_ms2>> ms on one and two GPUs (efficiency <<a10_50k_eff2>>%), and a <<a10_weak_pages>>-page index (<<a10_weak_gib>> GiB) in <<a10_weak_ms>> ms. We state that routing saves generation compute rather than index memory.",
+      "<<mg_weak_k>> pages on one GPU. We repeated the run, unchanged, on a node with <<a10_n_word>> <<a10_gpu>> GPUs: 50k pages in <<a10_50k_ms1>> and <<a10_50k_ms2>> ms on one and two GPUs (efficiency <<a10_50k_eff2>>%), and a <<a10_weak_pages>>-page index (<<a10_weak_gib>> GiB) in <<a10_weak_ms>> ms. We also held an index of <<hs_max_words>> pages (<<hs_gib>> GiB) in host memory on that node and streamed it to the GPUs for every query batch: two A10s search it at <<hs_qps2>> queries/s at batch <<hs_b>>, close to the GPU-seconds per query of GPU-resident search (<<hs_vs_res>>% of its throughput where both were measured, at <<hs_res_pages>> pages), whereas a GPU-resident index would need <<hs_res_gpus>> A10s (projected). A single query takes <<hs_p50_2>> s, bound by PCIe, so this placement suits batch rather than interactive search. We state that routing saves generation compute rather than index memory.",
       "New material: a hardware table for each machine, energy per query from NVML, router throughput up to batch "
-      "1,024, serving capacity and GPUs needed per policy, visual-index latency from 1k to 100k pages, index sharding "
+      "1,024, serving capacity and GPUs needed per policy, visual-index latency from 1k to 100k pages, an index of <<hs_max_words>> pages streamed from host memory, index sharding "
       "measured on two multi-GPU nodes (strong and weak scaling, with energy), and serial versus speculative "
       "escalation. The method figure was redrawn as the pipeline actually built, including its "
       "deployment on a GPU pool. We are explicit about scale: routing and generation are measured on one GPU, "

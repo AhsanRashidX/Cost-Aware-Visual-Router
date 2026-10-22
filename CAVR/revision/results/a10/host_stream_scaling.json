@@ -279,12 +279,18 @@
     "streamed_qps_big": 43.73984415484377,
     "throughput_ratio": 0.9439235606136535,
     "resident_j_per_query_big": 6.3851354166666665,
-    "streamed_j_per_query_big": 6.724265625
+    "streamed_j_per_query_big": 6.724265625,
+    "resident_gpu_s_b1": 0.08280579998972826,
+    "streamed_gpu_s_b1": 1.2866151999915019,
+    "resident_j_per_query_b1": 14.56971875,
+    "streamed_j_per_query_b1": 98.817
   },
   "resident_1m": {
     "pages": 1000000,
     "gpus_needed": 16,
+    "nodes_needed": 8,
     "budget_gib_per_gpu": 15.603881835937498,
+    "budget_share_of_memory": 0.6997256428671523,
     "pages_per_gpu": 62500,
     "projected_p50_s": 0.05145926062962937,
     "fit": {
@@ -308,6 +314,7 @@
     },
     "gpu_s_per_query_1m": 0.44450563281247923,
     "max_p50_over_copy": 1.0359866535629805,
+    "max_latency_cv": 0.005387061605936787,
     "min_check_same": 1.0
   }
 }

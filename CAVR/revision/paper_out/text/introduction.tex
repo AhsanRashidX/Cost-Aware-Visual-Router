@@ -4,7 +4,7 @@
 
 Retrieval-augmented generation (RAG) over document collections increasingly works on page images as well as on
 extracted text. Visual retrievers such as ColPali~\cite{colpali} embed each page as a grid of patch vectors and
-score queries by late interaction~\cite{colbert}, which handles tables, charts and layouts that OCR text loses.
+score queries by late interaction~\cite{colbert}, which handles tables, charts and layouts that optical character recognition (OCR) text loses.
 The price is GPU compute and memory: every query is encoded and scored against every patch vector of every page, and
 a vision-language generator then reads the page image. BM25~\cite{bm25} over OCR text answers a retrieval query on a
 CPU in about a millisecond for our page pools of up to 1,286 pages, but needs OCR at indexing time
@@ -20,11 +20,14 @@ from our measured service times on one GPU with dynamic batching, a hybrid-only 
 per second at a p95 latency of 2\,s, and 100 queries/s needs 106 GPUs, 1.5$\times$
 as many as content-aware routing.
 \emph{Memory grows with the corpus.} ColPali stores 1,031 vectors per page; at 100k pages the index needs
-24.6\,GiB in bf16, more than our 24\,GiB GPU, and a million pages (about 246\,GiB) exceed any
-single accelerator. Such an index must be sharded, streamed from host memory or compressed at a loss in recall.
+24.6\,GiB in bf16, more than our 24\,GiB GPU, and a million pages (about 246\,GiB) exceed the
+memory of most current accelerators. Such an index must be sharded, streamed from host memory or compressed at a loss in recall.
 Measured on three older GPUs (Tesla P40), sharding keeps exhaustive search at constant latency when the number of GPUs grows with
 the corpus: 327\,ms for 50k pages on one GPU and 328\,ms for 150k pages on
-three; on two data-centre NVIDIA A10 GPUs it is 41.1\,ms for 50k pages on one and 41.4\,ms for 100k pages on two. Routing
+three; on two data-centre NVIDIA A10 GPUs it is 41.1\,ms for 50k pages on one and 41.4\,ms for 100k pages on two. Holding the index in host memory instead, two A10s searched
+a million pages in batches of 64 at 0.44\,GPU-s per query, close to GPU-resident search
+(94\% of its throughput where both were measured), which would need 16 A10s; at
+6.4\,s per single query, this placement suits batch rather than interactive search. Routing
 does not shrink the index, since our best router reads ColPali scores for every query; index placement is a separate
 decision that the scaling study quantifies.
 \emph{Latency targets constrain the design.} Interactive systems are judged on tail latency, so routing and
@@ -38,7 +41,7 @@ adaptive retrieval~\cite{adaptiverag}; serving systems batch and schedule model 
 targets~\cite{clipper,orca,vllm}, and efficient engines reduce late-interaction scoring cost~\cite{plaid}. We bring
 these threads together for multimodal document RAG, where the choice is between context modalities that share one
 generator, and evaluate routing end to end on answer quality and measured cost.
-Routing, retrieval and generation are measured on a single GPU with HF Transformers generation, and capacity at
+Routing, retrieval and generation are measured on a single GPU with Hugging Face (HF) Transformers generation, and capacity at
 larger scale is simulated from measured service times; multi-GPU index sharding is measured on two further nodes, with
 three older GPUs (Tesla P40) and with two NVIDIA A10 GPUs.
 
@@ -60,21 +63,22 @@ three older GPUs (Tesla P40) and with two NVIDIA A10 GPUs.
 \begin{itemize}
   \item An end-to-end evaluation that runs every path on every query of DocVQA~\cite{docvqa} and
   InfographicVQA~\cite{infovqa} with real BM25 and ColPali retrieval and a local generator, and measures answer
-  quality, GPU-seconds, energy and latency per query. All tables and figures are generated from cached outputs by
+  quality as average normalised Levenshtein similarity (ANLS), GPU-seconds, energy and latency per query. All tables and figures are generated from cached outputs by
   released code.
   \item Outcome-based route labels, and the finding that keyword-derived labels agree with them no better than chance
   (Cohen's $\kappa = 0.01$).
-  \item CAVR, a multi-task router that applies the standard cost-penalised decision rule
+  \item The Cost-Aware Visual Router (CAVR), a multi-task router that applies the standard cost-penalised decision rule
   $\arg\max_p \hat{q}_p - \lambda \bar{c}_p$ with $\lambda$ set at serving time, with its relation to
-  budget-constrained routing made explicit; and CAVR-CE, a content-aware quality predictor that uses 29\% less
+  budget-constrained routing made explicit; and CAVR-CE, a content-aware quality predictor built on a cross-encoder (CE) that uses 29\% less
   GPU compute than always-hybrid at a mean ANLS cost of 0.008.
   \item An analysis of confidence-based escalation that separates pre-generation re-routing from serial and
   speculative cascades, with their latency and GPU cost computed from measured per-stage times.
   \item A serving study: capacity per GPU and GPUs needed at a p95 target under Poisson load (simulated from measured
   service times), router throughput (measured), and visual-index latency up to 100k pages with GPU-resident,
-  host-streamed and pooled placement (measured; larger indexes built from replicated page embeddings), and
-  multi-GPU sharding measured on two nodes (up to three Tesla P40 and two NVIDIA A10 GPUs), with near-linear strong and weak scaling up to
-  150k pages.
+  host-streamed and pooled placement (measured; larger indexes built from replicated page embeddings).
+  \item Index placement beyond one GPU, measured: multi-GPU sharding on two nodes (up to three Tesla P40 and two NVIDIA A10 GPUs), with near-linear strong and weak scaling up to
+  150k pages, and an index of a million pages held in host memory and streamed to two GPUs, with
+  its latency and throughput compared with GPU-resident search.
 \end{itemize}
 
 We also report what does not work. With a shared generator the text path is not cheap; routing on the question text

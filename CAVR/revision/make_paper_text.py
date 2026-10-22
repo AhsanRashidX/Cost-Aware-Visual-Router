@@ -206,6 +206,50 @@ def values():
             V[f"{k}_ms{g}"] = f"{1000 * v['p50_s']:.0f}" if v["p50_s"] >= 0.1 else f"{1000 * v['p50_s']:.1f}"
             V[f"{k}_eff{g}"] = f"{100 * v['latency_efficiency']:.1f}"
             V[f"{k}_ea{g}"] = f"{v['energy_j_per_query_active']:.1f}"
+    # index in host memory, streamed to the A10s
+    hs = J("a10/host_stream_scaling.json")
+    hr = {(r["pages"], r["gpus"]): r for r in hs["runs"]}
+    hmax, hg, hb = hs["summary"]["max_pages"], max(r["gpus"] for r in hs["runs"]), str(hs["source"]["big_batch"])
+    h1, h2, vr, r1m = hr[(hmax, 1)], hr[(hmax, hg)], hs["vs_resident"], hs["resident_1m"]
+    gib_page = hs["summary"]["max_gib"] / hmax
+
+    def kpages(n):
+        return f"{n // 10**6}M" if n % 10**6 == 0 else f"{n // 1000}k"
+    sizes = [kpages(n) for n in sorted({r["pages"] for r in hs["runs"]})]
+    cross = [r["crossover_batch"] for r in hs["runs"]]
+    src = hs["source"]
+    V.update({
+        "hs_max_words": {10**6: "a million"}.get(hmax, f"{hmax:,}"), "hs_max_k": kpages(hmax),
+        "hs_gib": f"{hs['summary']['max_gib']:.0f}", "hs_sizes": ", ".join(sizes[:-1]) + " and " + sizes[-1],
+        "hs_ncheck": src["checks"]["1"]["queries"], "hs_check_k": kpages(src["checks"]["1"]["pages"]),
+        "hs_copy1": f"{hs['copy_only']['1']['gb_per_s_total']:.1f}",
+        "hs_copy2": f"{hs['copy_only'][str(hg)]['gb_per_s_total']:.1f}",
+        "hs_share": f"{100 * hs['pcie_two_gpu_share']:.0f}",
+        "hs_lat_sp": f"{hs['speedup'][str(hmax)]['latency']:.1f}",
+        "hs_thr_sp": f"{hs['speedup'][str(hmax)]['throughput_big']:.1f}",
+        "hs_p50_1": f"{h1['p50_s']:.1f}", "hs_p50_2": f"{h2['p50_s']:.1f}",
+        "hs_over_copy": f"{100 * (hs['summary']['max_p50_over_copy'] - 1):.0f}",
+        "hs_cross": f"{min(cross):.0f}--{max(cross):.0f}", "hs_b": hb,
+        "hs_qps1": f"{h1['qps'][hb]:.2f}", "hs_qps2": f"{h2['qps'][hb]:.2f}",
+        "hs_b_lat2": f"{int(hb) / h2['qps'][hb]:.0f}",
+        "hs_gpus_q": f"{hs['summary']['gpu_s_per_query_1m']:.2f}",
+        "hs_res_gpus_q": f"{r1m['gpu_s_per_query_big']:.2f}",
+        "hs_res_pages": kpages(vr["pages"]), "hs_vs_res": f"{100 * vr['throughput_ratio']:.0f}",
+        "hs_e_stream": f"{vr['streamed_j_per_query_big']:.1f}", "hs_e_res": f"{vr['resident_j_per_query_big']:.1f}",
+        "hs_res_gpus": r1m["gpus_needed"], "hs_res_ms": f"{1000 * r1m['projected_p50_s']:.0f}",
+        "hs_fewer": f"{r1m['gpus_needed'] / hg:.0f}",
+        "hs_reg_gib": f"{src['host_index']['register_block_pages'] * gib_page:.0f}",
+        "hs_chunk": f"{src['chunk_pages']:,}", "hs_chunk_gib": f"{src['chunk_pages'] * gib_page:.1f}",
+        "hs_nlat": src["n_lat"], "hs_reps": src["reps"],
+        "hs_batches": ", ".join(map(str, src["batches"][:-1])) + " and " + str(src["batches"][-1]),
+    })
+    V.update({
+        "hs_budget_pct": f"{100 * r1m['budget_share_of_memory']:.0f}", "hs_res_nodes": r1m["nodes_needed"],
+        "hs_100k_p50_1": f"{hr[(vr['pages'], 1)]['p50_s']:.2f}",
+        "hs_b1_gpus_s": f"{vr['streamed_gpu_s_b1']:.2f}", "hs_b1_gpus_r": f"{vr['resident_gpu_s_b1']:.3f}",
+        "hs_b1_e_s": f"{vr['streamed_j_per_query_b1']:.0f}", "hs_b1_e_r": f"{vr['resident_j_per_query_b1']:.0f}",
+        "hs_cv": f"{100 * hs['summary']['max_latency_cv']:.1f}",
+    })
     b = ix["build"]
     V["build_h"], V["build_pps"], V["build_b"] = (f"{b['extrapolated_build_hours']['100000']:.1f}",
                                                   f"{b['by_batch'][str(b['best_batch'])]['pages_per_s']:.1f}", b["best_batch"])
@@ -353,7 +397,7 @@ CAVR-CE reads ColPali scores for every query.
 
 \paragraph{Visual index scaling.} ColPali stores 1,031 vectors per page. At 100k pages the index needs
 <<ix100_gb>>\,GiB in bf16, more than our <<gpu_mem>>\,GiB GPU holds before any model weights or activations, and a
-million pages (about <<ix1m_gb>>\,GiB) would exceed any single accelerator
+million pages (about <<ix1m_gb>>\,GiB) would exceed the memory of most current accelerators
 (Table~\ref{tab:index_scaling}, Figure~\ref{fig:index}). Streaming it from pinned host memory costs
 <<ix100_stream_ms>>\,ms per query; 2$\times$2 pooling shrinks it to <<ix100_pool_gb>>\,GiB and <<ix100_pool_ms>>\,ms
 but lowers recall@1 on the real corpus from <<pool_r1_full>> to <<pool_r1>> (both measured with the same batched
@@ -392,13 +436,42 @@ top page as one GPU for all <<mg_ncheck>> check questions (<<a10_exact>>\% exact
 <<a10_50k_eff2>>\%); from 50k pages up, dispatch and merge add at most <<a10_ovh_ms>>\,ms, and batch-<<mg_tb>>
 throughput efficiency is at least <<a10_thr_eff_min>>\% from <<mg_min_pages>> pages up. A <<a10_weak_pages>>-page index
 (<<a10_weak_gib>>\,GiB, more than one A10 holds) is searched in <<a10_weak_ms>>\,ms on two GPUs, as fast as
-<<a10_weak_k>> pages on one (weak-scaling efficiency <<a10_weak_eff>>\%), and two A10s hold up to <<a10_maxpages>> pages
-(<<a10_max_ms>>\,ms). One A10 is <<a10_vs_p40>>$\times$ faster than one P40 on the 50k-page search and uses
+<<a10_weak_k>> pages on one (weak-scaling efficiency <<a10_weak_eff>>\%), and the largest corpus run on two A10s,
+<<a10_maxpages>> pages, took <<a10_max_ms>>\,ms. One A10 is <<a10_vs_p40>>$\times$ faster than one P40 on the 50k-page search and uses
 <<a10_e_ratio>>$\times$ less active energy per query (<<a10_50k_ea1>> against <<mg50k_ea1>>\,J), largely because it
 scores in fp16 on tensor cores, which the P40 lacks; it is still <<a10_vs_ws>>$\times$ slower than the <<gpu_short>>.
 As on the P40 node, active energy per query does not depend on the number of GPUs (<<a10_50k_ea1>> and
 <<a10_50k_ea2>>\,J at 50k pages). Near-linear sharding therefore holds across two GPU generations and two scoring
 precisions; the parallel efficiency transfers between machines, the absolute speed does not.
+
+\paragraph{Host-memory placement at a million pages.} With the index held in host memory, two <<a10_gpu>> GPUs
+searched <<hs_max_words>> pages (<<hs_gib>>\,GiB). Held in GPU memory within the same <<hs_budget_pct>>\% per-GPU budget
+(<<a10_budget>>\,GiB), this index would need <<hs_res_gpus>> A10s, or <<hs_res_nodes>> nodes like this one
+(Table~\ref{tab:host_stream}, Figure~\ref{fig:host_stream}). Streamed search returned the same top page, up to the
+repetition of real pages in the corpus, and the same score as GPU-resident search for all <<hs_ncheck>> check questions
+on <<hs_check_k>> pages. Single queries were bound by the PCIe link: their latency stayed within <<hs_over_copy>>\% of
+the time needed to copy each GPU's shard, and at <<hs_max_words>> pages it was <<hs_p50_1>>\,s on one GPU and
+<<hs_p50_2>>\,s on two. The workstation shows the same bound, streaming <<hs_res_pages>> pages from host memory in
+<<ix100_stream_ms>>\,ms against <<hs_100k_p50_1>>\,s on one A10. One A10 read host memory at <<hs_copy1>>\,GB/s and two
+together at <<hs_copy2>>\,GB/s, <<hs_share>>\% of twice the single-GPU rate, so a second GPU cut single-query latency by
+only <<hs_lat_sp>>$\times$. The cause of this shortfall was not identified: nvidia-smi reports a path through several PCIe
+bridges between the two GPUs, and the placement of host memory across the two CPU sockets was not controlled.
+
+Batching removes the PCIe bound, because one pass over the index serves every query in the batch. Scoring rather than
+copying sets the pace from about <<hs_cross>> queries per batch, a crossover derived from the batch-1 and
+batch-<<hs_b>> times on the assumption that scoring time grows linearly with batch size. At batch <<hs_b>> and
+<<hs_max_words>> pages, throughput was <<hs_qps1>> queries/s on one GPU and <<hs_qps2>> on two (<<hs_thr_sp>>$\times$),
+or <<hs_gpus_q>>\,GPU-s per query; GPU-resident search would cost about <<hs_res_gpus_q>>\,GPU-s, scaled linearly from
+its <<hs_res_pages>>-page run. Where both placements were measured on the same corpus (<<hs_res_pages>> pages, two GPUs),
+streamed search reached <<hs_vs_res>>\% of the GPU-resident throughput at batch <<hs_b>> with a GPU energy of
+<<hs_e_stream>> against <<hs_e_res>>\,J per query; the host CPU and memory energy that streaming adds was not measured.
+At batch 1 the comparison reverses: streamed search used <<hs_b1_gpus_s>> against <<hs_b1_gpus_r>>\,GPU-s and
+<<hs_b1_e_s>> against <<hs_b1_e_r>>\,J per query. Host-memory placement therefore trades latency for GPU count at about
+the same throughput per GPU, but only for workloads that fill large batches. At <<hs_p50_2>>\,s per single query and
+about <<hs_b_lat2>>\,s per batch of <<hs_b>>, it misses the 2\,s p95 target of the load test and suits batch or offline
+search. Interactive search over <<hs_max_words>> pages needs GPU-resident sharding, projected at about
+<<hs_res_ms>>\,ms on <<hs_res_gpus>> A10s (linear fit of the resident runs against pages per GPU, without the cost of
+merging results across nodes), or a compressed index.
 
 \paragraph{Router overhead.} The CAVR router (mpnet embedding and MLP) takes <<cavr_router_ms>>\,ms per query at
 batch 1 on the GPU (<<cavr_router_cpu_ms>>\,ms on the CPU) and reaches <<cavr_router_qps>> queries/s at large
@@ -409,6 +482,7 @@ batch. CAVR-CE takes <<ce_ms>>\,ms and <<ce_j>>\,J per query at batch 1, and its
 \input{tables/load_test_operating_points}
 \input{tables/index_scaling}
 \input{tables/multi_gpu_scaling}
+\input{tables/host_stream}
 \input{tables/router_throughput}
 \begin{figure}[t]
   \centering
@@ -431,19 +505,31 @@ batch. CAVR-CE takes <<ce_ms>>\,ms and <<ce_j>>\,J per query at batch 1, and its
   (weak scaling).}
   \label{fig:multi_gpu}
 \end{figure*}
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/host_stream.pdf}
+  \caption{ColPali index held in host memory and streamed to one and <<a10_n_word>> <<a10_gpu>> GPUs: (a) p50 latency of
+  single queries against index size, with the time to copy each GPU's shard over PCIe (black dashes, within
+  <<hs_over_copy>>\% of the latency); (b) throughput at batch
+  <<hs_b>>, streamed (filled markers) and GPU-resident where the index fits in GPU memory (open markers).}
+  \label{fig:host_stream}
+\end{figure*}
 
 \subsection{Limitations}
 \label{sec:res-limits}
 
-All measurements except index sharding use one consumer GPU (<<gpu>>) under Windows; caps on visual tokens and OCR length keep memory
+All measurements except index sharding and the host-memory index use one consumer GPU (<<gpu>>) under Windows; caps on visual tokens and OCR length keep memory
 below the point where the driver spills to system RAM. Generation uses HF Transformers rather than a serving
 engine such as vLLM~\cite{vllm}, so absolute capacity is pessimistic; the comparison between policies is the main
 result. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
-computed from measured per-stage times rather than measured on concurrent workers. Indexes of 10k--100k pages
+computed from measured per-stage times rather than measured on concurrent workers. Indexes of 10k--<<hs_max_k>> pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that
 scale. Multi-GPU sharding was measured for retrieval only, on two server nodes with at most <<mg_n_word>> GPUs
-each (<<mg_gpu>>, <<a10_gpu>>), whose absolute times do not transfer to the workstation, and the load test does not include sharded retrieval. Energy covers the GPU only (NVML). The router handles text
+each (<<mg_gpu>>, <<a10_gpu>>), whose absolute times do not transfer to the workstation, and the load test does not include sharded retrieval. The host-memory index was measured in one process on one node, with <<hs_nlat>> latency queries and <<hs_reps>>
+repetitions per batch (latency varied by at most <<hs_cv>>\% within the run) and with host memory placed across CPU
+sockets without control; its energy covers the GPUs only, and GPU-resident search at <<hs_max_words>> pages is
+projected from smaller resident runs, not measured. Energy covers the GPU only (NVML). The router handles text
 queries over visual documents; queries that contain an image are out of scope. The router design was developed on the same five splits that we
 report on, and the feasibility analyses that motivated it looked at their test portions; no parameter of the final
 pipeline is selected on test data, but a held-out confirmation set would give a cleaner estimate. Splits group
@@ -506,12 +592,12 @@ withdrawn; we list them first so that nothing is hidden behind the new results.
 The revised paper frames CAVR as a scheduler for GPU resources in multimodal RAG serving. Late-interaction visual
 retrieval stores 1,031 vectors per page, so index memory and scoring time grow with the corpus: at 100k pages the
 ColPali index needs <<ix100_gb>> GiB, more than our <<gpu_mem>> GiB GPU holds, and a million pages (about <<ix1m_gb>>
-GiB) would exceed any single accelerator. Such an index must be streamed from host memory (<<ix100_stream_ms>> ms per
+GiB) would exceed the memory of most current accelerators. Such an index must be streamed from host memory (<<ix100_stream_ms>> ms per
 query on our hardware), pooled (recall@1 drops from <<pool_r1_full>> to <<pool_r1>>) or sharded. We measured sharding on a node
 with <<mg_n_word>> <<mg_gpu>> GPUs: sharded search returns the same top page as one GPU, a 50k-page index is searched in
 <<mg50k_ms1>>, <<mg50k_ms2>> and <<mg50k_ms3>> ms on one, two and three GPUs (parallel efficiency <<mg50k_eff3>>%), and a
 <<mg_weak_pages>>-page index (<<mg_weak_gib>> GiB, more than one GPU holds) is searched in <<mg_weak_ms>> ms, as fast as
-<<mg_weak_k>> pages on one GPU. On a second node with <<a10_n_word>> <<a10_gpu>> GPUs, the same benchmark searches 50k pages in <<a10_50k_ms1>> and <<a10_50k_ms2>> ms on one and two GPUs (efficiency <<a10_50k_eff2>>%) and a <<a10_weak_pages>>-page index (<<a10_weak_gib>> GiB) in <<a10_weak_ms>> ms. Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
+<<mg_weak_k>> pages on one GPU. On a second node with <<a10_n_word>> <<a10_gpu>> GPUs, the same benchmark searches 50k pages in <<a10_50k_ms1>> and <<a10_50k_ms2>> ms on one and two GPUs (efficiency <<a10_50k_eff2>>%) and a <<a10_weak_pages>>-page index (<<a10_weak_gib>> GiB) in <<a10_weak_ms>> ms. We also held an index of <<hs_max_words>> pages (<<hs_gib>> GiB) in host memory on that node and streamed it to the GPUs for every query batch: two A10s search it at <<hs_qps2>> queries/s at batch <<hs_b>>, close to the GPU-seconds per query of GPU-resident search (<<hs_vs_res>>% of its throughput where both were measured, at <<hs_res_pages>> pages), whereas a GPU-resident index would need <<hs_res_gpus>> A10s (projected). A single query takes <<hs_p50_2>> s, bound by PCIe, so this placement suits batch rather than interactive search. Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
 times, serving 100 queries/s at p95 ≤ 2 s needs <<g100_always_hybrid>> GPUs for always-hybrid and
 <<g100_cavr_ce_valsel>> for CAVR-CE (<<g100_save>>% fewer; means over <<n_seeds>> seeds). We added these
 experiments, a hardware table for each machine, energy per query, router throughput up to batch 1,024, and serial versus
@@ -521,10 +607,11 @@ and contribution); Related work (inference serving and late-interaction retrieva
 these citations]; Method (Figure method: the pipeline as built and its deployment); Results, subsection
 "Scalability, throughput and
 energy" (Tables hardware, hardware_multigpu, load_test, load_test_operating_points, index_scaling,
-multi_gpu_scaling, router_throughput; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling); Conclusion.
+multi_gpu_scaling, host_stream, router_throughput; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling,
+host_stream); Setup (multi-GPU sharding and index in host memory); Conclusion.
 Routing and generation were measured on one <<gpu>>, capacity projections come from a simulation driven by
-measured service times, and multi-GPU sharding was measured on two multi-GPU nodes for retrieval only; the paper
-states all three.
+measured service times, and multi-GPU sharding and the host-memory index were measured on separate nodes for retrieval only,
+with GPU-resident search at <<hs_max_words>> pages projected rather than measured; the paper states all of this.
 
 **E.2 — Report results accurately, rewrite overstated conclusions and explain limitations fully.**
 Every number now comes from one cached run, and tables and figures are generated from the results files. The

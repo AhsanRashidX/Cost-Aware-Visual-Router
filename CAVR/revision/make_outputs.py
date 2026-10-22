@@ -281,7 +281,8 @@ def index_scaling():
     cap = (f"ColPali index scaling on one RTX 4090: p50 query latency (ms, batch 1). Pooling 2$\\times$2 cuts vectors "
            f"per page {ix['vectors_per_page']}$\\to${pr['vectors_per_page_pooled']}; R@1 on the real corpus "
            f"{pr['full']:.3f}$\\to${pr['pooled2x2']:.3f}. Sharded latency is emulated here (shards timed one by one "
-           "on one GPU); measured sharding on two multi-GPU nodes is in Table~\\ref{tab:multi_gpu}.")
+           "on one GPU); measured sharding on two multi-GPU nodes is in Table~\\ref{tab:multi_gpu} and "
+           "host-memory streaming up to a million pages in Table~\\ref{tab:host_stream}.")
     table("index_scaling", cap, "tab:index_scaling",
           ["Pages", "Index GiB", "GPU", "CPU stream", "Pooled GiB", "Pooled GPU", "GPUs / sharded"], rows)
 
@@ -334,8 +335,8 @@ def multi_gpu():
                 "Energy": f"NVML energy counters, summed over all {G} GPUs"}
     cols = [hw(mg) for mg, _ in mgs]
     rows = [[k] + [c[k] for c in cols] for k in cols[0]]
-    table("hardware_multigpu", "Multi-GPU nodes used for the index-sharding measurements "
-          "(Table~\\ref{tab:multi_gpu}). No model runs on these nodes: page and query embeddings are exported from "
+    table("hardware_multigpu", "Multi-GPU nodes used for the index-sharding and host-memory measurements "
+          "(Tables~\\ref{tab:multi_gpu} and~\\ref{tab:host_stream}). No model runs on these nodes: page and query embeddings are exported from "
           "the workstation of Table~\\ref{tab:hardware}.", "tab:hardware_multigpu",
           ["Component"] + [f"{short} node" for _, short in mgs], rows, "l" * (len(mgs) + 1))
 
@@ -410,6 +411,66 @@ def multi_gpu():
     fig.savefig(FIG / "multi_gpu_scaling.pdf")
     plt.close(fig)
     print("  figure multi_gpu_scaling.png")
+
+
+def host_stream():
+    hs = load("a10/host_stream_scaling.json")
+    rs = load("a10/a10_shard_scaling.json")
+    if not hs:
+        return
+    src, b = hs["source"], str(hs["source"]["big_batch"])
+    topk = load("a10/a10_host_stream.json")["topk"]
+    rows = []
+    for r in sorted(hs["runs"], key=lambda r: (r["pages"], r["gpus"])):
+        n = r["pages"]
+        rows.append([f"{n // 10**6}M" if n % 10**6 == 0 else f"{n // 1000}k", f"{r['index_gib_total']:.1f}", r["gpus"],
+                     f"{r['p50_s']:.2f}", f"{r['stream_gb_per_s_per_gpu_b1']:.1f}", f"{r['qps']['16']:.2f}",
+                     f"{r['qps'][b]:.2f}", f"{r['gpu_s_per_query_big']:.3f}", f"{r['energy_j_per_query'][b]:.1f}"])
+    c, ck = hs["copy_only"], src["checks"]["1"]
+    cap = (f"ColPali index held in host memory and streamed to the GPUs of the A10 node "
+           f"(Table~\\ref{{tab:hardware_multigpu}}): index stored in {src['compute_dtype'].replace('float', 'fp')}, "
+           f"page-locked with \\texttt{{cudaHostRegister}}, split into one contiguous shard per GPU and streamed in "
+           f"chunks of {src['chunk_pages']:,} pages with copying and scoring overlapped; exhaustive MaxSim in "
+           f"{src['compute_dtype'].replace('float', 'fp')}, per-GPU top-{topk} merged on the host. p50 over {src['n_lat']} "
+           f"single queries; PCIe rate per GPU at batch 1; throughput at batch 16 and {b}; GPU-seconds and node energy "
+           f"per query at batch {b} ({src['reps']} repetitions per batch). Energy is the NVML sum over both GPUs, so "
+           f"one-GPU runs include the unused GPU; host CPU and memory energy is not measured. Copying alone reached "
+           f"{c['1']['gb_per_s_total']:.1f}\\,GB/s on one GPU and {c['2']['gb_per_s_total']:.1f}\\,GB/s on two. Streamed "
+           f"top-1 results matched GPU-resident search for all {ck['queries']} check queries on "
+           f"{ck['pages'] // 1000}k pages.")
+    table("host_stream", cap, "tab:host_stream",
+          ["Pages", "Index GiB", "GPUs", "p50 (s)", "GB/s/GPU", "Q/s, b16", f"Q/s, b{b}", "GPU-s/query", "GPU J/query"],
+          rows)
+
+    color = {1: COLOR["cavr"], 2: COLOR["always_hybrid"]}
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7.0, 3.0))
+    for g in sorted({r["gpus"] for r in hs["runs"]}):
+        rr = sorted((r for r in hs["runs"] if r["gpus"] == g), key=lambda r: r["pages"])
+        x = [r["pages"] for r in rr]
+        ax1.plot(x, [r["p50_s"] for r in rr], marker="o", color=color[g], label=f"{g} GPU{'s' if g > 1 else ''}")
+        ax1.plot(x, [r["copy_only_s"] for r in rr], color=INK, linestyle=(0, (3, 2)), linewidth=1, zorder=3)
+        ax2.plot(x, [r["qps"][b] for r in rr], marker="o", color=color[g], label=f"{g} GPU{'s' if g > 1 else ''}, streamed")
+        if rs:
+            res = sorted((r for r in rs["runs"] if r["gpus"] == g and r["pages"] >= 10000), key=lambda r: r["pages"])
+            ax2.plot([r["pages"] for r in res], [r["throughput"][b]["queries_per_s"] for r in res], marker="o",
+                     linestyle="none", markerfacecolor="white", color=color[g],
+                     label=f"{g} GPU{'s' if g > 1 else ''}, GPU-resident")
+    from matplotlib.lines import Line2D
+    h, lab = ax1.get_legend_handles_labels()
+    ax1.legend(h + [Line2D([], [], color=INK, linestyle=(0, (3, 2)), linewidth=1)], lab + ["PCIe copy time"], fontsize=7)
+    ax2.legend(fontsize=7)
+    for ax, ylab, title in ((ax1, "p50 latency, single query (s)", "(a) Latency, batch 1"),
+                            (ax2, "Queries/s", f"(b) Throughput, batch {b}")):
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel("Pages in index")
+        ax.set_ylabel(ylab)
+        ax.set_title(title, fontsize=9, color=INK, loc="left")
+    fig.tight_layout()
+    fig.savefig(FIG / "host_stream.png")
+    fig.savefig(FIG / "host_stream.pdf")
+    plt.close(fig)
+    print("  figure host_stream.png")
 
 
 def load_test():
@@ -510,6 +571,7 @@ def main():
     t_escalation()
     index_scaling()
     multi_gpu()
+    host_stream()
     load_test()
     router_cost()
 

@@ -53,12 +53,12 @@ withdrawn; we list them first so that nothing is hidden behind the new results.
 The revised paper frames CAVR as a scheduler for GPU resources in multimodal RAG serving. Late-interaction visual
 retrieval stores 1,031 vectors per page, so index memory and scoring time grow with the corpus: at 100k pages the
 ColPali index needs 24.6 GiB, more than our 24 GiB GPU holds, and a million pages (about 246
-GiB) would exceed any single accelerator. Such an index must be streamed from host memory (1,044 ms per
+GiB) would exceed the memory of most current accelerators. Such an index must be streamed from host memory (1,044 ms per
 query on our hardware), pooled (recall@1 drops from 0.577 to 0.525) or sharded. We measured sharding on a node
 with three Tesla P40 GPUs: sharded search returns the same top page as one GPU, a 50k-page index is searched in
 327, 164 and 109 ms on one, two and three GPUs (parallel efficiency 99.8%), and a
 150k-page index (36.9 GiB, more than one GPU holds) is searched in 328 ms, as fast as
-50k pages on one GPU. On a second node with two NVIDIA A10 GPUs, the same benchmark searches 50k pages in 41.1 and 21.0 ms on one and two GPUs (efficiency 97.6%) and a 100k-page index (24.6 GiB) in 41.4 ms. Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
+50k pages on one GPU. On a second node with two NVIDIA A10 GPUs, the same benchmark searches 50k pages in 41.1 and 21.0 ms on one and two GPUs (efficiency 97.6%) and a 100k-page index (24.6 GiB) in 41.4 ms. We also held an index of a million pages (246 GiB) in host memory on that node and streamed it to the GPUs for every query batch: two A10s search it at 4.50 queries/s at batch 64, close to the GPU-seconds per query of GPU-resident search (94% of its throughput where both were measured, at 100k pages), whereas a GPU-resident index would need 16 A10s (projected). A single query takes 6.4 s, bound by PCIe, so this placement suits batch rather than interactive search. Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
 times, serving 100 queries/s at p95 ≤ 2 s needs 106 GPUs for always-hybrid and
 72 for CAVR-CE (32% fewer; means over 5 seeds). We added these
 experiments, a hardware table for each machine, energy per query, router throughput up to batch 1,024, and serial versus
@@ -68,10 +68,11 @@ and contribution); Related work (inference serving and late-interaction retrieva
 these citations]; Method (Figure method: the pipeline as built and its deployment); Results, subsection
 "Scalability, throughput and
 energy" (Tables hardware, hardware_multigpu, load_test, load_test_operating_points, index_scaling,
-multi_gpu_scaling, router_throughput; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling); Conclusion.
+multi_gpu_scaling, host_stream, router_throughput; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling,
+host_stream); Setup (multi-GPU sharding and index in host memory); Conclusion.
 Routing and generation were measured on one GeForce RTX 4090, capacity projections come from a simulation driven by
-measured service times, and multi-GPU sharding was measured on two multi-GPU nodes for retrieval only; the paper
-states all three.
+measured service times, and multi-GPU sharding and the host-memory index were measured on separate nodes for retrieval only,
+with GPU-resident search at a million pages projected rather than measured; the paper states all of this.
 
 **E.2 — Report results accurately, rewrite overstated conclusions and explain limitations fully.**
 Every number now comes from one cached run, and tables and figures are generated from the results files. The

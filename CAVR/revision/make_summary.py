@@ -22,6 +22,7 @@ def main():
     ma = J("a10/multi_gpu_scaling.json")
     mas, maw = ma["strong"], ma["weak"]["50000"]
     maw_top = maw[max(maw, key=int)]
+    hs = J("a10/host_stream_scaling.json")
     hw = meta["hardware"]
     g = hw["gpus"][0]
     a = ev["aggregate"]
@@ -226,6 +227,13 @@ CAVR-CE is the Phase 1 router. Phase 0 probes are in `results/phase0/VERDICT.md`
 - 50k pages, p50: {' / '.join(f"{1000 * v['p50_s']:.1f}" for v in mas['50000']['by_gpus'].values())} ms on {' / '.join(mas['50000']['by_gpus'])} GPUs (efficiency {100 * mas['50000']['by_gpus'][str(ma['n_gpus'])]['latency_efficiency']:.1f}%); dispatch + merge ≤ {1000 * ma['summary']['max_overhead_s_ge50k']:.1f} ms from 50k pages up; batch-{ma['throughput_batch']} throughput efficiency ≥ {100 * ma['summary']['min_throughput_efficiency_ge10k']:.1f}% from 10k pages up.
 - Weak scaling: {maw_top['pages'] // 1000}k pages ({maw_top['index_gib_total']:.1f} GiB) on {ma['n_gpus']} GPUs in {1000 * maw_top['p50_s']:.1f} ms vs 50k on one ({100 * maw_top['efficiency']:.1f}%). Largest corpus on {ma['n_gpus']} GPUs: {max(int(n) for n in mas) // 1000}k pages.
 - One A10 is {mgs['50000']['by_gpus']['1']['p50_s'] / mas['50000']['by_gpus']['1']['p50_s']:.1f}× faster than one P40 on the 50k search, with {mgs['50000']['by_gpus']['1']['energy_j_per_query_active'] / mas['50000']['by_gpus']['1']['energy_j_per_query_active']:.1f}× less active energy per query ({mas['50000']['by_gpus']['1']['energy_j_per_query_active']:.2f} J); it is {mas['50000']['by_gpus']['1']['p50_s'] / ix['scaling']['50000']['gpu_bf16']['p50_s']:.1f}× slower than the 4090. Unused GPUs in the run hold a CUDA context (≈{ma['summary']['idle_w_per_gpu']:.0f} W each).
+
+**Index in host memory** (2× {ma['source']['devices'][0]}, cudaHostRegister'd host RAM streamed over PCIe, fp16 scoring):
+- Streamed top-1 = GPU-resident top-1 (page and score) for all {hs['source']['checks']['1']['queries']} check queries on {hs['source']['checks']['1']['pages'] // 1000}k pages.
+- Copy only: {hs['copy_only']['1']['gb_per_s_total']:.1f} GB/s on 1 GPU, {hs['copy_only']['2']['gb_per_s_total']:.1f} GB/s on 2 ({100 * hs['pcie_two_gpu_share']:.0f}% of 2× one GPU; cause not identified: PCIe bridges (PXB), NUMA placement uncontrolled).
+- {hs['summary']['max_pages']:,} pages ({hs['summary']['max_gib']:.0f} GiB): p50 {hs['summary']['p50_1m_by_gpus']['1']:.1f} s on 1 GPU, {hs['summary']['p50_1m_by_gpus']['2']:.1f} s on 2 (PCIe-bound); batch {hs['source']['big_batch']}: {hs['summary']['qps_big_1m_by_gpus']['1']:.2f} / {hs['summary']['qps_big_1m_by_gpus']['2']:.2f} q/s = {hs['summary']['gpu_s_per_query_1m']:.2f} GPU-s per query (compute-bound from batch ≈{min(r['crossover_batch'] for r in hs['runs']):.0f}).
+- vs GPU-resident at {hs['vs_resident']['pages'] // 1000}k pages on 2 GPUs: {100 * hs['vs_resident']['throughput_ratio']:.0f}% of the batch-{hs['source']['big_batch']} throughput, {hs['vs_resident']['streamed_j_per_query_big']:.1f} vs {hs['vs_resident']['resident_j_per_query_big']:.1f} J per query.
+- A GPU-resident 1M-page index would need {hs['resident_1m']['gpus_needed']} A10s (projected p50 {1000 * hs['resident_1m']['projected_p50_s']:.0f} ms, not measured).
 
 ## Limitations to state in the paper
 

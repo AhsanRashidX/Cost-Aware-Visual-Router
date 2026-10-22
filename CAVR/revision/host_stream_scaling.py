@@ -59,7 +59,11 @@ def main():
                   "resident_qps_big": a["throughput"][B_BIG]["queries_per_s"], "streamed_qps_big": s["qps"][B_BIG],
                   "throughput_ratio": s["qps"][B_BIG] / a["throughput"][B_BIG]["queries_per_s"],
                   "resident_j_per_query_big": a["throughput"][B_BIG]["energy_j_per_query"],
-                  "streamed_j_per_query_big": s["energy_j_per_query"][B_BIG]}
+                  "streamed_j_per_query_big": s["energy_j_per_query"][B_BIG],
+                  # batch 1: every GPU is busy for the whole query, so GPU-s = GPUs x p50
+                  "resident_gpu_s_b1": two * a["p50_s"], "streamed_gpu_s_b1": two * s["p50_s"],
+                  "resident_j_per_query_b1": a["throughput"]["1"]["energy_j_per_query"],
+                  "streamed_j_per_query_b1": s["energy_j_per_query"]["1"]}
 
     # GPU-resident 1M-page index: GPUs needed within the per-GPU budget, latency projected from the resident runs
     nmax = max(sizes)
@@ -67,7 +71,10 @@ def main():
     slope, icpt = np.polyfit([p for p, _ in pts], [t for _, t in pts], 1)
     g_need = math.ceil(nmax * page_bytes / 2**30 / rs["budget_gib_per_gpu"])
     gpu_s_res = two / res[(n_ref, two)]["throughput"][B_BIG]["queries_per_s"] * nmax / n_ref
-    resident_1m = {"pages": nmax, "gpus_needed": g_need, "budget_gib_per_gpu": rs["budget_gib_per_gpu"],
+    resident_1m = {"pages": nmax, "gpus_needed": g_need, "nodes_needed": math.ceil(g_need / len(rs["devices"])),
+                   "budget_gib_per_gpu": rs["budget_gib_per_gpu"],
+                   "budget_share_of_memory": rs["budget_gib_per_gpu"] * 2**30
+                   / (json.load(open(SRC / "a10_env.json", encoding="utf-8"))["gpus"][0]["memory_gb"] * 2**30),
                    "pages_per_gpu": math.ceil(nmax / g_need),
                    "projected_p50_s": float(slope * math.ceil(nmax / g_need) + icpt),
                    "fit": {"slope_s_per_page": float(slope), "intercept_s": float(icpt), "points": len(pts)},
@@ -84,6 +91,7 @@ def main():
                        "qps_big_1m_by_gpus": {str(g): R[(nmax, g)]["qps"][B_BIG] for g in (1, two) if (nmax, g) in R},
                        "gpu_s_per_query_1m": s1m["gpu_s_per_query_big"],
                        "max_p50_over_copy": max(r["p50_over_copy"] for r in runs),
+                       "max_latency_cv": max(float(np.std(r["lat_s"]) / np.mean(r["lat_s"])) for r in hs["runs"]),
                        "min_check_same": min(min(c["same_page"], c["same_score"]) for c in hs["checks"].values())}}
     write_json(SRC / "host_stream_scaling.json", out)
     for r in runs:

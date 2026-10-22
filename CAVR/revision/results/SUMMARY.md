@@ -144,6 +144,13 @@ CAVR-CE is the Phase 1 router. Phase 0 probes are in `results/phase0/VERDICT.md`
 - Weak scaling: 100k pages (24.6 GiB) on 2 GPUs in 41.4 ms vs 50k on one (99.2%). Largest corpus on 2 GPUs: 120k pages.
 - One A10 is 8.0× faster than one P40 on the 50k search, with 5.6× less active energy per query (3.19 J); it is 2.1× slower than the 4090. Unused GPUs in the run hold a CUDA context (≈57 W each).
 
+**Index in host memory** (2× NVIDIA A10, cudaHostRegister'd host RAM streamed over PCIe, fp16 scoring):
+- Streamed top-1 = GPU-resident top-1 (page and score) for all 100 check queries on 100k pages.
+- Copy only: 24.2 GB/s on 1 GPU, 41.0 GB/s on 2 (85% of 2× one GPU; cause not identified: PCIe bridges (PXB), NUMA placement uncontrolled).
+- 1,000,000 pages (246 GiB): p50 10.9 s on 1 GPU, 6.4 s on 2 (PCIe-bound); batch 64: 2.25 / 4.50 q/s = 0.44 GPU-s per query (compute-bound from batch ≈25).
+- vs GPU-resident at 100k pages on 2 GPUs: 94% of the batch-64 throughput, 6.7 vs 6.4 J per query.
+- A GPU-resident 1M-page index would need 16 A10s (projected p50 51 ms, not measured).
+
 ## Limitations to state in the paper
 
 - **One consumer GPU (RTX 4090) under Windows WDDM.** Caps on visual tokens and OCR text length keep memory below the point where the driver spills to system RAM. Batch sizes that came near that point are excluded.

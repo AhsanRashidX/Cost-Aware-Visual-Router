@@ -76,7 +76,7 @@ given to the generator at no more than 1280 visual tokens.
 
 Every path is run once on every query on a single GPU at batch size 1, and the outputs are cached. Per query and path
 we record GPU-seconds (generation plus, for paths that use it, ColPali query encoding and scoring), GPU energy from
-NVML counters, peak GPU memory, and wall-clock latency including preprocessing and BM25 retrieval on the CPU. Router
+NVIDIA Management Library (NVML) counters, peak GPU memory, and wall-clock latency including preprocessing and BM25 retrieval on the CPU. Router
 overhead is measured separately and added to every routed query. When a router reads ColPali scores, ColPali
 retrieval is charged to every query, including those routed to the text path, and never twice for the same query.
 Offline costs (OCR, ColPali indexing) are reported separately. No cost is priced from list prices.
@@ -92,7 +92,7 @@ auxiliary classification head.
 \subsection{Routers}
 \label{sec:method-routers}
 
-\paragraph{CAVR.} A multi-task MLP over the all-mpnet-base-v2~\cite{mpnet,sbert} question embedding and a one-hot
+\paragraph{CAVR.} A multi-task multilayer perceptron (MLP) over the all-mpnet-base-v2~\cite{mpnet,sbert} question embedding and a one-hot
 dataset indicator, with hidden layers of 256 and 128 units (dropout 0.2) and three heads: path logits
 (cross-entropy on the outcome label at $\lambda = 0.1$), per-path predicted quality $\hat{q}_p$ (squared error on
 ANLS), and a confidence head (binary cross-entropy on whether the chosen path reaches ANLS $\ge$ 0.5), with loss
@@ -109,7 +109,8 @@ agreement and cross-ranks between the two retrievers, lexical and semantic overl
 retrieved pages, OCR length, and ColPali per-token match statistics (for each question token, its best match on the top
 pages). A two-layer head predicts $\hat{q}_p$ for every path, trained with binary cross-entropy against ANLS as a soft
 target for 5 epochs (AdamW; learning rates 2e-05 for the encoder and 0.001 for the head; weight
-decay 0.01; batch 16; linear warm-up and decay), keeping the epoch with the best validation AUC.
+decay 0.01; batch 16; linear warm-up and decay), keeping the epoch with the best validation area under the curve (AUC) of the receiver operating characteristic
+(ROC).
 
 \paragraph{Choosing $\lambda$.} $\lambda$ is a run-time parameter. To report a single operating point without
 tuning on test data, we choose on each split's validation set the cheapest $\lambda$ whose validation ANLS is within

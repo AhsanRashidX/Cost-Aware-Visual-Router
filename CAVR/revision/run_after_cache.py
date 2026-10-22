@@ -24,6 +24,7 @@ STEPS = [
     ("multi_gpu_scaling_a10 (results/a10 from the 2x A10 node)",
      ["multi_gpu_scaling.py", "--env", "results/a10/a10_env.json", "--scaling", "results/a10/a10_shard_scaling.json",
       "--out", "results/a10/multi_gpu_scaling.json"]),
+    ("host_stream_scaling (results/a10 from the 2x A10 node)", ["host_stream_scaling.py"]),
     ("make_outputs", ["make_outputs.py"]),
     ("make_method_figure", ["make_method_figure.py"]),
     ("make_training_figure", ["make_training_figure.py"]),

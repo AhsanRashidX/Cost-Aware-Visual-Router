@@ -45,7 +45,7 @@ Retrieval quality is reported in Table~\ref{tab:retrieval}.
 \subsection{Generation}
 \label{sec:setup-generation}
 
-All paths use Qwen2.5-VL-7B-Instruct~\cite{qwen25vl} (revision \texttt{cc59489}) in bf16 with SDPA attention, greedy
+All paths use Qwen2.5-VL-7B-Instruct~\cite{qwen25vl} (revision \texttt{cc59489}) in bf16 with scaled dot-product attention (SDPA), greedy
 decoding, at most 32 new tokens and the model's default repetition penalty (1.05). The system prompt is
 the same for every path: ``You answer questions about documents. Reply with only the answer: a short phrase, number or name, copied exactly from the document when possible. No explanation.'' The user turn contains, in this order, the page image (visual and
 hybrid paths), the text context as ``Document text:'' followed by ``[Page $i$ OCR]'' blocks (text and hybrid paths),
@@ -53,7 +53,7 @@ and ``Question: $q$ / Answer:''. The text context is the first 2,000 characters 
 BM25 pages. Page images are resized with the model's own resizing rule to between 256 and
 1280 visual tokens.
 
-The GPU also drives the Windows desktop (WDDM). When its memory is exhausted, the NVIDIA driver's system-memory
+The GPU also drives the Windows desktop under the Windows Display Driver Model (WDDM). When its memory is exhausted, the NVIDIA driver's system-memory
 fallback silently moves allocations to host RAM, which slows execution by an order of magnitude instead of failing.
 The token and character caps were chosen to keep peak reserved memory below this point; in the main run the peak was
 22.9\,GiB, 7 hybrid queries exceeded 21\,GiB, and no generation took longer than
@@ -84,7 +84,7 @@ not depend on the weights, so both benchmarks use untrained heads.
 \label{sec:setup-metrics}
 
 Answer quality is measured with ANLS~\cite{anls}: the normalised Levenshtein similarity to the closest reference
-answer, set to zero below 0.5. Before comparison, answers are NFKC-normalised, lower-cased, whitespace is collapsed,
+answer, set to zero below 0.5. Before comparison, answers are converted to the Unicode normal form NFKC, lower-cased, whitespace is collapsed,
 and leading and trailing spaces, periods, commas, colons, semicolons and quotation marks are stripped. This differs
 from the official evaluation, which only lower-cases and strips whitespace, by at most 0.0003 ANLS on any path.
 Exact match uses the same normalisation. A router's \emph{success AUC} is the area under the ROC curve of its predicted
@@ -101,7 +101,7 @@ GPU-seconds and joules per query, and latency as p50 and p95 wall-clock time.
   \item \emph{Random at equal budget:} paths drawn independently with CAVR's path mix (200 draws).
   \item \emph{Logistic regression:} one classifier per $\lambda$ on the question embedding, predicting the outcome
   label; regularisation $C \in \{0.1, 1, 10\}$ chosen on validation utility.
-  \item \emph{kNN:} regression of per-path ANLS from the $k$ nearest training questions (cosine distance,
+  \item \emph{$k$-nearest neighbours (kNN):} regression of per-path ANLS from the $k$ nearest training questions (cosine distance,
   $k \in \{5, 10, 25, 50, 100\}$ chosen on validation utility at $\lambda = 0.1$), followed by the decision rule of
   Section~\ref{sec:method-formulation}.
   \item \emph{CAVR}, its class head used alone (``CAVR (class head only)''), and two ablations that add BM25 scores, or
@@ -172,7 +172,7 @@ real GPUs below. Latency is the median
 over 50 single queries (all from DocVQA); throughput uses query batches of 1, 4, 16, 64 (streamed index: 1, 4
 and 16), with at least two repetitions per batch size.
 \emph{Multi-GPU sharding.} Sharding is measured on two further machines, one with three Tesla P40 GPUs and one with
-two NVIDIA A10 GPUs, all in compute (TCC) mode (Table~\ref{tab:hardware_multigpu}), with the same benchmark script. The page embeddings of the evaluation corpus and the per-token embeddings of
+two NVIDIA A10 GPUs, all in Tesla Compute Cluster (TCC) mode, NVIDIA's compute-only driver model (Table~\ref{tab:hardware_multigpu}), with the same benchmark script. The page embeddings of the evaluation corpus and the per-token embeddings of
 the questions are exported from the workstation, so no model runs on these nodes. A corpus of 1k to 150k pages,
 built by repeating the real pages (page $j$ is real page $j$ modulo the 1,786 evaluation pages), is split into one
 contiguous shard per GPU, stored in fp16 and scored by exhaustive MaxSim in fp32 on the Tesla P40, whose fp16 arithmetic is slow, and
@@ -183,12 +183,25 @@ latency includes dispatch and merge. Shards larger than 70\% of GPU memory (15.7
 Latency is the median and 95th percentile over 50 single queries; throughput and energy use query batches of
 1, 4, 16 and 64. Energy is read from the NVML counters of all GPUs of the node, so runs on fewer GPUs include the idle
 draw of the unused ones, which we estimate from the runs themselves (Section~\ref{sec:res-scale}).
+\emph{Index in host memory.} On the NVIDIA A10 node, corpora of 100k, 250k, 500k and 1M pages, built in the same way, are held
+in host memory (up to 246\,GiB) and streamed to the GPUs for every query batch. Windows refuses page-locked
+(pinned) allocations of this size, so the index is allocated as ordinary memory and then page-locked with
+\texttt{cudaHostRegister} in blocks of 16\,GiB. With $g$ GPUs the corpus is split into $g$ contiguous
+shards. For each batch, every GPU copies its shard over PCIe in chunks of 4,068 pages
+(1.0\,GiB) into two device buffers, so that copying one chunk overlaps scoring the other; no copy spans
+two registered blocks. Scoring is exhaustive MaxSim in fp16, as in the GPU-resident runs on this node; each GPU keeps
+its top-10 pages and the host merges them. Before timing, the top-1 page (up to the repetition of real pages) and score
+of streamed search are compared with GPU-resident search, sharded over both GPUs, for 100 questions on 100k pages.
+Latency is the median over 5 single queries after one warm-up pass; throughput and energy use batches of
+1, 16 and 64 with 2 repetitions each. The PCIe copy rate alone is measured by streaming the largest index
+without scoring. Energy is the sum of the NVML counters of both GPUs.
 
 \subsection{Hardware, software and reproducibility}
 \label{sec:setup-hardware}
 
-All experiments except multi-GPU sharding ran on the workstation of Table~\ref{tab:hardware}, which also lists the
-library versions and model revisions; sharding ran on the nodes of Table~\ref{tab:hardware_multigpu}. Seeds are fixed (1234 for data sampling and the first split). The CAVR MLP is trained on the
+All experiments except multi-GPU sharding and the host-memory index ran on the workstation of
+Table~\ref{tab:hardware}, which also lists the library versions and model revisions; these two ran on the nodes of
+Table~\ref{tab:hardware_multigpu}. Seeds are fixed (1234 for data sampling and the first split). The CAVR MLP is trained on the
 CPU and is deterministic; generation, ColPali and CAVR-CE fine-tuning run on the GPU in bf16 and are reproducible up to
 small numerical differences (re-training CAVR-CE changed validation AUC by at most 0.003). Every query's
 outputs are cached, every table and figure in this paper is generated from the cached results by the released code
