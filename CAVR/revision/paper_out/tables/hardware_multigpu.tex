@@ -1,20 +1,23 @@
 \begin{table}[t]
 \centering
-\caption{Multi-GPU node used for the index-sharding measurements (Table~\ref{tab:multi_gpu}). No model runs on this node: page and query embeddings are exported from the workstation of Table~\ref{tab:hardware}.}
+\caption{Multi-GPU nodes used for the index-sharding measurements (Table~\ref{tab:multi_gpu}). No model runs on these nodes: page and query embeddings are exported from the workstation of Table~\ref{tab:hardware}.}
 \label{tab:hardware_multigpu}
-\begin{tabular}{ll}
+\begin{tabular}{lll}
 \toprule
-\textbf{Component} & \textbf{Value} \\
+\textbf{Component} & \textbf{P40 node} & \textbf{A10 node} \\
 \midrule
-GPU & 3 $\times$ Tesla P40 (22.4\,GiB each, power limit 250\,W, compute capability 6.1) \\
-Driver / mode & 581.15 / TCC (compute mode) \\
-fp32 matrix multiply (measured) & 8.2--8.6 TFLOPS per GPU \\
-PCIe link width & $\times$16 per GPU (topology not recorded) \\
-CPU & Intel Xeon Gold 6140 CPU @ 2.30GHz \\
-CPU threads / RAM & 72 / 128\,GiB \\
-OS / Python & Windows (build 17134) / 3.11.0 \\
-PyTorch / CUDA & 2.5.1+cu118 / 11.8 \\
-Energy & NVML energy counters, summed over all 3 GPUs \\
+GPU & 3 $\times$ Tesla P40 & 2 $\times$ NVIDIA A10 \\
+Memory / power limit & 22.4\,GiB / 250\,W each & 22.3\,GiB / 150\,W each \\
+Compute capability & 6.1 & 8.6 \\
+Driver / mode & 581.15 / TCC (compute mode) & 616.92 / TCC (compute mode) \\
+fp32 matrix multiply (measured) & 8.2--8.6 TFLOPS per GPU & 14.0--14.4 TFLOPS per GPU \\
+Index scoring precision & fp32 & fp16 \\
+PCIe link width & $\times$16 per GPU (topology not recorded) & $\times$16 per GPU \\
+CPU & Intel Xeon Gold 6140 @ 2.30GHz & Intel Xeon Gold 6330 @ 2.00GHz \\
+CPU threads / RAM & 72 / 128\,GiB & 112 / 1024\,GiB \\
+OS / Python & Windows (build 17134) / 3.11.0 & Windows (build 26300) / 3.11.17 \\
+PyTorch / CUDA & 2.5.1+cu118 / 11.8 & 2.11.0+cu128 / 12.8 \\
+Energy & NVML energy counters, summed over all 3 GPUs & NVML energy counters, summed over all 2 GPUs \\
 \bottomrule
 \end{tabular}
 \end{table}

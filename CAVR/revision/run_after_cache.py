@@ -21,6 +21,9 @@ STEPS = [
     ("simulate", ["simulate.py"]),
     ("bench_index (GPU)", ["bench_index.py"]),
     ("multi_gpu_scaling (results/multi_gpu from the multi-GPU node)", ["multi_gpu_scaling.py"]),
+    ("multi_gpu_scaling_a10 (results/a10 from the 2x A10 node)",
+     ["multi_gpu_scaling.py", "--env", "results/a10/a10_env.json", "--scaling", "results/a10/a10_shard_scaling.json",
+      "--out", "results/a10/multi_gpu_scaling.json"]),
     ("make_outputs", ["make_outputs.py"]),
     ("make_method_figure", ["make_method_figure.py"]),
     ("make_training_figure", ["make_training_figure.py"]),
@@ -33,7 +36,7 @@ def main():
     for name, args in STEPS:
         t0 = time.time()
         print(f"=== {name} ...", flush=True)
-        with open(ROOT / "logs" / f"{args[0].replace('.py', '')}.log", "w", encoding="utf-8") as log:
+        with open(ROOT / "logs" / f"{name.split()[0]}.log", "w", encoding="utf-8") as log:
             rc = subprocess.call([sys.executable, "-W", "ignore", *args], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
         print(f"=== {name}: exit {rc} in {time.time() - t0:.0f}s", flush=True)
         if rc != 0:

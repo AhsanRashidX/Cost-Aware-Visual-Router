@@ -8,9 +8,9 @@ end with real retrieval and generation on one GPU, the content-aware router CAVR
 than always combining text and image contexts, at a mean ANLS cost of 0.008. In a load test simulated from
 measured service times, it reduces the GPUs needed for 100 queries/s at p95 $\le$ 2\,s from 106 to
 72. Its cost weight is set at serving time, and pre-generation escalation trades part of the
-saving back for quality without adding a serial step. On a three-GPU node, sharding the visual index holds
-exhaustive search at constant latency as the corpus grows with the number of GPUs, with parallel efficiency of at
-least 99.6\% from 50k pages up.
+saving back for quality without adding a serial step. On two multi-GPU nodes (three Tesla P40 and two NVIDIA A10 GPUs), sharding the visual index
+holds exhaustive search at constant latency as the corpus grows with the number of GPUs, with parallel efficiency
+of at least 99.6\% and 97.6\% from 50k pages up.
 
 The evaluation also corrects the earlier version of this work. Keyword-derived route labels do not reflect which path
 answers correctly, list-price cost estimates do not survive measurement, and with a shared generator the text path is

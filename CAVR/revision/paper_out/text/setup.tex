@@ -171,23 +171,24 @@ the shards one after another and reporting the slowest shard, without the cost o
 real GPUs below. Latency is the median
 over 50 single queries (all from DocVQA); throughput uses query batches of 1, 4, 16, 64 (streamed index: 1, 4
 and 16), with at least two repetitions per batch size.
-\emph{Multi-GPU sharding.} Sharding is measured on a second machine with three Tesla P40 GPUs in compute (TCC)
-mode (Table~\ref{tab:hardware_multigpu}). The page embeddings of the evaluation corpus and the per-token embeddings of
-the questions are exported from the workstation, so no model runs on this node. A corpus of 1k to 150k pages,
+\emph{Multi-GPU sharding.} Sharding is measured on two further machines, one with three Tesla P40 GPUs and one with
+two NVIDIA A10 GPUs, all in compute (TCC) mode (Table~\ref{tab:hardware_multigpu}), with the same benchmark script. The page embeddings of the evaluation corpus and the per-token embeddings of
+the questions are exported from the workstation, so no model runs on these nodes. A corpus of 1k to 150k pages,
 built by repeating the real pages (page $j$ is real page $j$ modulo the 1,786 evaluation pages), is split into one
-contiguous shard per GPU, stored in fp16 and scored by exhaustive MaxSim in fp32. Each query is sent to all shards at
+contiguous shard per GPU, stored in fp16 and scored by exhaustive MaxSim in fp32 on the Tesla P40, whose fp16 arithmetic is slow, and
+in fp16 on the NVIDIA A10. Each query is sent to all shards at
 once, one host thread per GPU; each shard returns its top-10 pages and the host merges them, so the measured
-latency includes dispatch and merge. Shards larger than 15.7\,GiB (70\% of GPU memory) are not
-run. Before timing, the sharded top-1 page on the real corpus is compared with one GPU for 500 questions.
+latency includes dispatch and merge. Shards larger than 70\% of GPU memory (15.7\,GiB on the Tesla P40,
+15.6\,GiB on the NVIDIA A10) are not run. Before timing, the sharded top-1 page on the real corpus is compared with one GPU for 500 questions.
 Latency is the median and 95th percentile over 50 single queries; throughput and energy use query batches of
-1, 4, 16 and 64. Energy is read from the NVML counters of all three GPUs, so runs on fewer GPUs include the idle
+1, 4, 16 and 64. Energy is read from the NVML counters of all GPUs of the node, so runs on fewer GPUs include the idle
 draw of the unused ones, which we estimate from the runs themselves (Section~\ref{sec:res-scale}).
 
 \subsection{Hardware, software and reproducibility}
 \label{sec:setup-hardware}
 
 All experiments except multi-GPU sharding ran on the workstation of Table~\ref{tab:hardware}, which also lists the
-library versions and model revisions; sharding ran on the node of Table~\ref{tab:hardware_multigpu}. Seeds are fixed (1234 for data sampling and the first split). The CAVR MLP is trained on the
+library versions and model revisions; sharding ran on the nodes of Table~\ref{tab:hardware_multigpu}. Seeds are fixed (1234 for data sampling and the first split). The CAVR MLP is trained on the
 CPU and is deterministic; generation, ColPali and CAVR-CE fine-tuning run on the GPU in bf16 and are reproducible up to
 small numerical differences (re-training CAVR-CE changed validation AUC by at most 0.003). Every query's
 outputs are cached, every table and figure in this paper is generated from the cached results by the released code

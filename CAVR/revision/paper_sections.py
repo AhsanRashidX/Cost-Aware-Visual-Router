@@ -50,7 +50,7 @@ is lower by <<ce_dh_abs>> on average (paired; lower on <<ce_lower_n>> of <<ce_n>
 simulated from measured service times, it cuts the GPUs needed for 100 queries/s at a p95 latency of 2\,s from
 <<g100_always_hybrid>> to <<g100_cavr_ce_valsel>>. We also show that the keyword-derived labels of our earlier
 version are uncorrelated with which path actually answers correctly, that a per-query oracle leaves large headroom,
-and how visual-index latency scales to 100k pages. Measured on <<mg_n_word>> GPUs of a second node, sharding the
+and how visual-index latency scales to 100k pages. Measured on two further nodes, with <<mg_n_word>> <<mg_gpu>> and <<a10_n_word>> <<a10_gpu>> GPUs, sharding the
 visual index scales near-linearly: a <<mg_weak_pages>>-page index (<<mg_weak_gib>>\,GiB) is searched in the time one GPU
 needs for <<mg_weak_k>> pages.
 \end{abstract}
@@ -82,7 +82,7 @@ as many as content-aware routing.
 single accelerator. Such an index must be sharded, streamed from host memory or compressed at a loss in recall.
 Measured on <<mg_n_word>> older GPUs (<<mg_gpu>>), sharding keeps exhaustive search at constant latency when the number of GPUs grows with
 the corpus: <<mg50k_ms1>>\,ms for <<mg_weak_k>> pages on one GPU and <<mg_weak_ms>>\,ms for <<mg_weak_pages>> pages on
-<<mg_n_word>>. Routing
+<<mg_n_word>>; on <<a10_n_word>> data-centre <<a10_gpu>> GPUs it is <<a10_50k_ms1>>\,ms for <<a10_weak_k>> pages on one and <<a10_weak_ms>>\,ms for <<a10_weak_pages>> pages on two. Routing
 does not shrink the index, since our best router reads ColPali scores for every query; index placement is a separate
 decision that the scaling study quantifies.
 \emph{Latency targets constrain the design.} Interactive systems are judged on tail latency, so routing and
@@ -97,8 +97,8 @@ targets~\cite{clipper,orca,vllm}, and efficient engines reduce late-interaction 
 these threads together for multimodal document RAG, where the choice is between context modalities that share one
 generator, and evaluate routing end to end on answer quality and measured cost.
 Routing, retrieval and generation are measured on a single GPU with HF Transformers generation, and capacity at
-larger scale is simulated from measured service times; multi-GPU index sharding is measured on a second node with
-<<mg_n_word>> older GPUs (<<mg_gpu>>).
+larger scale is simulated from measured service times; multi-GPU index sharding is measured on two further nodes, with
+<<mg_n_word>> older GPUs (<<mg_gpu>>) and with <<a10_n_word>> <<a10_gpu>> GPUs.
 
 \subsection{Research questions}
 
@@ -131,7 +131,7 @@ larger scale is simulated from measured service times; multi-GPU index sharding 
   \item A serving study: capacity per GPU and GPUs needed at a p95 target under Poisson load (simulated from measured
   service times), router throughput (measured), and visual-index latency up to 100k pages with GPU-resident,
   host-streamed and pooled placement (measured; larger indexes built from replicated page embeddings), and
-  multi-GPU sharding measured on one to <<mg_n_word>> GPUs, with near-linear strong and weak scaling up to
+  multi-GPU sharding measured on two nodes (up to <<mg_n_word>> <<mg_gpu>> and <<a10_n_word>> <<a10_gpu>> GPUs), with near-linear strong and weak scaling up to
   <<mg_maxpages>> pages.
 \end{itemize}
 
@@ -468,23 +468,24 @@ the shards one after another and reporting the slowest shard, without the cost o
 real GPUs below. Latency is the median
 over <<n_lat>> single queries (all from DocVQA); throughput uses query batches of <<qbatches>> (streamed index: 1, 4
 and 16), with at least two repetitions per batch size.
-\emph{Multi-GPU sharding.} Sharding is measured on a second machine with <<mg_n_word>> <<mg_gpu>> GPUs in compute (TCC)
-mode (Table~\ref{tab:hardware_multigpu}). The page embeddings of the evaluation corpus and the per-token embeddings of
-the questions are exported from the workstation, so no model runs on this node. A corpus of 1k to <<mg_maxpages>> pages,
+\emph{Multi-GPU sharding.} Sharding is measured on two further machines, one with <<mg_n_word>> <<mg_gpu>> GPUs and one with
+<<a10_n_word>> <<a10_gpu>> GPUs, all in compute (TCC) mode (Table~\ref{tab:hardware_multigpu}), with the same benchmark script. The page embeddings of the evaluation corpus and the per-token embeddings of
+the questions are exported from the workstation, so no model runs on these nodes. A corpus of 1k to <<mg_maxpages>> pages,
 built by repeating the real pages (page $j$ is real page $j$ modulo the <<n_pages>> evaluation pages), is split into one
-contiguous shard per GPU, stored in fp16 and scored by exhaustive MaxSim in fp32. Each query is sent to all shards at
+contiguous shard per GPU, stored in fp16 and scored by exhaustive MaxSim in fp32 on the <<mg_gpu>>, whose fp16 arithmetic is slow, and
+in fp16 on the <<a10_gpu>>. Each query is sent to all shards at
 once, one host thread per GPU; each shard returns its top-<<mg_topk>> pages and the host merges them, so the measured
-latency includes dispatch and merge. Shards larger than <<mg_budget>>\,GiB (<<mg_budget_pct>>\% of GPU memory) are not
-run. Before timing, the sharded top-1 page on the real corpus is compared with one GPU for <<mg_ncheck>> questions.
+latency includes dispatch and merge. Shards larger than <<mg_budget_pct>>\% of GPU memory (<<mg_budget>>\,GiB on the <<mg_gpu>>,
+<<a10_budget>>\,GiB on the <<a10_gpu>>) are not run. Before timing, the sharded top-1 page on the real corpus is compared with one GPU for <<mg_ncheck>> questions.
 Latency is the median and 95th percentile over <<mg_nlat>> single queries; throughput and energy use query batches of
-<<mg_batches>>. Energy is read from the NVML counters of all <<mg_n_word>> GPUs, so runs on fewer GPUs include the idle
+<<mg_batches>>. Energy is read from the NVML counters of all GPUs of the node, so runs on fewer GPUs include the idle
 draw of the unused ones, which we estimate from the runs themselves (Section~\ref{sec:res-scale}).
 
 \subsection{Hardware, software and reproducibility}
 \label{sec:setup-hardware}
 
 All experiments except multi-GPU sharding ran on the workstation of Table~\ref{tab:hardware}, which also lists the
-library versions and model revisions; sharding ran on the node of Table~\ref{tab:hardware_multigpu}. Seeds are fixed (<<seed_first>> for data sampling and the first split). The CAVR MLP is trained on the
+library versions and model revisions; sharding ran on the nodes of Table~\ref{tab:hardware_multigpu}. Seeds are fixed (<<seed_first>> for data sampling and the first split). The CAVR MLP is trained on the
 CPU and is deterministic; generation, ColPali and CAVR-CE fine-tuning run on the GPU in bf16 and are reproducible up to
 small numerical differences (re-training CAVR-CE changed validation AUC by at most <<ce_rerun_diff>>). Every query's
 outputs are cached, every table and figure in this paper is generated from the cached results by the released code
@@ -504,9 +505,9 @@ end with real retrieval and generation on one GPU, the content-aware router CAVR
 than always combining text and image contexts, at a mean ANLS cost of <<ce_dh_abs>>. In a load test simulated from
 measured service times, it reduces the GPUs needed for 100 queries/s at p95 $\le$ 2\,s from <<g100_always_hybrid>> to
 <<g100_cavr_ce_valsel>>. Its cost weight is set at serving time, and pre-generation escalation trades part of the
-saving back for quality without adding a serial step. On a <<mg_n_word>>-GPU node, sharding the visual index holds
-exhaustive search at constant latency as the corpus grows with the number of GPUs, with parallel efficiency of at
-least <<mg_lat_eff_min>>\% from <<mg_weak_k>> pages up.
+saving back for quality without adding a serial step. On two multi-GPU nodes (<<mg_n_word>> <<mg_gpu>> and <<a10_n_word>> <<a10_gpu>> GPUs), sharding the visual index
+holds exhaustive search at constant latency as the corpus grows with the number of GPUs, with parallel efficiency
+of at least <<mg_lat_eff_min>>\% and <<a10_lat_eff_min>>\% from <<mg_weak_k>> pages up.
 
 The evaluation also corrects the earlier version of this work. Keyword-derived route labels do not reflect which path
 answers correctly, list-price cost estimates do not survive measurement, and with a shared generator the text path is

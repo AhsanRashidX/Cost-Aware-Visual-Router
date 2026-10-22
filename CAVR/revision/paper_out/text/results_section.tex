@@ -155,13 +155,28 @@ corpora gain less at batch 1 (three GPUs give 2.51$\times$ at 1k pages and 2.52$
 where per-query overheads are a larger share of a short search; their batch-64 throughput still reaches
 96\% and 102\% of linear scaling. Energy per query for the whole node falls from
 28.4\,J on one GPU to 17.8\,J on three at 50k pages, but not because the GPUs work more efficiently: an
-idle GPU draws about 51\,W (estimated from the runs; 50--53\,W across
+unused GPU, which holds a CUDA context in the benchmark process, draws about 51\,W (estimated from the runs; 50--53\,W across
 configurations), and without the idle draw the active energy is 17.8\,J per query whatever the number of GPUs.
 On a node whose GPUs are powered anyway, spreading the shards over all of them therefore lowers the energy per query.
 These GPUs are much slower than the workstation's: one Tesla P40 takes 327\,ms for the 50k-page search that
 the RTX 4090 completes in 19.8\,ms in bf16, 17$\times$ faster. Absolute times therefore do not
 transfer between the machines; the scaling with the number of GPUs does. It also shows that the emulated sharding above
 omitted little: merging the shard results costs well under a millisecond.
+
+\paragraph{Sharding on data-centre GPUs.} The same benchmark, unchanged, ran on a node with two
+NVIDIA A10 GPUs (Ampere, scored in fp16; Table~\ref{tab:hardware_multigpu}). Sharded search again returned the same
+top page as one GPU for all 500 check questions (99.8\% exactly, the rest exact score ties). A
+50k-page index is searched in 41.1\,ms on one A10 and 21.0\,ms on two (parallel efficiency
+97.6\%); from 50k pages up, dispatch and merge add at most 0.5\,ms, and batch-64
+throughput efficiency is at least 98.6\% from 10k pages up. A 100k-page index
+(24.6\,GiB, more than one A10 holds) is searched in 41.4\,ms on two GPUs, as fast as
+50k pages on one (weak-scaling efficiency 99.2\%), and two A10s hold up to 120k pages
+(49.5\,ms). One A10 is 8$\times$ faster than one P40 on the 50k-page search and uses
+5.6$\times$ less active energy per query (3.2 against 17.8\,J), largely because it
+scores in fp16 on tensor cores, which the P40 lacks; it is still 2.1$\times$ slower than the RTX 4090.
+As on the P40 node, active energy per query does not depend on the number of GPUs (3.2 and
+3.2\,J at 50k pages). Near-linear sharding therefore holds across two GPU generations and two scoring
+precisions; the parallel efficiency transfers between machines, the absolute speed does not.
 
 \paragraph{Router overhead.} The CAVR router (mpnet embedding and MLP) takes 11.7\,ms per query at
 batch 1 on the GPU (25.0\,ms on the CPU) and reaches 12,454 queries/s at large
@@ -188,8 +203,8 @@ batch. CAVR-CE takes 24.8\,ms and 1.74\,J per query at batch 1, and its cross-en
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/multi_gpu_scaling.pdf}
-  \caption{Measured multi-GPU sharding of the ColPali index on three Tesla P40 GPUs: (a) p50 latency of single
-  queries and (b) throughput at batch 64, against the number of GPUs, for each corpus size. Dashed lines show
+  \caption{Measured multi-GPU sharding of the ColPali index on three Tesla P40 GPUs (a, b) and two
+  NVIDIA A10 GPUs (c, d): p50 latency of single queries (a, c) and throughput at batch 64 (b, d), against the number of GPUs, for each corpus size. Dashed lines show
   linear scaling from the fewest GPUs that hold the corpus; the dotted line joins runs with 50k pages per GPU
   (weak scaling).}
   \label{fig:multi_gpu}
@@ -205,8 +220,8 @@ result. The 2\,s latency target is our choice; the saving is smaller at looser t
 The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. Indexes of 10k--100k pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that
-scale. Multi-GPU sharding was measured for retrieval only, on older GPUs (Tesla P40) whose absolute times do not
-transfer to the workstation, and the load test does not include sharded retrieval. Energy covers the GPU only (NVML). The router handles text
+scale. Multi-GPU sharding was measured for retrieval only, on two server nodes with at most three GPUs
+each (Tesla P40, NVIDIA A10), whose absolute times do not transfer to the workstation, and the load test does not include sharded retrieval. Energy covers the GPU only (NVML). The router handles text
 queries over visual documents; queries that contain an image are out of scope. The router design was developed on the same five splits that we
 report on, and the feasibility analyses that motivated it looked at their test portions; no parameter of the final
 pipeline is selected on test data, but a held-out confirmation set would give a cleaner estimate. Splits group

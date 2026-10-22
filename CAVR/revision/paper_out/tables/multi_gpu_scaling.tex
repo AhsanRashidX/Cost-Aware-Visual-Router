@@ -1,11 +1,12 @@
 \begin{table}[t]
 \centering
-\caption{Measured multi-GPU sharding of the ColPali index on 3 Tesla P40 GPUs (Table~\ref{tab:hardware_multigpu}): index stored in fp16 and scored in fp32, one contiguous shard per GPU, all shards queried in parallel and their top-10 merged on the host. p50 and p95 over 50 single queries; speedup and parallel efficiency of p50 latency relative to the fewest GPUs that hold the corpus (two for 100k pages); throughput and energy at batch 64. Energy is read for the whole node, so runs on fewer than 3 GPUs include the idle GPUs (about 51\,W each). Sharded top-1 results matched one GPU for all 500 check queries (99.8\% exactly, the rest exact score ties). Shards above 15.7\,GiB per GPU were not run.}
+\caption{Measured multi-GPU sharding of the ColPali index on two nodes (Table~\ref{tab:hardware_multigpu}): index stored in fp16 and scored in fp32 (P40) and fp16 (A10); one contiguous shard per GPU, all shards queried in parallel and their top-10 merged on the host. p50 and p95 over 50 single queries; speedup and parallel efficiency of p50 latency relative to the fewest GPUs that hold the corpus; throughput and energy at batch 64. Energy is read for the whole node, so runs on fewer GPUs include the unused GPUs, which hold a CUDA context and draw about 51\,W (P40) and 57\,W (A10) each. Sharded top-1 results matched one GPU for all 500 check queries on every node (99.8\% (P40) and 99.8\% (A10) exactly, the rest exact score ties). Shards above 70\% of GPU memory (15.7\,GiB (P40) and 15.6\,GiB (A10)) were not run.}
 \label{tab:multi_gpu}
 \begin{tabular}{lrrrrrrrr}
 \toprule
 \textbf{Pages} & \textbf{GPUs} & \textbf{GiB/GPU} & \textbf{p50 (ms)} & \textbf{p95 (ms)} & \textbf{Speedup} & \textbf{Eff. (\%)} & \textbf{Queries/s} & \textbf{J/query} \\
 \midrule
+\multicolumn{9}{l}{\emph{3 $\times$ Tesla P40}} \\
 1k & 1 & 0.2 & 7.0 & 8.0 & 1.00 & 100 & 477 & 0.58 \\
 1k & 2 & 0.1 & 3.8 & 4.3 & 1.84 & 92 & 933 & 0.40 \\
 1k & 3 & 0.1 & 2.8 & 3.2 & 2.51 & 84 & 1,369 & 0.35 \\
@@ -18,6 +19,17 @@
 100k & 2 & 12.3 & 327.4 & 378.8 & 1.00 & 100 & 9.67 & 41.6 \\
 100k & 3 & 8.2 & 218.8 & 253.1 & 1.50 & 100 & 14.5 & 36.3 \\
 150k & 3 & 12.3 & 327.6 & 378.8 & 1.00 & 100 & 9.68 & 54.5 \\
+\midrule \multicolumn{9}{l}{\emph{2 $\times$ NVIDIA A10}} \\
+1k & 1 & 0.2 & 1.3 & 1.4 & 1.00 & 100 & 2,159 & 0.12 \\
+1k & 2 & 0.1 & 0.9 & 1.1 & 1.36 & 68 & 3,778 & 0.07 \\
+10k & 1 & 2.5 & 8.7 & 9.9 & 1.00 & 100 & 231 & 0.86 \\
+10k & 2 & 1.2 & 4.8 & 5.3 & 1.83 & 91 & 456 & 0.61 \\
+25k & 1 & 6.1 & 20.9 & 24.0 & 1.00 & 100 & 92.9 & 2.17 \\
+25k & 2 & 3.1 & 10.9 & 12.4 & 1.91 & 96 & 185 & 1.63 \\
+50k & 1 & 12.3 & 41.1 & 48.3 & 1.00 & 100 & 46.3 & 4.42 \\
+50k & 2 & 6.1 & 21.0 & 24.1 & 1.95 & 98 & 92.2 & 3.19 \\
+100k & 2 & 12.3 & 41.4 & 47.3 & 1.00 & 100 & 46.3 & 6.39 \\
+120k & 2 & 14.7 & 49.5 & 56.5 & 1.00 & 100 & 38.6 & 7.79 \\
 \bottomrule
 \end{tabular}
 \end{table}

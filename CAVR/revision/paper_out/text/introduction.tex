@@ -24,7 +24,7 @@ as many as content-aware routing.
 single accelerator. Such an index must be sharded, streamed from host memory or compressed at a loss in recall.
 Measured on three older GPUs (Tesla P40), sharding keeps exhaustive search at constant latency when the number of GPUs grows with
 the corpus: 327\,ms for 50k pages on one GPU and 328\,ms for 150k pages on
-three. Routing
+three; on two data-centre NVIDIA A10 GPUs it is 41.1\,ms for 50k pages on one and 41.4\,ms for 100k pages on two. Routing
 does not shrink the index, since our best router reads ColPali scores for every query; index placement is a separate
 decision that the scaling study quantifies.
 \emph{Latency targets constrain the design.} Interactive systems are judged on tail latency, so routing and
@@ -39,8 +39,8 @@ targets~\cite{clipper,orca,vllm}, and efficient engines reduce late-interaction 
 these threads together for multimodal document RAG, where the choice is between context modalities that share one
 generator, and evaluate routing end to end on answer quality and measured cost.
 Routing, retrieval and generation are measured on a single GPU with HF Transformers generation, and capacity at
-larger scale is simulated from measured service times; multi-GPU index sharding is measured on a second node with
-three older GPUs (Tesla P40).
+larger scale is simulated from measured service times; multi-GPU index sharding is measured on two further nodes, with
+three older GPUs (Tesla P40) and with two NVIDIA A10 GPUs.
 
 \subsection{Research questions}
 
@@ -73,7 +73,7 @@ three older GPUs (Tesla P40).
   \item A serving study: capacity per GPU and GPUs needed at a p95 target under Poisson load (simulated from measured
   service times), router throughput (measured), and visual-index latency up to 100k pages with GPU-resident,
   host-streamed and pooled placement (measured; larger indexes built from replicated page embeddings), and
-  multi-GPU sharding measured on one to three GPUs, with near-linear strong and weak scaling up to
+  multi-GPU sharding measured on two nodes (up to three Tesla P40 and two NVIDIA A10 GPUs), with near-linear strong and weak scaling up to
   150k pages.
 \end{itemize}
 
