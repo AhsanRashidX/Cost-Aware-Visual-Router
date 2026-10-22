@@ -47,6 +47,11 @@ def main():
                     "agreement_with_utility_label": float((pred == default).mean()),
                     "kappa_with_utility_label": float(cohen_kappa_score(pred, default)),
                     "agreement_with_threshold_label": float((pred == thr).mean())}
+        # queries where at least one path succeeds: all-fail queries tie and are labelled with the cheapest path
+        ok = A.max(axis=1) > 0
+        kw[name].update({"solvable_queries": int(ok.sum()),
+                         "agreement_with_utility_label_solvable": float((pred[ok] == default[ok]).mean()),
+                         "kappa_with_utility_label_solvable": float(cohen_kappa_score(pred[ok], default[ok]))})
 
     # How often each path is uniquely best, tied, or every path fails.
     best = A.max(axis=1, keepdims=True)

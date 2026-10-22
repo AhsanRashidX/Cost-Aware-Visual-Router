@@ -22,7 +22,7 @@ COLOR = {"cavr": "#2a78d6", "always_visual": "#eb6834", "always_hybrid": "#1baf7
 MARK = {"cavr": "o", "always_visual": "s", "always_hybrid": "D", "always_text": "^", "keyword_submitted": "v",
         "knn": "P", "logreg": "X", "cavr_rf": "h", "cavr_ce": "p", "cavr_ce_valsel": "p", "oracle": "*"}
 LABEL = {"always_text": "Always text", "always_visual": "Always visual", "always_hybrid": "Always hybrid",
-         "keyword_submitted": "Keyword rule (submitted)", "keyword_regex": "Keyword rule (regex fixed)",
+         "keyword_submitted": "Keyword rule", "keyword_regex": "Keyword rule (regex)",
          "logreg": "Logistic regression", "knn": "kNN quality", "cavr": "CAVR", "cavr_cls_head": "CAVR (class head only)",
          "oracle": "Per-query oracle", "random_equal_budget": "Random (equal budget)",
          "cavr_bm25": "CAVR + BM25 scores", "cavr_rf": "CAVR + BM25 + ColPali scores",
@@ -204,7 +204,7 @@ def t_labels():
     rows += [[f"{s} (threshold)"] + [th[s].get(p, 0) for p in ("text", "visual", "hybrid")] for s in ("train", "val", "test")]
     kw = lb["keyword_rule_vs_outcome"]["keyword_submitted"]
     cap = (f"Outcome-based route labels on the seed-1 split (utility label at $\\lambda$={lb['lambda_default']}; threshold label = cheapest path "
-           f"with ANLS $\\geq$ 0.5). The submitted keyword labels agree with the utility labels on "
+           f"with ANLS $\\geq$ 0.5). Keyword-rule labels agree with the utility labels on "
            f"{100*kw['agreement_with_utility_label']:.1f}\\% of queries (Cohen's $\\kappa$ = {kw['kappa_with_utility_label']:.2f}).")
     table("labels", cap, "tab:labels", ["Split", "Text", "Visual", "Hybrid"], rows)
 
@@ -280,6 +280,7 @@ def index_scaling():
     pr = ix["pooling_recall_at1"]
     cap = (f"ColPali index scaling on one RTX 4090: p50 query latency (ms, batch 1). Pooling 2$\\times$2 cuts vectors "
            f"per page {ix['vectors_per_page']}$\\to${pr['vectors_per_page_pooled']}; R@1 on the real corpus "
+           "(batched query encoding, which differs slightly from the per-query encoding of Table~\\ref{tab:retrieval}) "
            f"{pr['full']:.3f}$\\to${pr['pooled2x2']:.3f}. Sharded latency is emulated here (shards timed one by one "
            "on one GPU); measured sharding on two multi-GPU nodes is in Table~\\ref{tab:multi_gpu} and "
            "host-memory streaming up to a million pages in Table~\\ref{tab:host_stream}.")
@@ -490,7 +491,7 @@ def load_test():
           "per-query service times and measured batching curves on one RTX 4090 (mean $\\pm$ std over "
           f"{n_seeds} seeds): highest arrival rate one GPU sustains at p95 $\\leq$ 2\\,s, and GPUs needed to hold "
           "p95 $\\leq$ 2\\,s at a given load (queries/s).", "tab:load_test",
-          ["Policy", "QPS per GPU", "GPUs@10", "GPUs@25", "GPUs@50", "GPUs@100"], rows)
+          ["Policy", "1-GPU capacity (q/s)", "GPUs@10", "GPUs@25", "GPUs@50", "GPUs@100"], rows)
     fig, ax = plt.subplots(figsize=(4.6, 3.2))
     for n, v in pol.items():
         pts = [(float(r), x["p95_s"]) for r, x in v["latency_vs_rate_1gpu"].items()]

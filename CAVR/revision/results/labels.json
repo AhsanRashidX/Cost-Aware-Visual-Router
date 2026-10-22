@@ -221,7 +221,10 @@
       },
       "agreement_with_utility_label": 0.6853987730061349,
       "kappa_with_utility_label": 0.009416577053264819,
-      "agreement_with_threshold_label": 0.7271165644171779
+      "agreement_with_threshold_label": 0.7271165644171779,
+      "solvable_queries": 5275,
+      "agreement_with_utility_label_solvable": 0.5270142180094787,
+      "kappa_with_utility_label_solvable": 0.00471773379382634
     },
     "keyword_regex": {
       "distribution": {
@@ -231,7 +234,10 @@
       },
       "agreement_with_utility_label": 0.6842944785276074,
       "kappa_with_utility_label": 0.009464197737302782,
-      "agreement_with_threshold_label": 0.7256441717791411
+      "agreement_with_threshold_label": 0.7256441717791411,
+      "solvable_queries": 5275,
+      "agreement_with_utility_label_solvable": 0.5270142180094787,
+      "kappa_with_utility_label_solvable": 0.005738047968282811
     }
   }
 }

@@ -1,6 +1,6 @@
 \begin{table}[t]
 \centering
-\caption{ColPali index scaling on one RTX 4090: p50 query latency (ms, batch 1). Pooling 2$\times$2 cuts vectors per page 1031$\to$263; R@1 on the real corpus 0.577$\to$0.525. Sharded latency is emulated here (shards timed one by one on one GPU); measured sharding on two multi-GPU nodes is in Table~\ref{tab:multi_gpu} and host-memory streaming up to a million pages in Table~\ref{tab:host_stream}.}
+\caption{ColPali index scaling on one RTX 4090: p50 query latency (ms, batch 1). Pooling 2$\times$2 cuts vectors per page 1031$\to$263; R@1 on the real corpus (batched query encoding, which differs slightly from the per-query encoding of Table~\ref{tab:retrieval}) 0.577$\to$0.525. Sharded latency is emulated here (shards timed one by one on one GPU); measured sharding on two multi-GPU nodes is in Table~\ref{tab:multi_gpu} and host-memory streaming up to a million pages in Table~\ref{tab:host_stream}.}
 \label{tab:index_scaling}
 \begin{tabular}{lrrrrrr}
 \toprule

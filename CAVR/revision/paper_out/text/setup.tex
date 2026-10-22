@@ -17,7 +17,7 @@ Routers are trained and evaluated on 5 splits (seeds 1234--1238). Each split ass
 pages to training, validation and test (60/20/20 within each dataset), so all questions about a page (4.6 on
 average) fall in the same split; test splits hold 1,548--1,653 questions. Splits group by page, not by
 document: 129 of the 178 multi-page DocVQA documents have pages in more than one split (seed
-1234). Training data fit the routers; validation data are used for early stopping, hyperparameter
+1234). Training data are used to fit the routers; validation data are used for early stopping, hyperparameter
 selection, the choice of $\lambda$ and the calibration of escalation probabilities. No parameter of the final pipeline
 is fitted or selected on test data. However, the router design itself (Section~\ref{sec:method-routers}) was developed
 on the same five splits, and the feasibility analyses that motivated it inspected their test portions; no separate
@@ -28,7 +28,7 @@ confirmation set was held back (Section~\ref{sec:res-limits}).
 \subsection{OCR and retrieval}
 \label{sec:setup-retrieval}
 
-Every page is OCR'd once with docTR~\cite{doctr} (DBNet-ResNet50 detection and CRNN-VGG16 recognition) on the GPU.
+OCR is run once on every page with docTR~\cite{doctr} (DBNet-ResNet50 detection and CRNN-VGG16 recognition) on the GPU.
 Pages more than twice as tall as they are wide are split into vertical tiles of 1.5 times their width so that the
 detector's resizing does not shrink the text; this applies to 276 of the 500 infographics and
 14 DocVQA pages (at most 8 tiles). OCR of all 1,786 pages took 471\,s; no page
@@ -96,9 +96,10 @@ GPU-seconds and joules per query, and latency as p50 and p95 wall-clock time.
 
 \begin{itemize}
   \item \emph{Fixed policies:} always-text, always-visual and always-hybrid.
-  \item \emph{Keyword rule:} the rule of the submitted version, applied verbatim, and the same rule with its patterns
-  applied as regular expressions.
-  \item \emph{Random at equal budget:} paths drawn independently with CAVR's path mix (200 draws).
+  \item \emph{Keyword rule:} a hand-written rule that routes by keywords in the question, applied as written (its
+  patterns matched as plain substrings) and with its patterns applied as regular expressions.
+  \item \emph{Random at equal budget:} paths drawn independently with CAVR's path mix (200 draws), and a
+  quality-blind mix of always-visual and always-hybrid at CAVR-CE's GPU cost, evaluated in expectation per seed.
   \item \emph{Logistic regression:} one classifier per $\lambda$ on the question embedding, predicting the outcome
   label; regularisation $C \in \{0.1, 1, 10\}$ chosen on validation utility.
   \item \emph{$k$-nearest neighbours (kNN):} regression of per-path ANLS from the $k$ nearest training questions (cosine distance,
@@ -143,16 +144,20 @@ standard deviations describe split-to-split variation rather than independent re
 policies are compared on the same test queries with McNemar's exact test on exact match, and with a paired bootstrap
 of the ANLS difference that resamples whole pages (1000 resamples, 95\% percentile intervals), because questions
 about the same page are not independent. McNemar's test treats questions as independent and is therefore somewhat
-liberal. Calibration is measured by the expected calibration error with ten equal-width bins.
+liberal. The five test splits together cover 5,419 of the 8,150 questions; 2,150 are tested more than
+once and 2,731 never. Counts across splits, such as the number of splits on which a difference is
+significant, are therefore descriptive, and the policy comparisons are exploratory and not corrected for multiple
+testing. Calibration is measured by the expected calibration error with ten equal-width bins.
 
 \subsection{Serving and scaling experiments}
 \label{sec:setup-serving}
 
-\emph{Batched generation.} Each path is run on 32 questions drawn from a stratified sample (up to 150
+\paragraph{Batched generation.} Each path is run on 32 questions drawn from a stratified sample (up to 150
 questions per dataset and question type) at batch sizes 1, 2, 4, 8 and 16 (hybrid: up to 8). Batch sizes whose peak
-reserved memory exceeded 3\,GiB are excluded, which leaves a largest batch of 8 for the text
+reserved memory exceeded 21\,GiB (within 3\,GiB of the GPU's memory) are excluded, which leaves a largest batch of 8 for the text
 and visual paths and 4 for the hybrid path; batch sizes in between are interpolated linearly.
-\emph{Load test.} A discrete-event simulation serves Poisson arrivals with a pool of identical GPUs and an ideal
+
+\paragraph{Load test.} A discrete-event simulation serves Poisson arrivals with a pool of identical GPUs and an ideal
 global queue. Requests are drawn with replacement from a split's test queries. A free GPU takes the oldest waiting
 request and batches it with the other waiting requests of the same path, without waiting for more; a batch takes the
 mean measured generation time of its members, scaled by the measured batching curve, plus the sum of their ColPali
@@ -163,7 +168,8 @@ within 2\,s; a value of 0 means below 0.25\,queries/s. The number of GPUs needed
 queries/s is the smallest pool, up to 256 GPUs, that holds p95 within the target, found by doubling and then binary
 search. Results at p95 $\le$ 2\,s are averaged over the 5 splits; the 5\,s sensitivity check, the latency
 curves and the $\lambda$ operating points use split 1.
-\emph{Index scaling.} Corpora of 1k, 10k, 50k and 100k pages are built by repeating the real page embeddings. We time
+
+\paragraph{Index scaling.} Corpora of 1k, 10k, 50k and 100k pages are built by repeating the real page embeddings. We time
 exhaustive MaxSim with the index resident on the GPU (when it fits within 18\,GiB), streamed in chunks from
 pinned host memory, pooled 2$\times$2 over the patch grid (1,024 patch vectors to 256, re-normalised, plus the 7 prompt
 tokens: 263 vectors), and split into shards that each fit one GPU. On this workstation sharding is emulated by timing
@@ -171,7 +177,8 @@ the shards one after another and reporting the slowest shard, without the cost o
 real GPUs below. Latency is the median
 over 50 single queries (all from DocVQA); throughput uses query batches of 1, 4, 16, 64 (streamed index: 1, 4
 and 16), with at least two repetitions per batch size.
-\emph{Multi-GPU sharding.} Sharding is measured on two further machines, one with three Tesla P40 GPUs and one with
+
+\paragraph{Multi-GPU sharding.} Sharding is measured on two further machines, one with three Tesla P40 GPUs and one with
 two NVIDIA A10 GPUs, all in Tesla Compute Cluster (TCC) mode, NVIDIA's compute-only driver model (Table~\ref{tab:hardware_multigpu}), with the same benchmark script. The page embeddings of the evaluation corpus and the per-token embeddings of
 the questions are exported from the workstation, so no model runs on these nodes. A corpus of 1k to 150k pages,
 built by repeating the real pages (page $j$ is real page $j$ modulo the 1,786 evaluation pages), is split into one
@@ -183,7 +190,8 @@ latency includes dispatch and merge. Shards larger than 70\% of GPU memory (15.7
 Latency is the median and 95th percentile over 50 single queries; throughput and energy use query batches of
 1, 4, 16 and 64. Energy is read from the NVML counters of all GPUs of the node, so runs on fewer GPUs include the idle
 draw of the unused ones, which we estimate from the runs themselves (Section~\ref{sec:res-scale}).
-\emph{Index in host memory.} On the NVIDIA A10 node, corpora of 100k, 250k, 500k and 1M pages, built in the same way, are held
+
+\paragraph{Index in host memory.} On the NVIDIA A10 node, corpora of 100k, 250k, 500k and 1M pages, built in the same way, are held
 in host memory (up to 246\,GiB) and streamed to the GPUs for every query batch. Windows refuses page-locked
 (pinned) allocations of this size, so the index is allocated as ordinary memory and then page-locked with
 \texttt{cudaHostRegister} in blocks of 16\,GiB. With $g$ GPUs the corpus is split into $g$ contiguous

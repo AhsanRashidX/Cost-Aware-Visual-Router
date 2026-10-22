@@ -2,21 +2,25 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-Routing in multimodal RAG is a scheduling decision over scarce GPU resources: generation grows with the request
-rate, the visual index grows with the corpus, and interactive services are judged on tail latency. Measured end to
+Serving multimodal RAG at scale is a GPU provisioning problem with two levers: routing reduces generation compute
+per query, and index placement handles visual-index memory as the corpus grows. Measured end to
 end with real retrieval and generation on one GPU, the content-aware router CAVR-CE uses 29\% less GPU compute
-than always combining text and image contexts, at a mean ANLS cost of 0.008. In a load test simulated from
+than always combining text and image contexts, at a mean ANLS cost of 0.008; against a quality-blind mix
+of the visual and hybrid paths at equal ANLS it saves 20\%. In a load test simulated from
 measured service times, it reduces the GPUs needed for 100 queries/s at p95 $\le$ 2\,s from 106 to
-72. Its cost weight is set at serving time, and pre-generation escalation trades part of the
-saving back for quality without adding a serial step. On two multi-GPU nodes (three Tesla P40 and two NVIDIA A10 GPUs), sharding the visual index
+72, while always using the page image alone needs 64 at lower ANLS. Its cost
+weight is set at serving time; confidence-based escalation reached the same operating point as lowering this
+weight.
+
+On two multi-GPU nodes (three Tesla P40 and two NVIDIA A10 GPUs), sharding the visual index
 holds exhaustive search at constant latency as the corpus grows with the number of GPUs, with parallel efficiency
 of at least 99.6\% and 97.6\% from 50k pages up. With the index in host memory,
 two GPUs searched a million pages in large batches at close to the throughput per GPU of GPU-resident search,
 which would need 16 GPUs; the price is single-query latency (6.4\,s), which limits this
 placement to batch search.
 
-The evaluation also corrects the earlier version of this work. Keyword-derived route labels do not reflect which path
-answers correctly, list-price cost estimates do not survive measurement, and with a shared generator the text path is
+The evaluation also shows what does not hold. Keyword-derived route labels do not reflect which path
+answers correctly, cost estimates from list prices do not match measured costs, and with a shared generator the text path is
 not a cheap path. A per-query oracle (ANLS 0.630 at 0.486 GPU-s) shows how much remains: the
 bottleneck is predicting, before generation, whether a path will succeed.
 

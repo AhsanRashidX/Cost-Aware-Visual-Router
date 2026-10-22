@@ -20,8 +20,8 @@ BM25 pages of OCR text; the visual path reads the top-1 ColPali page image (at m
 tokens); the hybrid path reads both. Over all 8,150 questions, always-text reaches ANLS 0.367 at
 0.43 GPU-s per query, always-visual 0.546 at 0.62 GPU-s, and always-hybrid
 0.570 at 1.01 GPU-s (329\,J).
-With a shared local generator the text path is therefore \emph{not} the cheap path the submitted version
-assumed: OCR text costs about as many input tokens as a page image, and the text path is much less accurate.
+With a shared local generator the text path is therefore \emph{not} a cheap path:
+OCR text costs about as many input tokens as a page image, and the text path is much less accurate.
 The real cost differences are between one context and two (hybrid costs 1.6$\times$ the visual path and
 2.3$\times$ the text path) and the size of the visual index at scale (Section~\ref{sec:res-scale}).
 In 35\% of queries every path fails. For 76\% of these, no path had the gold page in its
@@ -31,19 +31,21 @@ can recover these queries; they bound every policy.
 \subsection{Outcome-based route labels}
 \label{sec:res-labels}
 
-Route labels are now derived from measured outcomes: the label of a query is the path that maximises
+Route labels are derived from measured outcomes: the label of a query is the path that maximises
 $\mathrm{ANLS} - \lambda \cdot \mathrm{cost}$, with ties broken towards the cheaper path (Table~\ref{tab:labels}).
-The keyword labels used in the submitted version agree with these outcome labels on 68.5\% of queries,
+Labels from a keyword rule over the question text agree with these outcome labels on 68.5\% of queries,
 with Cohen's $\kappa = 0.01$, i.e.\ no agreement beyond chance; the keyword rule sends 97\% of
-queries to the text path. Routing accuracy against keyword labels therefore says nothing about cost or answer
-quality, and we no longer report it.
+queries to the text path. On the 5,275 queries that at least one path answers, agreement falls to
+52.7\% ($\kappa = 0.005$): most of the overall agreement comes from queries that every path
+fails, which tie and default to the cheaper text path. Routing accuracy measured against keyword labels therefore says nothing about cost or answer
+quality.
 
 \input{tables/labels}
 
 \subsection{Routing policies}
 \label{sec:res-policies}
 
-Table~\ref{tab:main_results} compares fixed policies, the submitted keyword rule, simple learned baselines,
+Table~\ref{tab:main_results} compares fixed policies, a keyword rule, simple learned baselines,
 CAVR, the content-aware CAVR-CE and the per-query oracle. All router costs include the router's own measured
 overhead and, where the router reads ColPali scores, ColPali retrieval for every query.
 
@@ -59,11 +61,17 @@ CAVR-CE reaches ANLS 0.557 $\pm$ 0.015 at 0.716 GPU-s per query, against
 (25--36\% across seeds; Table~\ref{tab:router_ce_tests}).
 The price is a small ANLS loss: CAVR-CE is lower than always-hybrid on 4 of 5 seeds
 (mean difference $-0.008$, range $-0.015$ to $+0.001$), and the 95\% bootstrap interval
-excludes zero on 2 of 5 seeds. On exact match, the difference is not significant on
-5 of 5 seeds (McNemar $p = 0.098$--$0.74$).
+excludes zero on 2 of 5 seeds. On exact match, McNemar's test finds no significant difference
+on 5 of 5 seeds ($p = 0.098$--$0.74$), but with only 80--107
+discordant pairs per seed it is underpowered, so this does not show that the two policies are equivalent.
 Against always-visual, CAVR-CE gains $+0.012$ to $+0.018$ ANLS (bootstrap interval above zero on
 5 of 5 seeds; McNemar on exact match $p \le 0.029$ on 5 of 5 seeds)
 for 15\% more GPU.
+Part of the saving over always-hybrid comes from using the hybrid path less often, whichever queries are chosen.
+A quality-blind random mix of always-visual and always-hybrid at CAVR-CE's GPU cost reaches ANLS 0.547
+(in expectation, computed per seed), and at CAVR-CE's ANLS it costs 0.896 GPU-s. The saving attributable
+to choosing queries is therefore 20\% (13--26\% across seeds), or $+0.010$
+ANLS at equal cost.
 
 The per-query oracle reaches ANLS 0.630 $\pm$ 0.016 at only 0.486 GPU-s, so substantial headroom
 remains. It is limited by prediction: CAVR-CE predicts per-path success with a mean AUC of 0.842
@@ -99,9 +107,11 @@ validation split by logistic regression; their expected calibration error on tes
 depending on the signal. On top of CAVR-CE, re-routing on the ColPali score margin at $\tau = 0.5$ raises ANLS
 from 0.557 to 0.564 and GPU cost from 0.716 to 0.856 GPU-s
 (34\% of queries escalated), still 15\% below always-hybrid.
-Escalation adds latency. Because the re-routing decision is made before generation, it adds no serial step:
+Setting $\lambda = 0$ reaches the same point without escalation (ANLS 0.564 at 0.845 GPU-s), and
+the signal and $\tau$ shown here were highlighted after inspecting test results, so this comparison is exploratory.
+Because the re-routing decision is made before generation, it adds no serial step, and its latency cost is small:
 p95 latency rises from 1.24\,s to 1.36\,s, against 1.39\,s for always-hybrid. Signals
-that judge the generated answer (token log-probabilities) need the first answer first. Computed from the measured
+that judge the generated answer (token log-probabilities) can be computed only after the routed answer exists. Computed from the measured
 per-stage times, a serial cascade has p95 1.91\,s; launching the hybrid path alongside the routed path cuts
 p95 to 1.42\,s but costs 1.46 GPU-s per query, 45\% more than always-hybrid (assuming two
 concurrent workers).
@@ -122,7 +132,8 @@ service times and measured batching curves, gives the highest arrival rate one G
 the number of GPUs needed for a given load (Table~\ref{tab:load_test}, mean over seeds; Figure~\ref{fig:gpus},
 seed 1). Serving 100 queries/s at p95 $\le$ 2\,s needs 106.0 $\pm$ 0.6 GPUs for always-hybrid,
 72.4 $\pm$ 3.9 for CAVR-CE (32\% fewer), 64.4 $\pm$ 0.5 for always-visual and
-41.6 $\pm$ 0.8 for the oracle. The saving depends on the target: at p95 $\le$ 5\,s, seed 1 needs
+41.6 $\pm$ 0.8 for the oracle. At this target batches rarely form: the ratio of GPUs needed by CAVR-CE and always-hybrid (0.68)
+tracks their ratio of batch-1 GPU-seconds (0.71). The saving depends on the target: at p95 $\le$ 5\,s, seed 1 needs
 63 GPUs for always-hybrid and 49 for CAVR-CE (22\% fewer). With HF Transformers
 generation (no serving engine such as vLLM~\cite{vllm}), one GPU serves at most 3.88 (text), 3.06
 (visual) and 1.80 (hybrid) queries/s at the best batch size within memory. The simulation keeps the
@@ -137,7 +148,9 @@ million pages (about 246\,GiB) would exceed the memory of most current accelerat
 but lowers recall@1 on the real corpus from 0.577 to 0.525 (both measured with the same batched
 query encoding); emulated sharding over 2 GPUs (shards timed one after another on this GPU) gives
 19.8\,ms. A GPU-resident index answers in 0.55\,ms at 1k pages and 19.8\,ms at
-50k pages. Building a 100k-page index would take about 1.7 GPU-hours, extrapolated from a 64-page
+50k pages.
+
+\paragraph{Offline cost.} Building a 100k-page index would take about 1.7 GPU-hours, extrapolated from a 64-page
 benchmark at batch 4 (16.2 pages/s); the 1,786-page evaluation index was built at batch
 8, which exceeded GPU memory, and ran at 11.3 pages per GPU-second. docTR OCR of the
 1,786 evaluation pages took 471\,s and 29.3\,kJ.
@@ -153,7 +166,9 @@ efficiency of at least 99.7\% from 10k pages up. With 50k pages per GPU, a
 328\,ms, as fast as 50k pages on one GPU (weak-scaling efficiency 99.9\%). Smaller
 corpora gain less at batch 1 (three GPUs give 2.51$\times$ at 1k pages and 2.52$\times$ at 10k pages),
 where per-query overheads are a larger share of a short search; their batch-64 throughput still reaches
-96\% and 102\% of linear scaling. Energy per query for the whole node falls from
+96\% and 102\% of linear scaling.
+
+Energy per query for the whole node falls from
 28.4\,J on one GPU to 17.8\,J on three at 50k pages, but not because the GPUs work more efficiently: an
 unused GPU, which holds a CUDA context in the benchmark process, draws about 51\,W (estimated from the runs; 50--53\,W across
 configurations), and without the idle draw the active energy is 17.8\,J per query whatever the number of GPUs.
@@ -256,14 +271,24 @@ All measurements except index sharding and the host-memory index use one consume
 below the point where the driver spills to system RAM. Generation uses HF Transformers rather than a serving
 engine such as vLLM~\cite{vllm}, so absolute capacity is pessimistic; the comparison between policies is the main
 result. The 2\,s latency target is our choice; the saving is smaller at looser targets.
+
 The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
-computed from measured per-stage times rather than measured on concurrent workers. Indexes of 10k--1M pages
+computed from measured per-stage times rather than measured on concurrent workers. The simulator assumes an ideal
+global queue and unlimited CPU, charges a batch the mean generation time of its members, and keeps the
+1,786-page evaluation index on every GPU, so retrieval capacity at large corpus sizes is not included. Costs
+are measured without prefix or encoder caching, which would favour paths whose page image repeats across
+questions. Indexes of 10k--1M pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that
 scale. Multi-GPU sharding was measured for retrieval only, on two server nodes with at most three GPUs
 each (Tesla P40, NVIDIA A10), whose absolute times do not transfer to the workstation, and the load test does not include sharded retrieval. The host-memory index was measured in one process on one node, with 5 latency queries and 2
 repetitions per batch (latency varied by at most 0.5\% within the run) and with host memory placed across CPU
-sockets without control; its energy covers the GPUs only, and GPU-resident search at a million pages is
-projected from smaller resident runs, not measured. Energy covers the GPU only (NVML). The router handles text
+sockets without control, and GPU-resident search at a million pages is
+projected from smaller resident runs, not measured.
+
+Energy covers the GPU only (NVML); host CPU and memory energy is not counted. Answers are short (at most
+32 tokens), so cost is dominated by processing the input; with longer answers the relative cost of an
+extra context shrinks. The savings are relative to this path set and one shared generator, and they depend on the
+retrieval depth and input caps of each path; routing to a smaller generator was not tested. The router handles text
 queries over visual documents; queries that contain an image are out of scope. The router design was developed on the same five splits that we
 report on, and the feasibility analyses that motivated it looked at their test portions; no parameter of the final
 pipeline is selected on test data, but a held-out confirmation set would give a cleaner estimate. Splits group

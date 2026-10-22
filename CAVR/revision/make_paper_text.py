@@ -30,6 +30,7 @@ def values():
     ce_sum, ce_lc, ce_cost = J("router_ce/summary.json"), J("router_ce/learning_curve.json"), J("router_ce_cost.json")
     hw, a = meta["hardware"], ev["aggregate"]
     V = {}
+    V["max_new_tokens"] = meta["max_new_tokens"]
 
     # data, hardware
     V["n_q"], V["n_pages"] = f"{man['natural']['queries']:,}", f"{man['pages']['total']:,}"
@@ -62,6 +63,24 @@ def values():
     # labels (seed-1 split)
     kw = lb["keyword_rule_vs_outcome"]["keyword_submitted"]
     V["kappa"], V["kw_agree"] = f"{kw['kappa_with_utility_label']:.2f}", f"{100 * kw['agreement_with_utility_label']:.1f}"
+    V["kw_solv_n"] = f"{kw['solvable_queries']:,}"
+    V["kw_agree_solv"] = f"{100 * kw['agreement_with_utility_label_solvable']:.1f}"
+    V["kw_kappa_solv"] = f"{kw['kappa_with_utility_label_solvable']:.3f}"
+    ra = J("review_analyses.json")
+    bm, ev0 = ra["blind_mix"], ra["escalation_vs_lambda0"]
+    V.update({
+        "bm_mix_anls": f"{bm['anls_at_ce_cost']['mean']:.3f}", "bm_diff": f"{bm['ce_minus_mix_anls']['mean']:.3f}",
+        "bm_mix_gpu": f"{bm['gpu_at_ce_anls']['mean']:.3f}", "bm_save": f"{100 * bm['saving_vs_mix']['mean']:.0f}",
+        "bm_save_min": f"{100 * bm['saving_vs_mix']['min']:.0f}", "bm_save_max": f"{100 * bm['saving_vs_mix']['max']:.0f}",
+        "esc_l0_anls": f"{ev0['lambda0_anls']['mean']:.3f}", "esc_l0_gpu": f"{ev0['lambda0_gpu_s']['mean']:.3f}",
+        "disc_min": f"{ra['mcnemar_power']['discordant_pairs']['min']:.0f}",
+        "disc_max": f"{ra['mcnemar_power']['discordant_pairs']['max']:.0f}",
+        "cov_tested": f"{ra['split_coverage']['tested_at_least_once']:,}",
+        "cov_multi": f"{ra['split_coverage']['tested_more_than_once']:,}",
+        "cov_never": f"{ra['split_coverage']['never_tested']:,}",
+        "cap_hyb_max": f"{ra['capacity_1gpu']['always_hybrid_max']:g}",
+        "cap_hyb_zero": ra["capacity_1gpu"]["seeds_below_first_step"],
+    })
     V["kw_text_share"] = f"{100 * kw['distribution'].get('text', 0) / lb['n_queries']:.0f}"
 
     # policies: mean (+- std) over seeds on test
@@ -135,6 +154,8 @@ def values():
         V[f"g100_{n}"] = f"{gd['mean']:.0f}"
         V[f"g100_{n}_pm"] = f"{gd['mean']:.1f} $\\pm$ {gd['std']:.1f}"
     V["g100_save"] = f"{100 * (1 - ss['cavr_ce_valsel']['gpus_needed']['100']['mean'] / ss['always_hybrid']['gpus_needed']['100']['mean']):.0f}"
+    V["g100_ratio"] = f"{ss['cavr_ce_valsel']['gpus_needed']['100']['mean'] / ss['always_hybrid']['gpus_needed']['100']['mean']:.2f}"
+    V["gs_ratio"] = f"{a['cavr_ce_valsel']['gpu_s']['mean'] / a['always_hybrid']['gpu_s']['mean']:.2f}"
     P1 = lt["policies"]
     V["g100_5s_hyb"], V["g100_5s_ce"] = P1["always_hybrid"]["gpus_needed"]["5.0"]["100"], P1["cavr_ce_valsel"]["gpus_needed"]["5.0"]["100"]
     V["g100_5s_save"] = f"{100 * (1 - V['g100_5s_ce'] / V['g100_5s_hyb']):.0f}"
@@ -286,8 +307,8 @@ BM25 pages of OCR text; the visual path reads the top-1 ColPali page image (at m
 tokens); the hybrid path reads both. Over all <<n_q>> questions, always-text reaches ANLS <<text_anls>> at
 <<text_gpu>> GPU-s per query, always-visual <<visual_anls>> at <<visual_gpu>> GPU-s, and always-hybrid
 <<hybrid_anls>> at <<hybrid_gpu>> GPU-s (<<hybrid_j>>\,J).
-With a shared local generator the text path is therefore \emph{not} the cheap path the submitted version
-assumed: OCR text costs about as many input tokens as a page image, and the text path is much less accurate.
+With a shared local generator the text path is therefore \emph{not} a cheap path:
+OCR text costs about as many input tokens as a page image, and the text path is much less accurate.
 The real cost differences are between one context and two (hybrid costs <<hyb_x_vis>>$\times$ the visual path and
 <<hyb_x_txt>>$\times$ the text path) and the size of the visual index at scale (Section~\ref{sec:res-scale}).
 In <<all_fail>>\% of queries every path fails. For <<fail_nogold>>\% of these, no path had the gold page in its
@@ -297,19 +318,21 @@ can recover these queries; they bound every policy.
 \subsection{Outcome-based route labels}
 \label{sec:res-labels}
 
-Route labels are now derived from measured outcomes: the label of a query is the path that maximises
+Route labels are derived from measured outcomes: the label of a query is the path that maximises
 $\mathrm{ANLS} - \lambda \cdot \mathrm{cost}$, with ties broken towards the cheaper path (Table~\ref{tab:labels}).
-The keyword labels used in the submitted version agree with these outcome labels on <<kw_agree>>\% of queries,
+Labels from a keyword rule over the question text agree with these outcome labels on <<kw_agree>>\% of queries,
 with Cohen's $\kappa = <<kappa>>$, i.e.\ no agreement beyond chance; the keyword rule sends <<kw_text_share>>\% of
-queries to the text path. Routing accuracy against keyword labels therefore says nothing about cost or answer
-quality, and we no longer report it.
+queries to the text path. On the <<kw_solv_n>> queries that at least one path answers, agreement falls to
+<<kw_agree_solv>>\% ($\kappa = <<kw_kappa_solv>>$): most of the overall agreement comes from queries that every path
+fails, which tie and default to the cheaper text path. Routing accuracy measured against keyword labels therefore says nothing about cost or answer
+quality.
 
 \input{tables/labels}
 
 \subsection{Routing policies}
 \label{sec:res-policies}
 
-Table~\ref{tab:main_results} compares fixed policies, the submitted keyword rule, simple learned baselines,
+Table~\ref{tab:main_results} compares fixed policies, a keyword rule, simple learned baselines,
 CAVR, the content-aware CAVR-CE and the per-query oracle. All router costs include the router's own measured
 overhead and, where the router reads ColPali scores, ColPali retrieval for every query.
 
@@ -325,11 +348,17 @@ CAVR-CE reaches ANLS <<cavr_ce_valsel_anls_pm>> at <<cavr_ce_valsel_gpu>> GPU-s 
 (<<ce_save_min>>--<<ce_save_max>>\% across seeds; Table~\ref{tab:router_ce_tests}).
 The price is a small ANLS loss: CAVR-CE is lower than always-hybrid on <<ce_lower_n>> of <<ce_n>> seeds
 (mean difference $<<ce_dh_mean>>$, range $<<ce_dh_min>>$ to $<<ce_dh_max>>$), and the 95\% bootstrap interval
-excludes zero on <<ce_ci_excl>> of <<ce_n>> seeds. On exact match, the difference is not significant on
-<<ce_nonsig_h>> of <<ce_n>> seeds (McNemar $p = <<ce_ph_min>>$--$<<ce_ph_max>>$).
+excludes zero on <<ce_ci_excl>> of <<ce_n>> seeds. On exact match, McNemar's test finds no significant difference
+on <<ce_nonsig_h>> of <<ce_n>> seeds ($p = <<ce_ph_min>>$--$<<ce_ph_max>>$), but with only <<disc_min>>--<<disc_max>>
+discordant pairs per seed it is underpowered, so this does not show that the two policies are equivalent.
 Against always-visual, CAVR-CE gains $<<ce_dv_min>>$ to $<<ce_dv_max>>$ ANLS (bootstrap interval above zero on
 <<ce_v_ci_excl>> of <<ce_n>> seeds; McNemar on exact match $p \le <<ce_pv_max>>$ on <<ce_sig_v>> of <<ce_n>> seeds)
 for <<ce_vs_vis_cost>>\% more GPU.
+Part of the saving over always-hybrid comes from using the hybrid path less often, whichever queries are chosen.
+A quality-blind random mix of always-visual and always-hybrid at CAVR-CE's GPU cost reaches ANLS <<bm_mix_anls>>
+(in expectation, computed per seed), and at CAVR-CE's ANLS it costs <<bm_mix_gpu>> GPU-s. The saving attributable
+to choosing queries is therefore <<bm_save>>\% (<<bm_save_min>>--<<bm_save_max>>\% across seeds), or $+<<bm_diff>>$
+ANLS at equal cost.
 
 The per-query oracle reaches ANLS <<oracle_anls_pm>> at only <<oracle_gpu>> GPU-s, so substantial headroom
 remains. It is limited by prediction: CAVR-CE predicts per-path success with a mean AUC of <<ce_auc>>
@@ -365,9 +394,11 @@ validation split by logistic regression; their expected calibration error on tes
 depending on the signal. On top of CAVR-CE, re-routing on the ColPali score margin at $\tau = 0.5$ raises ANLS
 from <<esc_none_anls>> to <<esc_anls>> and GPU cost from <<esc_none_gpu>> to <<esc_gpu>> GPU-s
 (<<esc_rate>>\% of queries escalated), still <<esc_save>>\% below always-hybrid.
-Escalation adds latency. Because the re-routing decision is made before generation, it adds no serial step:
+Setting $\lambda = 0$ reaches the same point without escalation (ANLS <<esc_l0_anls>> at <<esc_l0_gpu>> GPU-s), and
+the signal and $\tau$ shown here were highlighted after inspecting test results, so this comparison is exploratory.
+Because the re-routing decision is made before generation, it adds no serial step, and its latency cost is small:
 p95 latency rises from <<esc_none_p95>>\,s to <<esc_p95>>\,s, against <<hyb_p95>>\,s for always-hybrid. Signals
-that judge the generated answer (token log-probabilities) need the first answer first. Computed from the measured
+that judge the generated answer (token log-probabilities) can be computed only after the routed answer exists. Computed from the measured
 per-stage times, a serial cascade has p95 <<ser_p95>>\,s; launching the hybrid path alongside the routed path cuts
 p95 to <<spe_p95>>\,s but costs <<spe_gpu>> GPU-s per query, <<spe_vs_hyb>>\% more than always-hybrid (assuming two
 concurrent workers).
@@ -388,7 +419,8 @@ service times and measured batching curves, gives the highest arrival rate one G
 the number of GPUs needed for a given load (Table~\ref{tab:load_test}, mean over seeds; Figure~\ref{fig:gpus},
 seed 1). Serving 100 queries/s at p95 $\le$ 2\,s needs <<g100_always_hybrid_pm>> GPUs for always-hybrid,
 <<g100_cavr_ce_valsel_pm>> for CAVR-CE (<<g100_save>>\% fewer), <<g100_always_visual_pm>> for always-visual and
-<<g100_oracle_pm>> for the oracle. The saving depends on the target: at p95 $\le$ 5\,s, seed 1 needs
+<<g100_oracle_pm>> for the oracle. At this target batches rarely form: the ratio of GPUs needed by CAVR-CE and always-hybrid (<<g100_ratio>>)
+tracks their ratio of batch-1 GPU-seconds (<<gs_ratio>>). The saving depends on the target: at p95 $\le$ 5\,s, seed 1 needs
 <<g100_5s_hyb>> GPUs for always-hybrid and <<g100_5s_ce>> for CAVR-CE (<<g100_5s_save>>\% fewer). With HF Transformers
 generation (no serving engine such as vLLM~\cite{vllm}), one GPU serves at most <<bq_text>> (text), <<bq_visual>>
 (visual) and <<bq_hybrid>> (hybrid) queries/s at the best batch size within memory. The simulation keeps the
@@ -403,7 +435,9 @@ million pages (about <<ix1m_gb>>\,GiB) would exceed the memory of most current a
 but lowers recall@1 on the real corpus from <<pool_r1_full>> to <<pool_r1>> (both measured with the same batched
 query encoding); emulated sharding over <<ix100_shards>> GPUs (shards timed one after another on this GPU) gives
 <<ix100_shard_ms>>\,ms. A GPU-resident index answers in <<ix1k_ms>>\,ms at 1k pages and <<ix50k_ms>>\,ms at
-50k pages. Building a 100k-page index would take about <<build_h>> GPU-hours, extrapolated from a 64-page
+50k pages.
+
+\paragraph{Offline cost.} Building a 100k-page index would take about <<build_h>> GPU-hours, extrapolated from a 64-page
 benchmark at batch <<build_b>> (<<build_pps>> pages/s); the 1,786-page evaluation index was built at batch
 <<full_build_b>>, which exceeded GPU memory, and ran at <<full_build_pps>> pages per GPU-second. docTR OCR of the
 <<n_pages>> evaluation pages took <<ocr_s>>\,s and <<ocr_kj>>\,kJ.
@@ -419,7 +453,9 @@ efficiency of at least <<mg_thr_eff_min>>\% from <<mg_min_pages>> pages up. With
 <<mg_weak_ms>>\,ms, as fast as <<mg_weak_k>> pages on one GPU (weak-scaling efficiency <<mg_weak_eff>>\%). Smaller
 corpora gain less at batch 1 (three GPUs give <<mg1k_sp3>>$\times$ at 1k pages and <<mg10k_sp3>>$\times$ at 10k pages),
 where per-query overheads are a larger share of a short search; their batch-<<mg_tb>> throughput still reaches
-<<mg1k_teff3>>\% and <<mg10k_teff3>>\% of linear scaling. Energy per query for the whole node falls from
+<<mg1k_teff3>>\% and <<mg10k_teff3>>\% of linear scaling.
+
+Energy per query for the whole node falls from
 <<mg50k_e1>>\,J on one GPU to <<mg50k_e3>>\,J on three at 50k pages, but not because the GPUs work more efficiently: an
 unused GPU, which holds a CUDA context in the benchmark process, draws about <<mg_idle_w>>\,W (estimated from the runs; <<mg_idle_lo>>--<<mg_idle_hi>>\,W across
 configurations), and without the idle draw the active energy is <<mg50k_ea1>>\,J per query whatever the number of GPUs.
@@ -522,14 +558,24 @@ All measurements except index sharding and the host-memory index use one consume
 below the point where the driver spills to system RAM. Generation uses HF Transformers rather than a serving
 engine such as vLLM~\cite{vllm}, so absolute capacity is pessimistic; the comparison between policies is the main
 result. The 2\,s latency target is our choice; the saving is smaller at looser targets.
+
 The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
-computed from measured per-stage times rather than measured on concurrent workers. Indexes of 10k--<<hs_max_k>> pages
+computed from measured per-stage times rather than measured on concurrent workers. The simulator assumes an ideal
+global queue and unlimited CPU, charges a batch the mean generation time of its members, and keeps the
+<<n_pages>>-page evaluation index on every GPU, so retrieval capacity at large corpus sizes is not included. Costs
+are measured without prefix or encoder caching, which would favour paths whose page image repeats across
+questions. Indexes of 10k--<<hs_max_k>> pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that
 scale. Multi-GPU sharding was measured for retrieval only, on two server nodes with at most <<mg_n_word>> GPUs
 each (<<mg_gpu>>, <<a10_gpu>>), whose absolute times do not transfer to the workstation, and the load test does not include sharded retrieval. The host-memory index was measured in one process on one node, with <<hs_nlat>> latency queries and <<hs_reps>>
 repetitions per batch (latency varied by at most <<hs_cv>>\% within the run) and with host memory placed across CPU
-sockets without control; its energy covers the GPUs only, and GPU-resident search at <<hs_max_words>> pages is
-projected from smaller resident runs, not measured. Energy covers the GPU only (NVML). The router handles text
+sockets without control, and GPU-resident search at <<hs_max_words>> pages is
+projected from smaller resident runs, not measured.
+
+Energy covers the GPU only (NVML); host CPU and memory energy is not counted. Answers are short (at most
+<<max_new_tokens>> tokens), so cost is dominated by processing the input; with longer answers the relative cost of an
+extra context shrinks. The savings are relative to this path set and one shared generator, and they depend on the
+retrieval depth and input caps of each path; routing to a smaller generator was not tested. The router handles text
 queries over visual documents; queries that contain an image are out of scope. The router design was developed on the same five splits that we
 report on, and the feasibility analyses that motivated it looked at their test portions; no parameter of the final
 pipeline is selected on test data, but a held-out confirmation set would give a cleaner estimate. Splits group

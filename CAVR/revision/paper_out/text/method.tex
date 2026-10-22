@@ -46,7 +46,7 @@ sweep over $\lambda$ reaches the vertices of the upper convex hull of achievable
 how we report the trade-off. The same Lagrangian form underlies cost-aware routers and cascades for language
 models~\cite{frugalgpt,routellm}; here it is applied to context modalities that share one generator.
 
-The submitted version maximised the ratio $Q/c$, which is not equivalent: the ratio ignores the budget. Consider
+Maximising the ratio $Q/c$, an intuitive alternative, is not equivalent: the ratio ignores the budget. Consider
 two paths with $(Q,c) = (0.50, 0.40)$ and $(0.60, 0.60)$. The ratio rule always picks the first (1.25 vs 1.00).
 Under a budget $B \ge 0.60$ the constrained optimum is the second ($\lambda^\ast = 0$), and (\ref{eq:rule}) picks it
 for every $\lambda < 0.5$.
@@ -148,6 +148,6 @@ band 3). BM25 retrieval, OCR text lookup and, optionally, the CAVR MLP run on CP
 ColPali query encoding and scoring, CAVR-CE and generation run on GPUs, with one dynamic-batching queue per path. Our
 load test models the GPU pool and its per-path queues; the dispatcher logic itself is not simulated. The visual index
 is placed according to corpus size: GPU-resident while it fits, then sharded across GPUs (each GPU scores its shard and
-the dispatcher merges the per-shard top-$k$), streamed from pinned host memory, or pooled. Because $\lambda$ is a run-time input, the dispatcher could raise it when queues grow, shifting load
+the dispatcher merges the per-shard top-$k$), streamed from host memory for batch workloads, or pooled. Because $\lambda$ is a run-time input, the dispatcher could raise it when queues grow, shifting load
 from the hybrid path to single-context paths instead of violating the latency target; we describe this option but do
 not evaluate it.
