@@ -3,6 +3,8 @@
 Inputs, the raw outputs of p40/check_env.py and p40/shard_bench.py, copied unchanged from the node:
   results/multi_gpu/p40_env.json, results/multi_gpu/p40_shard_scaling.json
 Output: results/multi_gpu_scaling.json
+Other nodes (e.g. the 2x A10 server): --env results/a10/a10_env.json --scaling results/a10/a10_shard_scaling.json
+  --out results/a10/multi_gpu_scaling.json
   strong scaling  per corpus size: speedup and parallel efficiency of p50 latency and of batch-64 throughput against
                   the fewest GPUs that hold the corpus, and the dispatch + merge overhead over ideal division
   weak scaling    runs with the same pages per GPU
@@ -11,6 +13,7 @@ Output: results/multi_gpu_scaling.json
                   split evenly), the idle power per GPU is (E_g - E_G) / ((G - g) t_g), with t_g the time per query;
                   it is estimated on corpora of at least MIN_PAGES pages and used to separate active from idle energy.
 """
+import argparse
 import json
 import math
 
@@ -36,8 +39,13 @@ def node_hardware(env):
 
 
 def main():
-    env = json.load(open(SRC / "p40_env.json", encoding="utf-8"))
-    sb = json.load(open(SRC / "p40_shard_scaling.json", encoding="utf-8"))
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--env", default=str(SRC / "p40_env.json"))
+    ap.add_argument("--scaling", default=str(SRC / "p40_shard_scaling.json"))
+    ap.add_argument("--out", default=str(RESULTS / "multi_gpu_scaling.json"))
+    args = ap.parse_args()
+    env = json.load(open(args.env, encoding="utf-8"))
+    sb = json.load(open(args.scaling, encoding="utf-8"))
     G = len(sb["devices"])
     R = {(r["pages"], r["gpus"]): r for r in sb["runs"]}
 
@@ -100,14 +108,14 @@ def main():
                       "budget_gib_per_gpu": sb["budget_gib_per_gpu"], "energy_mode": sb["energy_mode"]},
            "n_gpus": G, "throughput_batch": int(THR_BATCH), "min_pages_fit": MIN_PAGES,
            "strong": strong, "weak": weak, "summary": summary}
-    write_json(RESULTS / "multi_gpu_scaling.json", out)
+    write_json(args.out, out)
     for n, s in strong.items():
         print(f"{int(n):>7} pages: " + ", ".join(
             f"{g} GPU {1000 * v['p50_s']:.1f} ms (eff {100 * v['latency_efficiency']:.0f}%, "
             f"thr eff {100 * v['throughput_efficiency']:.0f}%)" for g, v in s["by_gpus"].items()))
     print("weak:", {p: {g: round(1000 * v["p50_s"], 1) for g, v in d.items()} for p, d in weak.items()})
     print("summary:", json.dumps(summary))
-    print(f"wrote {RESULTS / 'multi_gpu_scaling.json'}")
+    print(f"wrote {args.out}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,288 @@
+{
+  "source": {
+    "node": {
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA A10",
+          "capability": "8.6",
+          "memory_gb": 22.3,
+          "fp32_tflops": 13.99,
+          "fp16_tflops": 82.62,
+          "power_limit_w": 150.0,
+          "pcie_width": 16
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA A10",
+          "capability": "8.6",
+          "memory_gb": 22.3,
+          "fp32_tflops": 14.36,
+          "fp16_tflops": 61.038,
+          "power_limit_w": 150.0,
+          "pcie_width": 16
+        }
+      ],
+      "driver": "616.92",
+      "driver_model": "TCC",
+      "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
+      "cpu_threads": 112,
+      "ram_gib": 1023.5,
+      "os": "Windows-10-10.0.26300-SP0",
+      "python": "3.11.17",
+      "torch": "2.11.0+cu128",
+      "cuda_build": "12.8",
+      "topology_recorded": true
+    },
+    "devices": [
+      "NVIDIA A10",
+      "NVIDIA A10"
+    ],
+    "capability": [
+      "8.6",
+      "8.6"
+    ],
+    "store_dtype": "fp16",
+    "compute_dtype": "float16",
+    "vectors_per_page": 1031,
+    "topk": 10,
+    "n_lat": 50,
+    "n_check": 500,
+    "batches": [
+      "1",
+      "4",
+      "16",
+      "64"
+    ],
+    "chunk": 4096,
+    "budget_gib_per_gpu": 15.603881835937498,
+    "energy_mode": "counter"
+  },
+  "n_gpus": 2,
+  "throughput_batch": 64,
+  "min_pages_fit": 10000,
+  "strong": {
+    "1000": {
+      "base_gpus": 1,
+      "index_gib_total": 0.24580955505371094,
+      "by_gpus": {
+        "1": {
+          "index_gib_per_gpu": 0.24580955505371094,
+          "p50_s": 0.0012795500006177463,
+          "p95_s": 0.0014233800015063024,
+          "latency_speedup": 1.0,
+          "latency_efficiency": 1.0,
+          "overhead_s": 0.0,
+          "throughput_qps": 2159.1495650797174,
+          "throughput_speedup": 1.0,
+          "throughput_efficiency": 1.0,
+          "energy_j_per_query_node": 0.11661458333333334,
+          "energy_j_per_query_active": 0.09020135826013242,
+          "node_power_w": 251.7883268861191
+        },
+        "2": {
+          "index_gib_per_gpu": 0.12290477752685547,
+          "p50_s": 0.0009424999952898361,
+          "p95_s": 0.001073250000627013,
+          "latency_speedup": 1.3576127395356232,
+          "latency_efficiency": 0.6788063697678116,
+          "overhead_s": 0.00030272499498096295,
+          "throughput_qps": 3778.4118866217746,
+          "throughput_speedup": 1.7499537538902603,
+          "throughput_efficiency": 0.8749768769451302,
+          "energy_j_per_query_node": 0.07388541666666666,
+          "energy_j_per_query_active": 0.07388541666666666,
+          "node_power_w": 279.1695365813359
+        }
+      }
+    },
+    "10000": {
+      "base_gpus": 1,
+      "index_gib_total": 2.4580955505371094,
+      "by_gpus": {
+        "1": {
+          "index_gib_per_gpu": 2.4580955505371094,
+          "p50_s": 0.008709850008017384,
+          "p95_s": 0.009898860003158915,
+          "latency_speedup": 1.0,
+          "latency_efficiency": 1.0,
+          "overhead_s": 0.0,
+          "throughput_qps": 231.16952636703343,
+          "throughput_speedup": 1.0,
+          "throughput_efficiency": 1.0,
+          "energy_j_per_query_node": 0.8611979166666667,
+          "energy_j_per_query_active": 0.6144954021725791,
+          "node_power_w": 199.08271450410925
+        },
+        "2": {
+          "index_gib_per_gpu": 1.2290477752685547,
+          "p50_s": 0.0047657999966759235,
+          "p95_s": 0.005328135004674549,
+          "latency_speedup": 1.8275735477973012,
+          "latency_efficiency": 0.9137867738986506,
+          "overhead_s": 0.0004108749926672317,
+          "throughput_qps": 455.94610717444596,
+          "throughput_speedup": 1.9723452063077265,
+          "throughput_efficiency": 0.9861726031538632,
+          "energy_j_per_query_node": 0.61390625,
+          "energy_j_per_query_active": 0.61390625,
+          "node_power_w": 279.9081648575622
+        }
+      }
+    },
+    "25000": {
+      "base_gpus": 1,
+      "index_gib_total": 6.145238876342773,
+      "by_gpus": {
+        "1": {
+          "index_gib_per_gpu": 6.145238876342773,
+          "p50_s": 0.020870250002190005,
+          "p95_s": 0.02396315499427146,
+          "latency_speedup": 1.0,
+          "latency_efficiency": 1.0,
+          "overhead_s": 0.0,
+          "throughput_qps": 92.92071888134967,
+          "throughput_speedup": 1.0,
+          "throughput_efficiency": 1.0,
+          "energy_j_per_query_node": 2.173208333333333,
+          "energy_j_per_query_active": 1.559458201869369,
+          "node_power_w": 201.9360806122731
+        },
+        "2": {
+          "index_gib_per_gpu": 3.0726194381713867,
+          "p50_s": 0.01090325000404846,
+          "p95_s": 0.012365979995956875,
+          "latency_speedup": 1.9141311071873728,
+          "latency_efficiency": 0.9570655535936864,
+          "overhead_s": 0.0004681250029534567,
+          "throughput_qps": 185.05394467093967,
+          "throughput_speedup": 1.9915251076268015,
+          "throughput_efficiency": 0.9957625538134007,
+          "energy_j_per_query_node": 1.6322135416666665,
+          "energy_j_per_query_active": 1.6322135416666665,
+          "node_power_w": 302.0475544307418
+        }
+      }
+    },
+    "50000": {
+      "base_gpus": 1,
+      "index_gib_total": 12.290477752685547,
+      "by_gpus": {
+        "1": {
+          "index_gib_per_gpu": 12.290477752685547,
+          "p50_s": 0.041060450006625615,
+          "p95_s": 0.048276045000966404,
+          "latency_speedup": 1.0,
+          "latency_efficiency": 1.0,
+          "overhead_s": 0.0,
+          "throughput_qps": 46.32807647204666,
+          "throughput_speedup": 1.0,
+          "throughput_efficiency": 1.0,
+          "energy_j_per_query_node": 4.4189895833333335,
+          "energy_j_per_query_active": 3.1879843749999996,
+          "node_power_w": 204.72328734584428
+        },
+        "2": {
+          "index_gib_per_gpu": 6.145238876342773,
+          "p50_s": 0.021036300007835962,
+          "p95_s": 0.024069094996229976,
+          "latency_speedup": 1.951885549803469,
+          "latency_efficiency": 0.9759427749017345,
+          "overhead_s": 0.0005060750045231543,
+          "throughput_qps": 92.2096796246692,
+          "throughput_speedup": 1.9903627917793327,
+          "throughput_efficiency": 0.9951813958896664,
+          "energy_j_per_query_node": 3.1879843749999996,
+          "energy_j_per_query_active": 3.1879843749999996,
+          "node_power_w": 293.96301786720124
+        }
+      }
+    },
+    "100000": {
+      "base_gpus": 2,
+      "index_gib_total": 24.580955505371094,
+      "by_gpus": {
+        "2": {
+          "index_gib_per_gpu": 12.290477752685547,
+          "p50_s": 0.04140289999486413,
+          "p95_s": 0.04729723500131512,
+          "latency_speedup": 1.0,
+          "latency_efficiency": 1.0,
+          "overhead_s": 0.0,
+          "throughput_qps": 46.33833286925066,
+          "throughput_speedup": 1.0,
+          "throughput_efficiency": 1.0,
+          "energy_j_per_query_node": 6.3851354166666665,
+          "energy_j_per_query_active": 6.3851354166666665,
+          "node_power_w": 295.87653035274144
+        }
+      }
+    },
+    "120000": {
+      "base_gpus": 2,
+      "index_gib_total": 29.497146606445312,
+      "by_gpus": {
+        "2": {
+          "index_gib_per_gpu": 14.748573303222656,
+          "p50_s": 0.049548350005352404,
+          "p95_s": 0.05654820499039487,
+          "latency_speedup": 1.0,
+          "latency_efficiency": 1.0,
+          "overhead_s": 0.0,
+          "throughput_qps": 38.55531391329735,
+          "throughput_speedup": 1.0,
+          "throughput_efficiency": 1.0,
+          "energy_j_per_query_node": 7.788291666666667,
+          "energy_j_per_query_active": 7.788291666666667,
+          "node_power_w": 300.2800300566511
+        }
+      }
+    }
+  },
+  "weak": {
+    "25000": {
+      "1": {
+        "pages": 25000,
+        "index_gib_total": 6.145238876342773,
+        "p50_s": 0.020870250002190005,
+        "efficiency": 1.0
+      },
+      "2": {
+        "pages": 50000,
+        "index_gib_total": 12.290477752685547,
+        "p50_s": 0.021036300007835962,
+        "efficiency": 0.9921065013531798
+      }
+    },
+    "50000": {
+      "1": {
+        "pages": 50000,
+        "index_gib_total": 12.290477752685547,
+        "p50_s": 0.041060450006625615,
+        "efficiency": 1.0
+      },
+      "2": {
+        "pages": 100000,
+        "index_gib_total": 24.580955505371094,
+        "p50_s": 0.04140289999486413,
+        "efficiency": 0.9917288405333686
+      }
+    }
+  },
+  "summary": {
+    "check_exact_min": 0.9980000257492065,
+    "check_exact_or_tie_min": 1.0,
+    "max_overhead_s_ge50k": 0.0005060750045231543,
+    "min_latency_efficiency_ge50k": 0.9759427749017345,
+    "min_throughput_efficiency_ge10k": 0.9861726031538632,
+    "idle_w_per_gpu": 57.03010342915442,
+    "idle_w_range": [
+      50.26962495273266,
+      57.16629745784765
+    ],
+    "max_pages_by_gpus": {
+      "1": 50000,
+      "2": 120000
+    }
+  }
+}

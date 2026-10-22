@@ -1,0 +1,40 @@
+{
+  "python": "3.11.17",
+  "os": "Windows-10-10.0.26300-SP0",
+  "torch": "2.11.0+cu128",
+  "cuda_build": "12.8",
+  "cuda_available": true,
+  "arch_list": [
+    "sm_75",
+    "sm_80",
+    "sm_86",
+    "sm_90",
+    "sm_100",
+    "sm_120"
+  ],
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA A10",
+      "capability": "8.6",
+      "memory_gb": 22.3,
+      "fp32_tflops": 13.99,
+      "fp16_tflops": 82.62
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA A10",
+      "capability": "8.6",
+      "memory_gb": 22.3,
+      "fp32_tflops": 14.36,
+      "fp16_tflops": 61.038
+    }
+  ],
+  "cpu_threads": 112,
+  "ram_gb": 1023.5,
+  "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
+  "smi_gpus": "index, name, driver_version, driver_model.current, pcie.link.gen.current, pcie.link.width.current, power.limit [W], memory.total [MiB]\n0, NVIDIA A10, 616.92, TCC, 1, 16, 150.00 W, 23028 MiB\n1, NVIDIA A10, 616.92, TCC, 1, 16, 150.00 W, 23028 MiB\n",
+  "smi_topology": "\t\u001b[4mGPU0\tGPU1\tCPU Affinity\tNUMA Affinity\tGPU NUMA ID\u001b[0m\nGPU0\t X \tPXB\t\t\t\tN/A\nGPU1\tPXB\t X \t\t\t\tN/A\n\nLegend:\n\n  X    = Self\n  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)\n  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node\n  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)\n  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)\n  PIX  = Connection traversing at most a single PCIe bridge\n  NV#  = Connection traversing a bonded set of # NVLinks\n",
+  "nvml_energy_counter": true,
+  "pytorch_supports_gpus": true
+}

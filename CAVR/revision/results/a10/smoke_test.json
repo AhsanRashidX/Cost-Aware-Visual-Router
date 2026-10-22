@@ -1,0 +1,113 @@
+{
+  "hardware": {
+    "timestamp": "2026-10-22T16:29:23",
+    "os": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.17",
+    "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
+    "cpu_threads": 112,
+    "ram_gb": 1023.5,
+    "git_commit": "f8575a534a8ab02f670fe3ace485861fc110f338",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "qwen-vl-utils": "0.0.14",
+      "accelerate": "1.15.0"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "616.92"
+  },
+  "cuda_visible_devices": "1",
+  "revisions": {
+    "Qwen/Qwen2.5-VL-7B-Instruct": {
+      "recorded": "cc594898137f460bfe9f0759e9844b3ce807cfb5",
+      "cache": "cc594898137f460bfe9f0759e9844b3ce807cfb5",
+      "snapshot_present": true,
+      "match": true
+    },
+    "vidore/colpali-v1.3": {
+      "recorded": "b5c6dd62125326e6f0b540c1f7b36e901cdc0a11",
+      "cache": "b5c6dd62125326e6f0b540c1f7b36e901cdc0a11",
+      "snapshot_present": true,
+      "match": true
+    },
+    "vidore/colpaligemma-3b-pt-448-base": {
+      "recorded": "30ab955d073de4a91dc5a288e8c97226647e3e5a",
+      "cache": "30ab955d073de4a91dc5a288e8c97226647e3e5a",
+      "snapshot_present": true,
+      "match": true
+    },
+    "sentence-transformers/all-mpnet-base-v2": {
+      "recorded": "e8c3b32edf5434bc2275fc9bab85f82640a19130",
+      "cache": "e8c3b32edf5434bc2275fc9bab85f82640a19130",
+      "snapshot_present": true,
+      "match": true
+    }
+  },
+  "qwen_load_s": 16.855393399993773,
+  "qwen": [
+    {
+      "qid": "docvqa-49153",
+      "path": "text",
+      "a10_answer": "2.44",
+      "4090_answer": "2.44",
+      "same": true,
+      "input_tokens": 2057,
+      "4090_input_tokens": 2057,
+      "a10_generate_s": 1.624590299994452,
+      "4090_generate_s": 0.5345007000141777
+    },
+    {
+      "qid": "docvqa-49153",
+      "path": "visual",
+      "a10_answer": "0.24",
+      "4090_answer": "0.24",
+      "same": true,
+      "input_tokens": 1313,
+      "4090_input_tokens": 1313,
+      "a10_generate_s": 1.171553699998185,
+      "4090_generate_s": 0.5711663999827579
+    },
+    {
+      "qid": "docvqa-49153",
+      "path": "hybrid",
+      "a10_answer": "0.28",
+      "4090_answer": "0.28",
+      "same": true,
+      "input_tokens": 3299,
+      "4090_input_tokens": 3299,
+      "a10_generate_s": 2.3250390000030166,
+      "4090_generate_s": 1.1529872000101022
+    }
+  ],
+  "qwen_peak_mem_gib": 18.555129051208496,
+  "colpali_load_s": 10.313879599998472,
+  "colpali": {
+    "queries": 64,
+    "mean_token_cosine_vs_4090": 0.9998561358079314,
+    "min_token_cosine": 0.9995993971824646,
+    "top1_same_as_4090": 49
+  }
+}
