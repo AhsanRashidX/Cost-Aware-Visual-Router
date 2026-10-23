@@ -11,8 +11,9 @@ from pathlib import Path
 os.environ.setdefault("HF_HOME", r"D:\hf_cache")
 
 ROOT = Path(__file__).resolve().parent
-DATA = ROOT / "data"
-RESULTS = ROOT / "results"
+# CAVR_DATA / CAVR_RESULTS let the same scripts run on another data set (e.g. the confirmation set)
+DATA = Path(os.environ.get("CAVR_DATA", ROOT / "data"))
+RESULTS = Path(os.environ.get("CAVR_RESULTS", ROOT / "results"))
 SEED = 1234
 
 PACKAGES = ["torch", "transformers", "sentence-transformers", "colpali-engine", "python-doctr",

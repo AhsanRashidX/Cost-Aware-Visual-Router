@@ -140,9 +140,23 @@ kept, which is epoch 2 on 5 of 5 splits.
 generator is run with the same prompt, caps and decoding on five further contexts: the top-1 BM25 page as text, the
 top-3 ColPali page images, and the gold page as text, as an image, and as both. These runs were made on the
 NVIDIA A10 node; to check that it reproduces the workstation, the main text and visual paths were re-run there on
-200 of the questions, giving identical answers for 98.5\% and 97.5\% of them (visual ANLS
-0.522 against 0.516). Differences are paired per question with page-cluster bootstrap
+200 of the questions, and the hybrid path on the same questions, giving identical answers for
+98.5\%, 97.5\% and 97.5\% of them (ANLS 0.522 against 0.516 for the
+visual path and 0.502 against 0.509 for the hybrid path). Differences are paired per question with page-cluster bootstrap
 intervals.
+
+\subsection{Held-out confirmation set}
+\label{sec:setup-confirm}
+
+After the design was fixed, a confirmation set was drawn from the training splits of the same Hugging Face copy
+(revision \texttt{539088ef8a8a}): a seeded sample of 750 questions per dataset from 6 training-split
+files, whose 1,662 DocVQA pages and 791 infographics form the retrieval pools. No page is shared
+with the validation data. OCR, BM25 and ColPali retrieval, generation on all three paths and the CAVR-CE features were
+run with the unchanged pipeline on the NVIDIA A10 node. One question was excluded because its hybrid input
+(5,184 tokens) did not fit in that GPU's memory. CAVR-CE was re-trained for each seed on that seed's original
+training split, the confirmation features were standardised with the same split's statistics, and the decision rule,
+$\lambda$ and cost estimates were not changed. Comparisons use the paired page-cluster bootstrap and McNemar tests
+described next.
 
 \subsection{Statistical analysis}
 \label{sec:setup-stats}

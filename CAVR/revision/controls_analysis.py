@@ -3,7 +3,7 @@
   matched depth    visual_k3 vs the main text path (both 3 pages) and the main visual path vs text_k1 (both 1 page):
                    separates the input modality from the number of retrieved pages
   gold page        gold_text / gold_visual / gold_hybrid vs the main paths: how much of each path's loss is retrieval
-  reproduction     check_text / check_visual on the A10 node vs the cached workstation answers (same questions)
+  reproduction     check_text / check_visual / check_hybrid on the A10 node vs the cached workstation answers
 Differences are paired per question; 95% intervals from a page-cluster bootstrap (1000 resamples, fixed seed).
 Inputs: results/controls/controls_*.jsonl, results/path_outputs.jsonl, results/retrieval_*.jsonl
 Output: results/controls_analysis.json
@@ -81,7 +81,7 @@ def main():
 
     # A10 vs workstation reproduction on the check questions
     rep = {}
-    for c, p in (("check_text", "text"), ("check_visual", "visual")):
+    for c, p in (("check_text", "text"), ("check_visual", "visual"), ("check_hybrid", "hybrid")):
         qs = [q for q in by if c in by[q] and p in cached[q]]
         same = [by[q][c]["answer"].strip() == cached[q][p]["answer"].strip() for q in qs]
         a10 = np.array([by[q][c]["anls"] for q in qs])

@@ -57,8 +57,9 @@ WITHDRAWN = [
     ("92.6% saving on the natural distribution", "Withdrawn",
      "Never measured. All results now use the full validation sets at their natural question mix."),
     ("Out-of-distribution generalisation on InfoVQA", "Withdrawn",
-     "InfoVQA was also used for training; both datasets are now in-distribution and split by page. "
-     "[AUTHOR ACTION: confirm, or add a held-out benchmark.]"),
+     "InfoVQA was also used for training; both datasets are now in-distribution and split by page. A held-out "
+     "confirmation set of <<cf_n>> new questions from the same datasets is reported (the saving over always-hybrid "
+     "holds; the gain over always-visual does not); generalisation to other datasets is not claimed."),
     ("Training details (AdamW, loss weights α/β/γ, temperature 0.7)", "Corrected",
      "The released code trained a plain classifier. The revised routers and their hyperparameters are documented "
      "and released."),

@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{Held-out confirmation set: 1,499 new questions from the DocVQA and InfographicVQA training splits, run on the A10 node. CAVR-CE is each seed's router re-trained on its original training split and frozen (validation-chosen $\lambda$); mean $\pm$ standard deviation over the five seeds. GPU-seconds per query on the A10, including retrieval; the router's overhead is the one measured on the workstation.}
+\label{tab:confirmation}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Policy} & \textbf{ANLS} & \textbf{EM} & \textbf{GPU-s} \\
+\midrule
+Always-text & 0.328 & 0.254 & 0.84 \\
+Always-visual & 0.600 & 0.538 & 1.11 \\
+Always-hybrid & 0.590 & 0.524 & 2.03 \\
+CAVR-CE (frozen) & 0.605 $\pm$ 0.004 & 0.541 $\pm$ 0.003 & 1.32 $\pm$ 0.11 \\
+Per-query oracle & 0.659 & -- & 0.92 \\
+\bottomrule
+\end{tabular}
+\end{table}

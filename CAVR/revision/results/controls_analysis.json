@@ -286,6 +286,15 @@
       "max_abs_anls_diff": 0.6666666666666667,
       "generate_s_a10_mean": 1.0264671030006138,
       "generate_s_workstation_mean": 0.5573201400006655
+    },
+    "hybrid": {
+      "n": 200,
+      "identical_answer_share": 0.975,
+      "anls_a10": 0.502177386339151,
+      "anls_workstation": 0.5088440530058178,
+      "max_abs_anls_diff": 0.8,
+      "generate_s_a10_mean": 1.9520513940004458,
+      "generate_s_workstation_mean": 0.963473041500547
     }
   },
   "generate_s_a10_mean": {
@@ -296,13 +305,13 @@
     "gold_hybrid": 1.2716557336001035
   },
   "hardware": {
-    "timestamp": "2026-10-23T12:09:06",
+    "timestamp": "2026-10-23T14:43:30",
     "os": "Windows-10-10.0.26300-SP0",
     "python": "3.11.17",
     "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
     "cpu_threads": 112,
     "ram_gb": 1023.5,
-    "git_commit": "7cfba6863bbfa3ac0b04b705c50463299c2f5985",
+    "git_commit": "b6f7a3bb87f81c17c19b2ad10b81cf51d3cc30fd",
     "packages": {
       "torch": "2.11.0+cu128",
       "transformers": "5.18.0",

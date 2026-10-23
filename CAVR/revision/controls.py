@@ -8,10 +8,10 @@ of N_PER_DATASET questions per dataset, with the same generator, prompt and caps
   gold_text        the gold page as text (OCR)
   gold_visual      the gold page image
   gold_hybrid      the gold page image and its OCR text
-  check_text, check_visual   the main text and visual paths re-run on the first N_CHECK questions, to confirm the
+  check_text, check_visual, check_hybrid (--extra)   the main paths re-run on the first N_CHECK questions, to confirm the
                    A10 node reproduces the cached workstation answers
 Usage:  CUDA_VISIBLE_DEVICES=<i> python controls.py --shard <i>/<n>      (resumable; one process per GPU)
-Output: results/controls/controls_<i>.jsonl (+ _meta.json)
+Output: results/controls/controls_<i>.jsonl (+ _meta.json); with --extra, controls_extra_<i>.jsonl
 """
 import argparse
 import hashlib
@@ -30,6 +30,7 @@ from metrics import anls, exact_match
 N_PER_DATASET = 750
 N_CHECK = 200
 CONDITIONS = ["text_k1", "visual_k3", "gold_text", "gold_visual", "gold_hybrid", "check_text", "check_visual"]
+EXTRA = ["check_hybrid"]   # run separately with --extra (keeps the job order, and so the shards, of the main run)
 
 
 def sample_qids(queries):
@@ -47,7 +48,8 @@ def contexts(cond, q, rt, rv):
     gold = q["page_id"]
     return {"text_k1": ([rt["top"][0]], []), "visual_k3": ([], rv["top"][:3]),
             "gold_text": ([gold], []), "gold_visual": ([], [gold]), "gold_hybrid": ([gold], [gold]),
-            "check_text": (rt["top"][:G.K_TEXT], []), "check_visual": ([], [rv["top"][0]])}[cond]
+            "check_text": (rt["top"][:G.K_TEXT], []), "check_visual": ([], [rv["top"][0]]),
+            "check_hybrid": (rt["top"][:G.K_TEXT], [rv["top"][0]])}[cond]
 
 
 def messages(question, texts, n_images):
@@ -65,6 +67,7 @@ def messages(question, texts, n_images):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--shard", default="0/1")
+    ap.add_argument("--extra", action="store_true", help="run the EXTRA conditions instead (output controls_extra_<i>)")
     args = ap.parse_args()
     si, sn = map(int, args.shard.split("/"))
     set_seed()
@@ -76,12 +79,14 @@ def main():
     pages = {(p["dataset"], p["page_id"]): p for p in map(json.loads, open(DATA / "pages.jsonl"))}
     ocr = {(o["dataset"], o["page_id"]): o["text"] for o in map(json.loads, open(DATA / "ocr.jsonl", encoding="utf-8"))}
     qids = sample_qids(queries)
-    jobs = [(qid, c) for n, qid in enumerate(qids) for c in CONDITIONS if not c.startswith("check") or n < N_CHECK]
+    conds = EXTRA if args.extra else CONDITIONS
+    jobs = [(qid, c) for n, qid in enumerate(qids) for c in conds if not c.startswith("check") or n < N_CHECK]
     jobs = jobs[si::sn]
 
     out_dir = RESULTS / "controls"
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"controls_{si}.jsonl"
+    tag = f"extra_{si}" if args.extra else f"{si}"
+    out_path = out_dir / f"controls_{tag}.jsonl"
     done = set()
     if out_path.exists():
         done = {(r["qid"], r["condition"]) for r in map(json.loads, open(out_path, encoding="utf-8"))}
@@ -94,8 +99,8 @@ def main():
             chat = processor.apply_chat_template(messages("warm up", ["warm up"], len(imgs)), add_generation_prompt=True)
             model.generate(**processor(text=[chat], images=imgs or None, return_tensors="pt").to(model.device),
                            max_new_tokens=4, do_sample=False)
-    write_json(out_dir / f"controls_{si}_meta.json", {
-        "model": G.MODEL, "conditions": CONDITIONS, "n_per_dataset": N_PER_DATASET, "n_check": N_CHECK,
+    write_json(out_dir / f"controls_{tag}_meta.json", {
+        "model": G.MODEL, "conditions": conds, "n_per_dataset": N_PER_DATASET, "n_check": N_CHECK,
         "shard": args.shard, "max_new_tokens": G.MAX_NEW_TOKENS, "max_chars_per_page": G.MAX_CHARS_PER_PAGE,
         "max_pixels": G.MAX_PIXELS, "script_sha1": hashlib.sha1(open(__file__, "rb").read()).hexdigest(),
         "hardware": hardware_info()})

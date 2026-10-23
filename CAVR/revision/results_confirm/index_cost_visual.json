@@ -1,0 +1,69 @@
+{
+  "model": "vidore/colpali-v1.3",
+  "index": {
+    "pages": 2453,
+    "page_batch": 8,
+    "wall_s": 469.1818518000073,
+    "gpu_s": 300.82701420018566,
+    "preprocess_s": 168.17771059964434,
+    "energy_j": 42899.599,
+    "peak_mem_gb": 10.28780460357666,
+    "vectors_per_page": 1031,
+    "dim": 128,
+    "index_bytes_bf16": 647435008
+  },
+  "query": {
+    "n": 1500,
+    "encode_p50_s": 0.07541950000450015,
+    "score_p50_s": 0.0013158500078134239,
+    "total_s": 107.06704369996442,
+    "energy_j": 9136.848
+  },
+  "recall": {
+    "@1": 0.526,
+    "@3": 0.6633333333333333,
+    "@5": 0.714,
+    "@10": 0.78
+  },
+  "mrr": 0.6136314284700963,
+  "hardware": {
+    "timestamp": "2026-10-23T12:25:23",
+    "os": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.17",
+    "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
+    "cpu_threads": 112,
+    "ram_gb": 1023.5,
+    "git_commit": "7cfba6863bbfa3ac0b04b705c50463299c2f5985",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "qwen-vl-utils": "0.0.14",
+      "accelerate": "1.15.0"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "616.92"
+  }
+}

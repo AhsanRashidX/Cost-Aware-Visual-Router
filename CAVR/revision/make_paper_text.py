@@ -108,6 +108,41 @@ def values():
         "ct_rep_vis_a10": f"{ca['reproduction']['visual']['anls_a10']:.3f}",
         "ct_rep_vis_ws": f"{ca['reproduction']['visual']['anls_workstation']:.3f}",
     })
+    rep_h = ca["reproduction"]["hybrid"]
+    V.update({"ct_rep_h": f"{100 * rep_h['identical_answer_share']:.1f}",
+              "ct_rep_hyb_a10": f"{rep_h['anls_a10']:.3f}", "ct_rep_hyb_ws": f"{rep_h['anls_workstation']:.3f}",
+              "ct_slow": f"{rep_h['generate_s_a10_mean'] / rep_h['generate_s_workstation_mean']:.1f}"})
+    cf = J("confirmation.json")
+    cs, cfx = cf["seeds"], cf["fixed"]
+    man_c = json.load(open(ROOT / "data_confirm" / "manifest.json"))
+    V.update({
+        "cf_n": f"{cf['n_queries']:,}", "cf_pages": f"{cf['pages']:,}",
+        "cf_n_ds": f"{man_c['natural']['by_dataset']['docvqa']:,}",
+        "cf_pool_doc": f"{man_c['pages']['by_dataset']['docvqa']:,}",
+        "cf_pool_info": f"{man_c['pages']['by_dataset']['infovqa']:,}",
+        "cf_rev": man_c["sources"]["docvqa"]["revision"][:12],
+        "cf_n_shards": len(man_c["sources"]["docvqa"]["shards"]) + len(man_c["sources"]["infovqa"]["shards"]),
+        "cf_oom_sent": "One question was" if len(cf["excluded_oom"]) == 1 else f"{len(cf['excluded_oom'])} questions were",
+        "cf_oom_tok": f"{cf['excluded_oom'][0]['input_tokens']:,}",
+        "cf_agree_min": f"{100 * min(r['test_decision_agreement'] for r in cf['reproducibility']):.0f}",
+        "cf_agree_max": f"{100 * max(r['test_decision_agreement'] for r in cf['reproducibility']):.0f}",
+        "cf_rep_anls": f"{max(abs(r['test_anls_retrained'] - r['test_anls_saved']) for r in cf['reproducibility']):.3f}",
+        "cf_anls": f"{cf['summary']['anls']['mean']:.3f}", "cf_anls_min": f"{cf['summary']['anls']['min']:.3f}",
+        "cf_anls_max": f"{cf['summary']['anls']['max']:.3f}", "cf_gpu": f"{cf['summary']['gpu_s']['mean']:.2f}",
+        "cf_hyb_anls": f"{cfx['hybrid']['anls']:.3f}", "cf_hyb_gpu": f"{cfx['hybrid']['gpu_s']:.2f}",
+        "cf_vis_anls": f"{cfx['visual']['anls']:.3f}", "cf_vis_gpu": f"{cfx['visual']['gpu_s']:.2f}",
+        "cf_save": f"{100 * cf['summary']['saving_vs_hybrid']['mean']:.0f}",
+        "cf_save_min": f"{100 * cf['summary']['saving_vs_hybrid']['min']:.0f}",
+        "cf_save_max": f"{100 * cf['summary']['saving_vs_hybrid']['max']:.0f}",
+        "cf_dh": f"{cf['summary']['anls_diff_vs_hybrid']['mean']:.3f}",
+        "cf_dh_pos": sum(s["anls_diff_vs_hybrid_ci95"][0] > 0 for s in cs),
+        "cf_mc_sig": sum(s["mcnemar_vs_hybrid"]["p"] < 0.05 and s["mcnemar_vs_hybrid"]["ce_only"] > s["mcnemar_vs_hybrid"]["hybrid_only"] for s in cs),
+        "cf_dv": f"{cf['summary']['anls_diff_vs_visual']['mean']:.3f}",
+        "cf_dv_incl": sum(s["anls_diff_vs_visual_ci95"][0] <= 0 <= s["anls_diff_vs_visual_ci95"][1] for s in cs),
+        "cf_vs_vis": f"{100 * (cf['summary']['gpu_s']['mean'] / cfx['visual']['gpu_s'] - 1):.0f}",
+        "cf_vis_less": f"{100 * (1 - cfx['visual']['gpu_s'] / cf['summary']['gpu_s']['mean']):.0f}",
+        "cf_oracle": f"{cf['oracle']['anls']:.3f}",
+    })
     tp = J("token_pooling.json")["methods"]
     best_f = max((k for k in tp if k.startswith("hier")), key=lambda k: int(k[4:]))
     a10_budget_gib = J("a10/a10_shard_scaling.json")["budget_gib_per_gpu"]
@@ -447,6 +482,30 @@ training pages (<<lc_seeds>> seeds) rises only from <<lc_25>> to <<lc_100>>.
 \input{tables/main_results}
 \input{tables/router_ce_tests}
 
+\subsection{Held-out confirmation}
+\label{sec:res-confirm}
+
+The router was designed on the same five splits that we report on. To test it on questions that played no part in
+its design, each seed's CAVR-CE was re-trained with the same code, data and seed on the <<a10_gpu>> node and frozen,
+with its validation-chosen $\lambda$ and training-split cost estimates, and applied to <<cf_n>> new questions from the
+DocVQA and InfographicVQA training splits (<<cf_pages>> pages, none shared with the validation data;
+Section~\ref{sec:setup-confirm}). The re-trained routers make the same choice as the saved ones on
+<<cf_agree_min>>--<<cf_agree_max>>\% of their original test queries, with test ANLS within $\pm$<<cf_rep_anls>>.
+
+On the confirmation set (Table~\ref{tab:confirmation}), the saving over always-hybrid holds. CAVR-CE reaches ANLS
+<<cf_anls>> (<<cf_anls_min>>--<<cf_anls_max>> across seeds) at <<cf_gpu>> GPU-s per query, against <<cf_hyb_anls>> at
+<<cf_hyb_gpu>> GPU-s for always-hybrid: <<cf_save>>\% less GPU compute (<<cf_save_min>>--<<cf_save_max>>\%), with ANLS
+higher by <<cf_dh>> rather than lower (bootstrap interval above zero on <<cf_dh_pos>> of <<ce_n>> seeds; McNemar
+$p < 0.05$ in CAVR-CE's favour on <<cf_mc_sig>> of <<ce_n>>). The gain over the best fixed path does not carry over.
+On these questions the hybrid path is less accurate than the visual path (<<cf_hyb_anls>> against <<cf_vis_anls>>),
+so always-visual is the best fixed policy: CAVR-CE exceeds it by only <<cf_dv>> ANLS (interval includes zero on
+<<cf_dv_incl>> of <<ce_n>> seeds) and uses <<cf_vs_vis>>\% more GPU compute. A quality-blind mix of the visual and
+hybrid paths is then dominated by always-visual, so the query-selection saving of Section~\ref{sec:res-policies} is
+not confirmed on this set. GPU-seconds here are measured on the <<a10_gpu>>, about <<ct_slow>>$\times$ slower per
+query than the workstation, so they are comparable within the set but not with Table~\ref{tab:main_results}.
+
+\input{tables/confirmation}
+
 \subsection{Runtime budget control}
 \label{sec:res-lambda}
 
@@ -688,7 +747,10 @@ retrieval depth and input caps of each path (the depth controls cover <<ct_n>> q
 modality); routing to a smaller generator was not tested. The router handles text
 queries over visual documents; queries that contain an image are out of scope. The router design was developed on the same five splits that we
 report on, and the feasibility analyses that motivated it looked at their test portions; no parameter of the final
-pipeline is selected on test data, but a held-out confirmation set would give a cleaner estimate. Splits group
+pipeline is selected on test data. On a held-out confirmation set, the saving over always-hybrid held but the
+gain over always-visual did not (Section~\ref{sec:res-confirm}): which fixed path is best, and so what routing
+gains over it, depends on the question distribution. The confirmation questions come from the training splits of
+the same two datasets and were run on a different GPU, so they test new questions and pages, not new datasets. Splits group
 questions by page, so pages of one DocVQA document can fall into different splits. Finally, the <<all_fail>>\% of
 queries that every path fails bound what routing can achieve on this benchmark.
 """
@@ -725,9 +787,15 @@ withdrawn; we list them first so that nothing is hidden behind the new results.
    (Table hardware). Dollar estimates from API prices and A100 rates are removed.
 5. **A content-aware router (CAVR-CE).** It reads retrieved content before generation and uses <<ce_save>>% less
    GPU compute than always-hybrid, at a mean ANLS cost of <<ce_dh_mean>>.
-6. **Supercomputing case.** New experiments on serving under load, GPUs needed at a latency target, visual-index
+6. **Held-out confirmation and controls.** The frozen routers were applied to <<cf_n>> new questions from the training
+   splits (Section "Held-out confirmation"): the saving over always-hybrid holds (<<cf_save>>%, at <<cf_dh>> higher
+   ANLS), but always-visual comes within <<cf_dv>> ANLS of the router at <<cf_vis_less>>% less GPU, and the paper says
+   so. Retrieval-depth and gold-page controls (Table controls) separate input modality from retrieval depth and errors.
+7. **Supercomputing case.** New experiments on serving under load, GPUs needed at a latency target, visual-index
    scaling to 100k pages, router throughput and energy.
-7. **Narrowed claims and a full limitations section.**
+8. **Related work and verified references.** A new related-work section; every reference was checked against its
+   DOI, arXiv, OpenReview or publisher record.
+9. **Narrowed claims and a full limitations section.**
 
 ## Withdrawn or corrected claims
 
@@ -887,6 +955,9 @@ difference is not significant on <<ce_nonsig_h>> of <<ce_n>> seeds. CAVR-CE beat
 <<ce_dv_min>> to <<ce_dv_max>> ANLS for <<ce_vs_vis_cost>>% more GPU. At 100 queries/s and p95 ≤ 2 s it needs
 <<g100_cavr_ce_valsel>> GPUs instead of <<g100_always_hybrid>> (simulated). The per-query oracle (ANLS <<oracle_anls>>
 at <<oracle_gpu>> GPU-s) shows that predicting per-query success remains the open problem, and the paper says so.
+On <<cf_n>> held-out questions, the frozen router keeps a <<cf_save>>% saving over always-hybrid, but there
+always-visual comes within <<cf_dv>> ANLS of it at <<cf_vis_less>>% less GPU; the paper reports this as a limit on
+what routing gains over the best single path.
 
 Sincerely,
 [AUTHOR ACTION: authors]

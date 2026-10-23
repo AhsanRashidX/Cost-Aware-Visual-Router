@@ -30,9 +30,15 @@ withdrawn; we list them first so that nothing is hidden behind the new results.
    (Table hardware). Dollar estimates from API prices and A100 rates are removed.
 5. **A content-aware router (CAVR-CE).** It reads retrieved content before generation and uses 29% less
    GPU compute than always-hybrid, at a mean ANLS cost of -0.008.
-6. **Supercomputing case.** New experiments on serving under load, GPUs needed at a latency target, visual-index
+6. **Held-out confirmation and controls.** The frozen routers were applied to 1,499 new questions from the training
+   splits (Section "Held-out confirmation"): the saving over always-hybrid holds (35%, at 0.014 higher
+   ANLS), but always-visual comes within 0.005 ANLS of the router at 16% less GPU, and the paper says
+   so. Retrieval-depth and gold-page controls (Table controls) separate input modality from retrieval depth and errors.
+7. **Supercomputing case.** New experiments on serving under load, GPUs needed at a latency target, visual-index
    scaling to 100k pages, router throughput and energy.
-7. **Narrowed claims and a full limitations section.**
+8. **Related work and verified references.** A new related-work section; every reference was checked against its
+   DOI, arXiv, OpenReview or publisher record.
+9. **Narrowed claims and a full limitations section.**
 
 ## Withdrawn or corrected claims
 
@@ -192,6 +198,9 @@ difference is not significant on 5 of 5 seeds. CAVR-CE beats always-visual by
 +0.012 to +0.018 ANLS for 15% more GPU. At 100 queries/s and p95 ≤ 2 s it needs
 72 GPUs instead of 106 (simulated). The per-query oracle (ANLS 0.630
 at 0.486 GPU-s) shows that predicting per-query success remains the open problem, and the paper says so.
+On 1,499 held-out questions, the frozen router keeps a 35% saving over always-hybrid, but there
+always-visual comes within 0.005 ANLS of it at 16% less GPU; the paper reports this as a limit on
+what routing gains over the best single path.
 
 Sincerely,
 [AUTHOR ACTION: authors]

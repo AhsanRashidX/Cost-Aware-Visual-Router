@@ -42,6 +42,7 @@ def build_index(model, processor, pages, gpu):
         t_load = time.perf_counter()
         imgs = [Image.open(DATA / p["path"]).convert("RGB") for p in batch]
         inputs = processor.process_images(imgs).to(model.device)
+        inputs.pop("labels", None)  # only makes PaliGemma compute an unused LM loss (7.9 GiB at batch 8); embeddings unchanged
         t0 = time.perf_counter()
         with torch.inference_mode():
             out = model(**inputs)

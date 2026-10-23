@@ -7,6 +7,17 @@
 #                  --security-opt seccomp=unconfined (old Docker seccomp profiles break glibc >= 2.34 images)
 #   native         no Docker: vLLM pip-installed in $PYTHON (e.g. a Kaggle notebook with 2x T4); replicas run as
 #                  background processes with CUDA_VISIBLE_DEVICES=i, logs in logs/, PIDs in run/
+# ---- hardware profile -------------------------------------------------------------------------------------------
+#   t4   (default) AWQ 4-bit model, fp16, plain AWQ kernels (compute capability 7.5)
+#   a10  the paper's model itself: Qwen2.5-VL-7B-Instruct in bf16 at revision cc59489, no quantisation, native mode
+#        (vLLM pip-installed in WSL2 on the 2x A10 node)
+PROFILE="${PROFILE:-t4}"
+if [ "$PROFILE" = a10 ]; then
+  MODE="${MODE:-native}"
+  MODEL="${MODEL:-Qwen/Qwen2.5-VL-7B-Instruct}"
+  MODEL_REVISION="${MODEL_REVISION:-cc594898137f460bfe9f0759e9844b3ce807cfb5}"
+  SERVED_NAME="${SERVED_NAME:-qwen2.5-vl-7b}"
+fi
 MODE="${MODE:-docker}"
 
 # ---- what to serve ----------------------------------------------------------------------------------------------
@@ -38,10 +49,14 @@ MAX_PIXELS=1003520
 
 # ---- vLLM server arguments of the study ---------------------------------------------------------------------------
 VLLM_ARGS=(--dtype half --max-model-len 8192 --gpu-memory-utilization 0.90 --max-num-seqs 16 --seed 1234)
+if [ "$PROFILE" = a10 ]; then
+  VLLM_ARGS=(--dtype bfloat16 --max-model-len 8192 --gpu-memory-utilization 0.90 --max-num-seqs 16 --seed 1234)
+fi
 
 # ---- vLLM-version-sensitive arguments: check `--help` of the pinned version and adjust --------------------------
 # T4 = compute capability 7.5: the awq_marlin kernels need >= 8.0, so force the plain AWQ kernels.
 QUANT_ARGS=(--quantization awq)
+if [ "$PROFILE" = a10 ]; then QUANT_ARGS=(); fi   # bf16 weights, no quantisation
 # One image per prompt. JSON form for vLLM >= ~0.8; older releases take: (--limit-mm-per-prompt image=1)
 LIMIT_MM_ARGS=(--limit-mm-per-prompt '{"image": 1}')
 # Same pixel limits as generate.py. Images are already pre-resized, so this mainly bounds vLLM's memory profiling

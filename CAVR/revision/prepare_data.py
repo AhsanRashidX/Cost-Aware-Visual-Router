@@ -1,5 +1,9 @@
 """Step 2: build the query table, page store, samples and manifest from DocVQA + InfoVQA validation.
 
+Confirmation set: --split train --shards <cfg>:<file>,... --n-per-dataset N builds a fresh set from pinned train
+shards (questions sampled with SEED; every page of the loaded shards is kept as the retrieval pool). Run it with
+CAVR_DATA pointing to a separate folder.
+
 Outputs (under CAVR/revision/data/):
   pages/<dataset>/<page_id>.<ext>   original image bytes, one file per unique page
   queries.jsonl                     one row per question, both datasets in one schema
@@ -38,7 +42,8 @@ def docvqa_rows(ds):
 def infovqa_rows(ds):
     for r in ds:
         page_id = hashlib.sha1(r["image_url"].encode()).hexdigest()[:16]
-        reasoning = r["operation/reasoning"]
+        reasoning = r["operation/reasoning"] or []      # None in some train rows
+        atype = r["answer_type"] or []
         yield {
             "qid": f"infovqa-{r['questionId']}",
             "dataset": "infovqa",
@@ -46,21 +51,38 @@ def infovqa_rows(ds):
             "answers": r["answers"],
             "page_id": page_id,
             # reasoning type when present (comparison/arithmetic/counting), else answer type
-            "qtype": reasoning[0] if reasoning else (r["answer_type"][0] if r["answer_type"] else "unknown"),
-            "qtypes_all": r["answer_type"] + reasoning,
+            "qtype": reasoning[0] if reasoning else (atype[0] if atype else "unknown"),
+            "qtypes_all": atype + reasoning,
             "image_url": r["image_url"],
         }, r["image"]
 
 
 def main():
+    import argparse
     from datasets import Image as HFImage, load_dataset
+    from huggingface_hub import hf_hub_download
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--split", default=SPLIT)
+    ap.add_argument("--shards", default=None, help="cfg:path_in_repo,... (only these parquet files)")
+    ap.add_argument("--revision", default=None, help="dataset revision for --shards")
+    ap.add_argument("--n-per-dataset", type=int, default=None, help="sample N questions per dataset (seeded)")
+    args = ap.parse_args()
+    shard_files = {}
+    for item in (args.shards.split(",") if args.shards else []):
+        cfg, f = item.split(":", 1)
+        shard_files.setdefault(cfg, []).append(f)
 
     pages_meta, queries = {}, []
     sources = {}
     for cfg, name, rows_fn in [("DocVQA", "docvqa", docvqa_rows), ("InfographicVQA", "infovqa", infovqa_rows)]:
-        ds = load_dataset(DATASET, cfg, split=SPLIT)
-        sources[name] = {"hf_dataset": DATASET, "config": cfg, "split": SPLIT,
-                         "fingerprint": ds._fingerprint, "rows": len(ds)}
+        if cfg in shard_files:
+            local = [hf_hub_download(DATASET, f, repo_type="dataset", revision=args.revision) for f in shard_files[cfg]]
+            ds = load_dataset("parquet", data_files=local, split="train")
+        else:
+            ds = load_dataset(DATASET, cfg, split=args.split)
+        sources[name] = {"hf_dataset": DATASET, "config": cfg, "split": args.split, "shards": shard_files.get(cfg),
+                         "revision": args.revision, "fingerprint": ds._fingerprint, "rows": len(ds)}
         if "ocr" in ds.column_names:
             ds = ds.remove_columns("ocr")  # we run our own OCR (docTR) for all pages
         ds = ds.cast_column("image", HFImage(decode=False))
@@ -82,6 +104,13 @@ def main():
                                "width": im.width, "height": im.height, "mode": im.mode, "sha1": digest,
                                "bytes": len(img["bytes"])}
 
+    if args.n_per_dataset:                      # confirmation set: sampled questions, all loaded pages as the pool
+        rng0 = random.Random(SEED)
+        keep = []
+        for name in ("docvqa", "infovqa"):
+            qs = [q for q in queries if q["dataset"] == name]
+            keep += rng0.sample(qs, min(args.n_per_dataset, len(qs)))
+        queries = keep
     qids = [q["qid"] for q in queries]
     assert len(qids) == len(set(qids)), "duplicate qids"
 

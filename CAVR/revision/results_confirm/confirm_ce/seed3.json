@@ -1,0 +1,60 @@
+{
+  "seed": 1237,
+  "lambda_valsel": 0.03,
+  "router_latency_s": 0.014022750008734874,
+  "train_s": 559.7561449999921,
+  "val_auc_by_epoch": [
+    0.8454496616427759,
+    0.8523628031753505,
+    0.839103788117062,
+    0.8410750617230093,
+    0.8347447922687734
+  ],
+  "max_abs_diff_vs_saved_qhat": 0.31497061252593994,
+  "mean_abs_diff_vs_saved_qhat": 0.028945649042725563,
+  "test_decision_agreement": 0.8986402966625463,
+  "test_anls_saved": 0.5524740159971843,
+  "test_anls_retrained": 0.5541373656822007,
+  "test_gpu_s_saved": 0.7317838142763412,
+  "test_gpu_s_retrained": 0.7381460569216942,
+  "hardware": {
+    "timestamp": "2026-10-23T14:28:29",
+    "os": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.17",
+    "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
+    "cpu_threads": 112,
+    "ram_gb": 1023.5,
+    "git_commit": "b6f7a3bb87f81c17c19b2ad10b81cf51d3cc30fd",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "qwen-vl-utils": "0.0.14",
+      "accelerate": "1.15.0"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "616.92"
+  }
+}

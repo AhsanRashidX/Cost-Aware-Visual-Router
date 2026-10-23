@@ -80,7 +80,8 @@ measured on two further nodes, with three older GPUs (Tesla P40) and with two NV
   $\arg\max_p \hat{q}_p - \lambda \bar{c}_p$ with $\lambda$ set at serving time, with its relation to
   budget-constrained routing made explicit; and CAVR-CE, a content-aware quality predictor built on a cross-encoder (CE) that uses 29\% less
   GPU compute than always-hybrid at a mean ANLS cost of 0.008, and 20\% less than a quality-blind mix
-  of the visual and hybrid paths at equal ANLS.
+  of the visual and hybrid paths at equal ANLS; on a held-out confirmation set the saving over always-hybrid holds,
+  but always-visual comes within 0.005 ANLS of the router at lower cost.
   \item An analysis of confidence-based escalation that separates pre-generation re-routing from serial and
   speculative cascades, with their latency and GPU cost computed from measured per-stage times.
   \item A serving study: capacity per GPU and GPUs needed at a p95 target under Poisson load (simulated from measured

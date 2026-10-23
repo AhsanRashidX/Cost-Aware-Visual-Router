@@ -96,6 +96,30 @@ training pages (2 seeds) rises only from 0.826 to 0.841.
 \input{tables/main_results}
 \input{tables/router_ce_tests}
 
+\subsection{Held-out confirmation}
+\label{sec:res-confirm}
+
+The router was designed on the same five splits that we report on. To test it on questions that played no part in
+its design, each seed's CAVR-CE was re-trained with the same code, data and seed on the NVIDIA A10 node and frozen,
+with its validation-chosen $\lambda$ and training-split cost estimates, and applied to 1,499 new questions from the
+DocVQA and InfographicVQA training splits (1,097 pages, none shared with the validation data;
+Section~\ref{sec:setup-confirm}). The re-trained routers make the same choice as the saved ones on
+80--93\% of their original test queries, with test ANLS within $\pm$0.007.
+
+On the confirmation set (Table~\ref{tab:confirmation}), the saving over always-hybrid holds. CAVR-CE reaches ANLS
+0.605 (0.600--0.609 across seeds) at 1.32 GPU-s per query, against 0.590 at
+2.03 GPU-s for always-hybrid: 35\% less GPU compute (31--44\%), with ANLS
+higher by 0.014 rather than lower (bootstrap interval above zero on 3 of 5 seeds; McNemar
+$p < 0.05$ in CAVR-CE's favour on 4 of 5). The gain over the best fixed path does not carry over.
+On these questions the hybrid path is less accurate than the visual path (0.590 against 0.600),
+so always-visual is the best fixed policy: CAVR-CE exceeds it by only 0.005 ANLS (interval includes zero on
+4 of 5 seeds) and uses 19\% more GPU compute. A quality-blind mix of the visual and
+hybrid paths is then dominated by always-visual, so the query-selection saving of Section~\ref{sec:res-policies} is
+not confirmed on this set. GPU-seconds here are measured on the NVIDIA A10, about 2.0$\times$ slower per
+query than the workstation, so they are comparable within the set but not with Table~\ref{tab:main_results}.
+
+\input{tables/confirmation}
+
 \subsection{Runtime budget control}
 \label{sec:res-lambda}
 
@@ -337,6 +361,9 @@ retrieval depth and input caps of each path (the depth controls cover 1,500 ques
 modality); routing to a smaller generator was not tested. The router handles text
 queries over visual documents; queries that contain an image are out of scope. The router design was developed on the same five splits that we
 report on, and the feasibility analyses that motivated it looked at their test portions; no parameter of the final
-pipeline is selected on test data, but a held-out confirmation set would give a cleaner estimate. Splits group
+pipeline is selected on test data. On a held-out confirmation set, the saving over always-hybrid held but the
+gain over always-visual did not (Section~\ref{sec:res-confirm}): which fixed path is best, and so what routing
+gains over it, depends on the question distribution. The confirmation questions come from the training splits of
+the same two datasets and were run on a different GPU, so they test new questions and pages, not new datasets. Splits group
 questions by page, so pages of one DocVQA document can fall into different splits. Finally, the 35\% of
 queries that every path fails bound what routing can achieve on this benchmark.

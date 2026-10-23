@@ -5,13 +5,16 @@ recognition (OCR) text, from a retrieved page image, or from both, at different 
 a GPU provisioning problem: generation compute grows with the request rate, and late-interaction visual indexes grow
 with the corpus, to about 246\,GiB at a million pages. We present the Cost-Aware Visual Router (CAVR), which
 chooses the answer path per query with a run-time cost weight. On one RTX 4090, we run every path on
-8,150 DocVQA and InfographicVQA questions with one shared generator and answer quality as average normalised Levenshtein similarity (ANLS), GPU-seconds, energy and latency. A
-content-aware router, CAVR-CE, whose cross-encoder (CE) reads the retrieved passages before generation, uses
+8,150 DocVQA and InfographicVQA questions with one shared generator, measuring average normalised Levenshtein
+similarity (ANLS), GPU-seconds, energy and latency. Its content-aware variant CAVR-CE, a cross-encoder (CE) over
+the retrieved passages, uses
 29\% less GPU compute than always using both contexts, at 0.008 lower mean ANLS, and 20\%
-less than a quality-blind mix of the visual and hybrid paths at equal ANLS. In a load test simulated from
+less than a quality-blind visual/hybrid mix at equal ANLS. In a load test simulated from
 measured service times, it cuts the GPUs needed for 100 queries/s at a p95 latency of 2\,s from 106 to
-72; always using the page image alone needs 64 at lower ANLS. Route labels derived
-from question keywords agree with measured outcomes no better than chance. On two further GPU nodes, index sharding
-scales near-linearly, and an index of a million pages held in host memory is searched by two GPUs in large
-batches at close to the GPU cost per query of GPU-resident search, but takes seconds per single query.
+72; always using the page image alone needs 64 at lower ANLS. On 1,499
+held-out questions, the frozen router still saved 35\% against always using both contexts, but the page image
+alone came within 0.005 ANLS at 16\% less compute. Keyword-derived route labels agree with
+measured outcomes no better than chance. On two further GPU nodes, index sharding
+scales near-linearly, and two GPUs batch-search an index of a million pages in host memory at near-resident
+cost per query, though not interactively.
 \end{abstract}

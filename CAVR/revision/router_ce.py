@@ -98,8 +98,10 @@ class CrossRouter(nn.Module):
         return self.head(torch.cat([pooled.float(), tab], 1))
 
 
-def train_ce(enc, tab, A, tr, va, seed, log=None):
-    """log: optional dict; if given, per-epoch train/val BCE and val AUC are appended to it."""
+def train_ce(enc, tab, A, tr, va, seed, log=None, extra=None):
+    """log: optional dict; if given, per-epoch train/val BCE and val AUC are appended to it.
+    extra: optional dict with input_ids, attention_mask, tab of other queries (e.g. the confirmation set); the kept
+    model's predictions for them are stored in extra["qhat"]."""
     set_seed(seed)
     dev = "cuda"
     model = CrossRouter(tab.shape[1]).to(dev)
@@ -163,6 +165,15 @@ def train_ce(enc, tab, A, tr, va, seed, log=None):
     if log is not None:
         log["best_epoch"] = int(np.argmax(history))   # 0-based; the epoch whose weights are kept
     qhat = predict(np.arange(len(A)))
+    if extra is not None:
+        model.eval()
+        e_ids, e_mask, e_tab = extra["input_ids"], extra["attention_mask"], torch.tensor(extra["tab"])
+        out = []
+        with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
+            for i in range(0, len(e_ids), 128):
+                out.append(torch.sigmoid(model(e_ids[i:i + 128].to(dev), e_mask[i:i + 128].to(dev),
+                                               e_tab[i:i + 128].to(dev)).float()).cpu())
+        extra["qhat"] = torch.cat(out).numpy()
 
     # router latency at batch 1 (tokenized input of a real query; tokenization excluded, measured separately)
     model.eval()

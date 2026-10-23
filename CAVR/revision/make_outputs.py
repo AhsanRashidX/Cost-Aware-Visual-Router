@@ -5,6 +5,7 @@ Each piece is skipped, with a note, if its source file doesn't exist yet.
 """
 import json
 from pathlib import Path
+from statistics import mean, stdev
 
 import matplotlib
 matplotlib.use("Agg")
@@ -262,6 +263,23 @@ def t_escalation():
     fig.savefig(FIG / "escalation.png")
     plt.close(fig)
     print("  figure escalation.png")
+
+
+def confirmation():
+    cf = load("confirmation.json")
+    if not cf:
+        return
+    fx, cs = cf["fixed"], cf["seeds"]
+    rows = [[f"Always-{p}", f"{fx[p]['anls']:.3f}", f"{fx[p]['em']:.3f}", f"{fx[p]['gpu_s']:.2f}"]
+            for p in ("text", "visual", "hybrid")]
+    m = lambda k, d: f"{mean(s[k] for s in cs):.{d}f} $\\pm$ {stdev(s[k] for s in cs):.{d}f}"
+    rows.append(["CAVR-CE (frozen)", m("anls", 3), m("em", 3), m("gpu_s", 2)])
+    rows.append(["Per-query oracle", f"{cf['oracle']['anls']:.3f}", "--", f"{cf['oracle']['gpu_s']:.2f}"])
+    cap = (f"Held-out confirmation set: {cf['n_queries']:,} new questions from the DocVQA and InfographicVQA training "
+           "splits, run on the A10 node. CAVR-CE is each seed's router re-trained on its original training split and "
+           "frozen (validation-chosen $\\lambda$); mean $\\pm$ standard deviation over the five seeds. GPU-seconds per "
+           "query on the A10, including retrieval; the router's overhead is the one measured on the workstation.")
+    table("confirmation", cap, "tab:confirmation", ["Policy", "ANLS", "EM", "GPU-s"], rows)
 
 
 def controls():
@@ -619,6 +637,7 @@ def main():
     t_retrieval()
     t_labels()
     controls()
+    confirmation()
     ev = load("eval_main.json")
     if ev:
         t_main(ev)

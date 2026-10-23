@@ -21,15 +21,18 @@ recognition (OCR) text, from a retrieved page image, or from both, at different 
 a GPU provisioning problem: generation compute grows with the request rate, and late-interaction visual indexes grow
 with the corpus, to about <<ix1m_gb>>\,GiB at a million pages. We present the Cost-Aware Visual Router (CAVR), which
 chooses the answer path per query with a run-time cost weight. On one <<gpu_short>>, we run every path on
-<<n_q>> DocVQA and InfographicVQA questions with one shared generator and answer quality as average normalised Levenshtein similarity (ANLS), GPU-seconds, energy and latency. A
-content-aware router, CAVR-CE, whose cross-encoder (CE) reads the retrieved passages before generation, uses
+<<n_q>> DocVQA and InfographicVQA questions with one shared generator, measuring average normalised Levenshtein
+similarity (ANLS), GPU-seconds, energy and latency. Its content-aware variant CAVR-CE, a cross-encoder (CE) over
+the retrieved passages, uses
 <<ce_save>>\% less GPU compute than always using both contexts, at <<ce_dh_abs>> lower mean ANLS, and <<bm_save>>\%
-less than a quality-blind mix of the visual and hybrid paths at equal ANLS. In a load test simulated from
+less than a quality-blind visual/hybrid mix at equal ANLS. In a load test simulated from
 measured service times, it cuts the GPUs needed for 100 queries/s at a p95 latency of 2\,s from <<g100_always_hybrid>> to
-<<g100_cavr_ce_valsel>>; always using the page image alone needs <<g100_always_visual>> at lower ANLS. Route labels derived
-from question keywords agree with measured outcomes no better than chance. On two further GPU nodes, index sharding
-scales near-linearly, and an index of <<hs_max_words>> pages held in host memory is searched by two GPUs in large
-batches at close to the GPU cost per query of GPU-resident search, but takes seconds per single query.
+<<g100_cavr_ce_valsel>>; always using the page image alone needs <<g100_always_visual>> at lower ANLS. On <<cf_n>>
+held-out questions, the frozen router still saved <<cf_save>>\% against always using both contexts, but the page image
+alone came within <<cf_dv>> ANLS at <<cf_vis_less>>\% less compute. Keyword-derived route labels agree with
+measured outcomes no better than chance. On two further GPU nodes, index sharding
+scales near-linearly, and two GPUs batch-search an index of <<hs_max_words>> pages in host memory at near-resident
+cost per query, though not interactively.
 \end{abstract}
 """
 
@@ -115,7 +118,8 @@ measured on two further nodes, with <<mg_n_word>> older GPUs (<<mg_gpu>>) and wi
   $\arg\max_p \hat{q}_p - \lambda \bar{c}_p$ with $\lambda$ set at serving time, with its relation to
   budget-constrained routing made explicit; and CAVR-CE, a content-aware quality predictor built on a cross-encoder (CE) that uses <<ce_save>>\% less
   GPU compute than always-hybrid at a mean ANLS cost of <<ce_dh_abs>>, and <<bm_save>>\% less than a quality-blind mix
-  of the visual and hybrid paths at equal ANLS.
+  of the visual and hybrid paths at equal ANLS; on a held-out confirmation set the saving over always-hybrid holds,
+  but always-visual comes within <<cf_dv>> ANLS of the router at lower cost.
   \item An analysis of confidence-based escalation that separates pre-generation re-routing from serial and
   speculative cascades, with their latency and GPU cost computed from measured per-stage times.
   \item A serving study: capacity per GPU and GPUs needed at a p95 target under Poisson load (simulated from measured
@@ -430,9 +434,23 @@ kept, which is epoch <<ce_kept>> on <<ce_kept_n>> of <<n_seeds>> splits.
 generator is run with the same prompt, caps and decoding on five further contexts: the top-1 BM25 page as text, the
 top-3 ColPali page images, and the gold page as text, as an image, and as both. These runs were made on the
 <<a10_gpu>> node; to check that it reproduces the workstation, the main text and visual paths were re-run there on
-<<ct_rep_n>> of the questions, giving identical answers for <<ct_rep_t>>\% and <<ct_rep_v>>\% of them (visual ANLS
-<<ct_rep_vis_a10>> against <<ct_rep_vis_ws>>). Differences are paired per question with page-cluster bootstrap
+<<ct_rep_n>> of the questions, and the hybrid path on the same questions, giving identical answers for
+<<ct_rep_t>>\%, <<ct_rep_v>>\% and <<ct_rep_h>>\% of them (ANLS <<ct_rep_vis_a10>> against <<ct_rep_vis_ws>> for the
+visual path and <<ct_rep_hyb_a10>> against <<ct_rep_hyb_ws>> for the hybrid path). Differences are paired per question with page-cluster bootstrap
 intervals.
+
+\subsection{Held-out confirmation set}
+\label{sec:setup-confirm}
+
+After the design was fixed, a confirmation set was drawn from the training splits of the same Hugging Face copy
+(revision \texttt{<<cf_rev>>}): a seeded sample of <<cf_n_ds>> questions per dataset from <<cf_n_shards>> training-split
+files, whose <<cf_pool_doc>> DocVQA pages and <<cf_pool_info>> infographics form the retrieval pools. No page is shared
+with the validation data. OCR, BM25 and ColPali retrieval, generation on all three paths and the CAVR-CE features were
+run with the unchanged pipeline on the <<a10_gpu>> node. <<cf_oom_sent>> excluded because its hybrid input
+(<<cf_oom_tok>> tokens) did not fit in that GPU's memory. CAVR-CE was re-trained for each seed on that seed's original
+training split, the confirmation features were standardised with the same split's statistics, and the decision rule,
+$\lambda$ and cost estimates were not changed. Comparisons use the paired page-cluster bootstrap and McNemar tests
+described next.
 
 \subsection{Statistical analysis}
 \label{sec:setup-stats}
@@ -587,7 +605,10 @@ Serving multimodal RAG at scale is a GPU provisioning problem with two levers: r
 per query, and index placement handles visual-index memory as the corpus grows. Measured end to
 end with real retrieval and generation on one GPU, the content-aware router CAVR-CE uses <<ce_save>>\% less GPU compute
 than always combining text and image contexts, at a mean ANLS cost of <<ce_dh_abs>>; against a quality-blind mix
-of the visual and hybrid paths at equal ANLS it saves <<bm_save>>\%. In a load test simulated from
+of the visual and hybrid paths at equal ANLS it saves <<bm_save>>\%. On <<cf_n>> held-out questions the frozen
+router kept a <<cf_save>>\% saving over always-hybrid, but always-visual came within <<cf_dv>> ANLS of it at
+<<cf_vis_less>>\% less GPU compute: whether routing beats the best single path depends on whether the OCR text
+helps on a given question distribution. In a load test simulated from
 measured service times, it reduces the GPUs needed for 100 queries/s at p95 $\le$ 2\,s from <<g100_always_hybrid>> to
 <<g100_cavr_ce_valsel>>, while always using the page image alone needs <<g100_always_visual>> at lower ANLS. Its cost
 weight is set at serving time; confidence-based escalation reached the same operating point as lowering this
@@ -600,8 +621,8 @@ two GPUs searched <<hs_max_words>> pages in large batches at close to the throug
 which would need <<hs_res_gpus>> GPUs; the price is single-query latency (<<hs_p50_2>>\,s), which limits this
 placement to batch search.
 
-The evaluation also shows what does not hold. Keyword-derived route labels do not reflect which path
-answers correctly, cost estimates from list prices do not match measured costs, and with a shared generator the text path is
+The evaluation also shows what does not hold. The gain over the best fixed path did not carry over to new
+questions, keyword-derived route labels do not reflect which path answers correctly, cost estimates from list prices do not match measured costs, and with a shared generator the text path is
 not a cheap path. A per-query oracle (ANLS <<oracle_anls>> at <<oracle_gpu>> GPU-s) shows how much remains: the
 bottleneck is predicting, before generation, whether a path will succeed.
 

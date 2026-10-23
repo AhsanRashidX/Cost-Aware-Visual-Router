@@ -15,6 +15,7 @@ import hashlib
 import json
 import random
 import time
+from pathlib import Path
 
 import pynvml
 import torch
@@ -65,6 +66,7 @@ def main():
     ap.add_argument("--sample", choices=["natural", "stratified"], default="natural")
     ap.add_argument("--limit", type=int, default=None, help="random subset of N queries (seeded)")
     ap.add_argument("--paths", default=",".join(PATHS))
+    ap.add_argument("--shard", default="0/1", help="i/n: every n-th query from i (one process per GPU)")
     args = ap.parse_args()
     paths = args.paths.split(",")
     set_seed()
@@ -75,6 +77,8 @@ def main():
     qids = json.load(open(DATA / "samples.json"))[args.sample]
     if args.limit:
         qids = random.Random(SEED).sample(qids, args.limit)
+    si, sn = map(int, args.shard.split("/"))
+    qids = qids[si::sn]
     ret_text = load_jsonl(RESULTS / "retrieval_text.jsonl", "qid")
     ret_vis = load_jsonl(RESULTS / "retrieval_visual.jsonl", "qid")
     pages = {(p["dataset"], p["page_id"]): p for p in map(json.loads, open(DATA / "pages.jsonl"))}
@@ -85,6 +89,9 @@ def main():
         done = {(r["qid"], r["path"]) for r in map(json.loads, open(args.out, encoding="utf-8"))}
     except FileNotFoundError:
         pass
+    oom_path = Path(args.out).with_suffix(".oom.jsonl")       # runs that do not fit in GPU memory (skipped)
+    if oom_path.exists():
+        done |= {(r["qid"], r["path"]) for r in map(json.loads, open(oom_path, encoding="utf-8"))}
 
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         MODEL, dtype=torch.bfloat16, device_map="cuda", attn_implementation="sdpa").eval()
@@ -137,8 +144,19 @@ def main():
                 t1 = time.perf_counter()
                 torch.cuda.reset_peak_memory_stats()
                 e0 = pynvml.nvmlDeviceGetTotalEnergyConsumption(gpu)
-                out_g = model.generate(**inputs, max_new_tokens=MAX_NEW_TOKENS, do_sample=False,
-                                       return_dict_in_generate=True, output_logits=True)
+                n_in_oom = int(inputs["input_ids"].shape[1])
+                try:
+                    out_g = model.generate(**inputs, max_new_tokens=MAX_NEW_TOKENS, do_sample=False,
+                                           return_dict_in_generate=True, output_logits=True)
+                except torch.OutOfMemoryError:
+                    # the largest inputs exceed a 22 GiB GPU (the math SDPA kernel is the only one available for
+                    # this call on Windows): log the run and skip it; load() then drops the query from every path
+                    del inputs
+                    torch.cuda.empty_cache()
+                    with open(oom_path, "a", encoding="utf-8") as f:
+                        f.write(json.dumps({"qid": qid, "path": path, "input_tokens": n_in_oom}) + "\n")
+                    print(f"OOM skipped: {qid} {path} ({n_in_oom} input tokens)", flush=True)
+                    continue
                 torch.cuda.synchronize()
                 t2 = time.perf_counter()
                 energy = (pynvml.nvmlDeviceGetTotalEnergyConsumption(gpu) - e0) / 1000

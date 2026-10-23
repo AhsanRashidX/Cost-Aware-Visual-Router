@@ -6,7 +6,10 @@ Serving multimodal RAG at scale is a GPU provisioning problem with two levers: r
 per query, and index placement handles visual-index memory as the corpus grows. Measured end to
 end with real retrieval and generation on one GPU, the content-aware router CAVR-CE uses 29\% less GPU compute
 than always combining text and image contexts, at a mean ANLS cost of 0.008; against a quality-blind mix
-of the visual and hybrid paths at equal ANLS it saves 20\%. In a load test simulated from
+of the visual and hybrid paths at equal ANLS it saves 20\%. On 1,499 held-out questions the frozen
+router kept a 35\% saving over always-hybrid, but always-visual came within 0.005 ANLS of it at
+16\% less GPU compute: whether routing beats the best single path depends on whether the OCR text
+helps on a given question distribution. In a load test simulated from
 measured service times, it reduces the GPUs needed for 100 queries/s at p95 $\le$ 2\,s from 106 to
 72, while always using the page image alone needs 64 at lower ANLS. Its cost
 weight is set at serving time; confidence-based escalation reached the same operating point as lowering this
@@ -19,8 +22,8 @@ two GPUs searched a million pages in large batches at close to the throughput pe
 which would need 16 GPUs; the price is single-query latency (6.4\,s), which limits this
 placement to batch search.
 
-The evaluation also shows what does not hold. Keyword-derived route labels do not reflect which path
-answers correctly, cost estimates from list prices do not match measured costs, and with a shared generator the text path is
+The evaluation also shows what does not hold. The gain over the best fixed path did not carry over to new
+questions, keyword-derived route labels do not reflect which path answers correctly, cost estimates from list prices do not match measured costs, and with a shared generator the text path is
 not a cheap path. A per-query oracle (ANLS 0.630 at 0.486 GPU-s) shows how much remains: the
 bottleneck is predicting, before generation, whether a path will succeed.
 

@@ -1,0 +1,122 @@
+{
+  "sources": {
+    "docvqa": {
+      "hf_dataset": "lmms-lab-encoder/DocVQA",
+      "config": "DocVQA",
+      "split": "train",
+      "shards": [
+        "DocVQA/train-00001-of-00012.parquet",
+        "DocVQA/train-00002-of-00012.parquet"
+      ],
+      "revision": "539088ef8a8ada01ac8e2e6d4e372586748a265e",
+      "fingerprint": "cd28212bf269ef9f",
+      "rows": 6578
+    },
+    "infovqa": {
+      "hf_dataset": "lmms-lab-encoder/DocVQA",
+      "config": "InfographicVQA",
+      "split": "train",
+      "shards": [
+        "InfographicVQA/train-00000-of-00024.parquet",
+        "InfographicVQA/train-00001-of-00024.parquet",
+        "InfographicVQA/train-00002-of-00024.parquet",
+        "InfographicVQA/train-00003-of-00024.parquet"
+      ],
+      "revision": "539088ef8a8ada01ac8e2e6d4e372586748a265e",
+      "fingerprint": "a2b73bd61a4464f3",
+      "rows": 3992
+    }
+  },
+  "pages": {
+    "total": 2453,
+    "by_dataset": {
+      "docvqa": 1662,
+      "infovqa": 791
+    },
+    "total_bytes": 470025045,
+    "median_megapixels": 3.79854
+  },
+  "natural": {
+    "queries": 1500,
+    "by_dataset": {
+      "docvqa": 750,
+      "infovqa": 750
+    },
+    "by_dataset_qtype": {
+      "docvqa/Image/Photo": 2,
+      "docvqa/Yes/No": 2,
+      "docvqa/figure/diagram": 5,
+      "docvqa/form": 290,
+      "docvqa/free_text": 54,
+      "docvqa/handwritten": 77,
+      "docvqa/layout": 126,
+      "docvqa/others": 19,
+      "docvqa/table/list": 175,
+      "infovqa/unknown": 750
+    }
+  },
+  "stratified": {
+    "queries": 735,
+    "by_dataset": {
+      "docvqa": 585,
+      "infovqa": 150
+    },
+    "by_dataset_qtype": {
+      "docvqa/Image/Photo": 2,
+      "docvqa/Yes/No": 2,
+      "docvqa/figure/diagram": 5,
+      "docvqa/form": 150,
+      "docvqa/free_text": 54,
+      "docvqa/handwritten": 77,
+      "docvqa/layout": 126,
+      "docvqa/others": 19,
+      "docvqa/table/list": 150,
+      "infovqa/unknown": 150
+    }
+  },
+  "notes": [
+    "DocVQA page_id = ucsf_document_id + '_' + page_no; InfoVQA page_id = sha1(image_url)[:16].",
+    "Bundled InfoVQA Textract OCR is dropped; all pages are OCR'd with docTR in ocr_pages.py.",
+    "qtype: DocVQA first question_type; InfoVQA reasoning type if any, else first answer_type."
+  ],
+  "hardware": {
+    "timestamp": "2026-10-23T10:45:45",
+    "os": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.17",
+    "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
+    "cpu_threads": 112,
+    "ram_gb": 1023.5,
+    "git_commit": "18f867e86704322c3c212cb1e41ae4edc090340c",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "qwen-vl-utils": "0.0.14",
+      "accelerate": "1.15.0"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "616.92"
+  }
+}
