@@ -1,0 +1,2 @@
+# Shell scripts run under bash (Linux, WSL); CRLF breaks them, whatever core.autocrlf says
+*.sh text eol=lf
