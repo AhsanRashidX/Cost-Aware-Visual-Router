@@ -19,6 +19,8 @@ STEPS = [
     ("escalate", ["escalate.py"]),
     ("bench_batching (GPU)", ["bench_batching.py"]),
     ("simulate", ["simulate.py"]),
+    ("sim_experiments (latency-target sweep, batch model, retrieval tier, adaptive lambda)", ["sim_experiments.py"]),
+    ("review_analyses (blind mix, escalation vs lambda=0, McNemar power, split coverage)", ["review_analyses.py"]),
     ("bench_index (GPU)", ["bench_index.py"]),
     ("multi_gpu_scaling (results/multi_gpu from the multi-GPU node)", ["multi_gpu_scaling.py"]),
     ("multi_gpu_scaling_a10 (results/a10 from the 2x A10 node)",

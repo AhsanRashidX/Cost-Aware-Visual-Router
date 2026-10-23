@@ -81,6 +81,32 @@ def values():
         "cap_hyb_max": f"{ra['capacity_1gpu']['always_hybrid_max']:g}",
         "cap_hyb_zero": ra["capacity_1gpu"]["seeds_below_first_step"],
     })
+    se = J("sim_experiments.json")
+    sw, sav = se["slo_sweep"], se["slo_sweep_saving_vs_hybrid"]
+    vis_more = {T: sw["cavr_ce_valsel"][T]["mean"] / sw["always_visual"][T]["mean"] - 1 for T in sav}
+    bmod = se["batch_model_saving_vs_hybrid"]
+    jn = se["joint"]["by_pages"][str(max(int(n) for n in se["joint"]["by_pages"]))]
+    ad = se["adaptive"]["policies"]
+    V.update({
+        "sw_min_t": f"{min(float(t) for t in sav):g}", "sw_max_t": f"{max(float(t) for t in sav):g}",
+        "sw_save_min": f"{100 * min(sav.values()):.0f}", "sw_save_max": f"{100 * max(sav.values()):.0f}",
+        "sw_vis_min": f"{100 * min(vis_more.values()):.0f}", "sw_vis_max": f"{100 * max(vis_more.values()):.0f}",
+        "bm_long_2": f"{100 * bmod['longest_member']['2.0']:.0f}", "bm_long_5": f"{100 * bmod['longest_member']['5.0']:.0f}",
+        "bm_mean_5": f"{100 * bmod['mean_member']['5.0']:.0f}",
+        "jn_pages": "a million" if int(max(se["joint"]["by_pages"], key=int)) == 10**6 else max(se["joint"]["by_pages"], key=int),
+        "jn_ret": jn["policies"]["cavr_ce_valsel"]["retrieval_gpus"], "jn_hold": jn["gpus_to_hold_index"],
+        "jn_ce": f"{jn['policies']['cavr_ce_valsel']['total']:.0f}", "jn_hyb": f"{jn['policies']['always_hybrid']['total']:.0f}",
+        "jn_vis": f"{jn['policies']['always_visual']['total']:.0f}", "jn_cavr": f"{jn['policies']['cavr']['total']:.0f}",
+        "jn_cavr_text": f"{100 * (1 - se['joint']['colpali_share']['cavr']):.0f}",
+        "ad_pool": se["adaptive"]["pool_gpus"], "ad_base": f"{se['adaptive']['burst']['base_qps']:g}",
+        "ad_burst": f"{se['adaptive']['burst']['burst_qps']:g}", "ad_base_s": f"{se['adaptive']['burst']['base_s']:g}",
+        "ad_burst_s": f"{se['adaptive']['burst']['burst_s']:g}",
+        "ad_fix_slo": f"{100 * ad['cavr_ce_valsel']['slo_2s']:.1f}", "ad_fix_anls": f"{ad['cavr_ce_valsel']['anls']:.3f}",
+        "ad_adp_slo": f"{100 * ad['cavr_ce_adaptive']['slo_2s']:.1f}", "ad_adp_anls": f"{ad['cavr_ce_adaptive']['anls']:.3f}",
+        "ad_02_slo": f"{100 * ad['cavr_ce@0.2']['slo_2s']:.1f}", "ad_02_anls": f"{ad['cavr_ce@0.2']['anls']:.3f}",
+        "ad_vis_slo": f"{100 * ad['always_visual']['slo_2s']:.1f}", "ad_hyb_slo": f"{100 * ad['always_hybrid']['slo_2s']:.1f}",
+        "ad_up": f"{100 * (1 - ad['cavr_ce_adaptive']['level_share'][0]):.0f}",
+    })
     V["kw_text_share"] = f"{100 * kw['distribution'].get('text', 0) / lb['n_queries']:.0f}"
 
     # policies: mean (+- std) over seeds on test
@@ -420,12 +446,35 @@ the number of GPUs needed for a given load (Table~\ref{tab:load_test}, mean over
 seed 1). Serving 100 queries/s at p95 $\le$ 2\,s needs <<g100_always_hybrid_pm>> GPUs for always-hybrid,
 <<g100_cavr_ce_valsel_pm>> for CAVR-CE (<<g100_save>>\% fewer), <<g100_always_visual_pm>> for always-visual and
 <<g100_oracle_pm>> for the oracle. At this target batches rarely form: the ratio of GPUs needed by CAVR-CE and always-hybrid (<<g100_ratio>>)
-tracks their ratio of batch-1 GPU-seconds (<<gs_ratio>>). The saving depends on the target: at p95 $\le$ 5\,s, seed 1 needs
-<<g100_5s_hyb>> GPUs for always-hybrid and <<g100_5s_ce>> for CAVR-CE (<<g100_5s_save>>\% fewer). With HF Transformers
+tracks their ratio of batch-1 GPU-seconds (<<gs_ratio>>). The saving depends on the target, as the sweep below shows. With HF Transformers
 generation (no serving engine such as vLLM~\cite{vllm}), one GPU serves at most <<bq_text>> (text), <<bq_visual>>
 (visual) and <<bq_hybrid>> (hybrid) queries/s at the best batch size within memory. The simulation keeps the
 evaluation index (<<n_pages>> pages) on every GPU; routing saves generation compute, not index memory, because
 CAVR-CE reads ColPali scores for every query.
+Across p95 targets from <<sw_min_t>> to <<sw_max_t>>\,s, on all five splits, CAVR-CE needs <<sw_save_min>>--<<sw_save_max>>\%
+fewer GPUs than always-hybrid and <<sw_vis_min>>--<<sw_vis_max>>\% more than always-visual (Table~\ref{tab:slo_sweep}).
+The simulator charges a batch the mean generation time of its members, scaled by the measured batching curve;
+charging the longest member instead, a conservative bound, the saving over always-hybrid is <<bm_long_2>>\% at 2\,s and
+<<bm_long_5>>\% at 5\,s (against <<bm_mean_5>>\% with the mean member).
+
+\paragraph{Generation and retrieval together.} The load test keeps the small evaluation index on every GPU. For a
+large corpus, a retrieval tier is needed as well. Projected from the workstation's measured MaxSim throughput at
+batch 64, scaled linearly in pages and at full utilisation, 100 queries/s over <<jn_pages>> pages needs <<jn_ret>> GPUs
+for retrieval (<<jn_hold>> just to hold the index) for every policy that reads ColPali on every query. CAVR-CE then
+needs <<jn_ce>> GPUs in total, against <<jn_hyb>> for always-hybrid and <<jn_vis>> for always-visual. The question-only
+router could skip ColPali for the queries it sends to the text path, but it sends only <<jn_cavr_text>>\% there and
+needs <<jn_cavr>> GPUs. Routing thus saves the same number of generation GPUs at any corpus size, while the index
+adds a cost that every visual policy pays.
+
+\paragraph{Load-adaptive $\lambda$.} On a fixed pool of <<ad_pool>> GPUs, the number CAVR-CE needs for 100 queries/s
+at p95 $\le$ 2\,s, arrivals alternate between <<ad_base>> queries/s for <<ad_base_s>>\,s and <<ad_burst>> queries/s for
+<<ad_burst_s>>\,s (split 1). CAVR-CE at its validation-chosen $\lambda$ answers <<ad_fix_slo>>\% of requests within 2\,s
+(ANLS <<ad_fix_anls>>); always-hybrid manages <<ad_hyb_slo>>\%. A controller that raises $\lambda$ when the oldest
+queued request has waited longer than a threshold (chosen on validation queries) moves <<ad_up>>\% of requests to a
+higher $\lambda$ and reaches <<ad_adp_slo>>\% (ANLS <<ad_adp_anls>>), whereas a fixed $\lambda = 0.2$ reaches
+<<ad_02_slo>>\% (ANLS <<ad_02_anls>>) and always-visual <<ad_vis_slo>>\%. In this simulator overload appears mostly as
+larger and slower batches rather than long queues, so a queue-driven controller reacts little; adapting $\lambda$
+to load needs a better overload signal, such as GPU busy time, which we leave open.
 
 \paragraph{Visual index scaling.} ColPali stores 1,031 vectors per page. At 100k pages the index needs
 <<ix100_gb>>\,GiB in bf16, more than our <<gpu_mem>>\,GiB GPU holds before any model weights or activations, and a
@@ -516,6 +565,7 @@ batch. CAVR-CE takes <<ce_ms>>\,ms and <<ce_j>>\,J per query at batch 1, and its
 
 \input{tables/load_test}
 \input{tables/load_test_operating_points}
+\input{tables/slo_sweep}
 \input{tables/index_scaling}
 \input{tables/multi_gpu_scaling}
 \input{tables/host_stream}
@@ -561,8 +611,8 @@ result. The 2\,s latency target is our choice; the saving is smaller at looser t
 
 The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. The simulator assumes an ideal
-global queue and unlimited CPU, charges a batch the mean generation time of its members, and keeps the
-<<n_pages>>-page evaluation index on every GPU, so retrieval capacity at large corpus sizes is not included. Costs
+global queue and unlimited CPU, charges a batch the mean generation time of its members (the longest-member bound is reported), and keeps the
+<<n_pages>>-page evaluation index on every GPU, so the retrieval tier for a large corpus is projected rather than simulated. Costs
 are measured without prefix or encoder caching, which would favour paths whose page image repeats across
 questions. Indexes of 10k--<<hs_max_k>> pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that

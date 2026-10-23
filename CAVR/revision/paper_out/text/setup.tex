@@ -169,6 +169,17 @@ queries/s is the smallest pool, up to 256 GPUs, that holds p95 within the target
 search. Results at p95 $\le$ 2\,s are averaged over the 5 splits; the 5\,s sensitivity check, the latency
 curves and the $\lambda$ operating points use split 1.
 
+\paragraph{Sensitivity and control experiments.} With the same simulator, the GPUs needed for 100 queries/s are
+found for p95 targets of 1.5, 2, 3, 5, 7.5 and 10\,s on all five splits for always-visual, always-hybrid and
+CAVR-CE; the 2 and 5\,s targets are repeated with each batch charged its longest member's generation time. For a
+large corpus, a retrieval tier is added by projection: ColPali GPU-seconds per query at batch 64 on the workstation,
+measured at the largest GPU-resident size and scaled linearly in pages, times the share of queries that need
+ColPali, at full utilisation, and at least as many GPUs as are needed to hold the index. Load-adaptive $\lambda$ is
+simulated on split 1 with a fixed pool under alternating Poisson rates; the controller moves one step up the
+$\lambda$ sweep each time the waiting time of the oldest queued request doubles past a base threshold, which is
+chosen on the split's validation queries (the highest ANLS with at least 95\% of requests within 2\,s, else the
+highest share within 2\,s).
+
 \paragraph{Index scaling.} Corpora of 1k, 10k, 50k and 100k pages are built by repeating the real page embeddings. We time
 exhaustive MaxSim with the index resident on the GPU (when it fits within 18\,GiB), streamed in chunks from
 pinned host memory, pooled 2$\times$2 over the patch grid (1,024 patch vectors to 256, re-normalised, plus the 7 prompt

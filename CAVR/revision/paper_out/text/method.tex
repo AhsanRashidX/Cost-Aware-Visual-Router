@@ -149,5 +149,5 @@ ColPali query encoding and scoring, CAVR-CE and generation run on GPUs, with one
 load test models the GPU pool and its per-path queues; the dispatcher logic itself is not simulated. The visual index
 is placed according to corpus size: GPU-resident while it fits, then sharded across GPUs (each GPU scores its shard and
 the dispatcher merges the per-shard top-$k$), streamed from host memory for batch workloads, or pooled. Because $\lambda$ is a run-time input, the dispatcher could raise it when queues grow, shifting load
-from the hybrid path to single-context paths instead of violating the latency target; we describe this option but do
-not evaluate it.
+from the hybrid path to single-context paths instead of violating the latency target; we evaluate a simple controller of this
+kind in simulation (Section~\ref{sec:res-scale}).

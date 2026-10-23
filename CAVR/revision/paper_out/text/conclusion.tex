@@ -25,5 +25,5 @@ not a cheap path. A per-query oracle (ANLS 0.630 at 0.486 GPU-s) shows how much 
 bottleneck is predicting, before generation, whether a path will succeed.
 
 The routing results come from one GPU and simulated load, and sharding and the host-memory index were measured on
-separate server nodes for retrieval only. Future work should validate routing on a multi-GPU cluster with a production serving engine, adapt $\lambda$ to measured load, improve per-query success
+separate server nodes for retrieval only. Future work should validate routing on a multi-GPU cluster with a production serving engine, find an overload signal that lets $\lambda$ follow load, improve per-query success
 prediction, and extend routing to queries that contain images.

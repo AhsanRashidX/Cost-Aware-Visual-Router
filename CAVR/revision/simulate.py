@@ -198,7 +198,7 @@ def main():
 
     def ms(xs):
         xs = [x for x in xs if x is not None]
-        return {"mean": float(np.mean(xs)), "std": float(np.std(xs)), "per_seed": xs} if xs else None
+        return {"mean": float(np.mean(xs)), "std": float(np.std(xs, ddof=1)), "per_seed": xs} if xs else None   # sample SD, as in evaluate.py
     out["seeds_summary"] = {"p95_target_s": 2.0, "policies": {
         n: {"anls_test": ms(v["anls_test"]), "max_rate_1gpu": ms(v["max_rate"]),
             "gpus_needed": {l: ms(x) for l, x in v["gpus"].items()}} for n, v in per.items() if v["anls_test"]}}

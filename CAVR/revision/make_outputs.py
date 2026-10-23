@@ -474,6 +474,25 @@ def host_stream():
     print("  figure host_stream.png")
 
 
+def slo_sweep():
+    se = load("sim_experiments.json")
+    if not se:
+        return
+    sw, sav = se["slo_sweep"], se["slo_sweep_saving_vs_hybrid"]
+    rows = []
+    for T in sw["always_hybrid"]:
+        rows.append([f"{float(T):g}"] + [f"{sw[p][T]['mean']:.1f} $\\pm$ {sw[p][T]['std']:.1f}"
+                                         for p in ("always_visual", "cavr_ce_valsel", "always_hybrid")]
+                    + [f"{100 * sav[T]:.0f}"])
+    bm = se["batch_model_saving_vs_hybrid"]["longest_member"]
+    cap = (f"GPUs needed to serve {se['load_qps']} queries/s against the p95 latency target (simulated from measured "
+           f"service times; mean $\\pm$ standard deviation over the 5 splits) and the saving of CAVR-CE over "
+           f"always-hybrid. Charging each batch its longest member instead of the mean member gives a saving of "
+           f"{100 * bm['2.0']:.0f}\\% at 2\\,s and {100 * bm['5.0']:.0f}\\% at 5\\,s.")
+    table("slo_sweep", cap, "tab:slo_sweep",
+          ["p95 target (s)", "Always visual", "CAVR-CE", "Always hybrid", "Saving vs hybrid (\\%)"], rows)
+
+
 def load_test():
     lt = load("load_test.json")
     if not lt:
@@ -574,6 +593,7 @@ def main():
     multi_gpu()
     host_stream()
     load_test()
+    slo_sweep()
     router_cost()
 
 
