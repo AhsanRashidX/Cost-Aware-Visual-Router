@@ -264,6 +264,23 @@ def t_escalation():
     print("  figure escalation.png")
 
 
+def controls():
+    ca = load("controls_analysis.json")
+    if not ca:
+        return
+    names = [("text_k1", "Text, top-1 BM25 page"), ("text", "Text, top-3 BM25 pages (main)"),
+             ("visual", "Visual, top-1 ColPali image (main)"), ("visual_k3", "Visual, top-3 ColPali images"),
+             ("hybrid", "Hybrid (main)"), ("gold_text", "Gold page as text"), ("gold_visual", "Gold page as image"),
+             ("gold_hybrid", "Gold page, image and text")]
+    b = ca["by_dataset"]
+    rows = [[lab, f"{b['all']['anls'][k]:.3f}", f"{b['docvqa']['anls'][k]:.3f}", f"{b['infovqa']['anls'][k]:.3f}",
+             f"{ca['input_tokens_mean'][k]:,.0f}"] for k, lab in names]
+    cap = (f"Retrieval-depth and gold-page controls on {ca['n_questions']:,} questions ({b['docvqa']['n']} per dataset): "
+           "mean ANLS of the same generator given each context, and mean input tokens. Main paths are the cached "
+           "workstation runs; the other rows were run on the A10 node.")
+    table("controls", cap, "tab:controls", ["Context", "ANLS (all)", "DocVQA", "InfoVQA", "Input tokens"], rows)
+
+
 def token_pooling():
     tp = load("token_pooling.json")
     if not tp:
@@ -601,6 +618,7 @@ def main():
     t_data()
     t_retrieval()
     t_labels()
+    controls()
     ev = load("eval_main.json")
     if ev:
         t_main(ev)

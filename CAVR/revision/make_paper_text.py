@@ -81,6 +81,33 @@ def values():
         "cap_hyb_max": f"{ra['capacity_1gpu']['always_hybrid_max']:g}",
         "cap_hyb_zero": ra["capacity_1gpu"]["seeds_below_first_step"],
     })
+    ca = J("controls_analysis.json")
+    cA, cd = ca["by_dataset"]["all"], ca["by_dataset"]
+    dd = lambda b, k: b["diffs"][k]
+    ci = lambda x: f"{x['ci95'][0]:.3f}, {x['ci95'][1]:.3f}"
+    V.update({
+        "ct_n": f"{ca['n_questions']:,}", "ct_n_ds": f"{cd['docvqa']['n']:,}",
+        "ct_v3_t": f"{dd(cA, 'visual_k3_minus_text')['mean']:.2f}", "ct_v3_t_ci": ci(dd(cA, "visual_k3_minus_text")),
+        "ct_v_t1": f"{dd(cA, 'visual_minus_text_k1')['mean']:.2f}", "ct_v_t1_ci": ci(dd(cA, "visual_minus_text_k1")),
+        "ct_v3_v": f"{dd(cA, 'visual_k3_minus_visual')['mean']:.3f}", "ct_t_t1": f"{dd(cA, 'text_minus_text_k1')['mean']:.3f}",
+        "ct_gv_gt": f"{dd(cA, 'gold_visual_minus_gold_text')['mean']:.2f}",
+        "ct_gv_gt_doc": f"{dd(cd['docvqa'], 'gold_visual_minus_gold_text')['mean']:.2f}",
+        "ct_gv_gt_info": f"{dd(cd['infovqa'], 'gold_visual_minus_gold_text')['mean']:.2f}",
+        "ct_vis": f"{cA['anls']['visual']:.3f}", "ct_gvis": f"{cA['anls']['gold_visual']:.3f}",
+        "ct_txt": f"{cA['anls']['text']:.3f}", "ct_gtxt": f"{cA['anls']['gold_text']:.3f}",
+        "ct_hyb": f"{cA['anls']['hybrid']:.3f}", "ct_ghyb": f"{cA['anls']['gold_hybrid']:.3f}",
+        "ct_v3": f"{cA['anls']['visual_k3']:.3f}",
+        "ct_gv_v_doc": f"{dd(cd['docvqa'], 'gold_visual_minus_visual')['mean']:.2f}",
+        "ct_gv_v_info": f"{dd(cd['infovqa'], 'gold_visual_minus_visual')['mean']:.2f}",
+        "ct_gh_gv": f"{dd(cA, 'gold_hybrid_minus_gold_visual')['mean']:.3f}",
+        "ct_gh_gv_ci": ci(dd(cA, "gold_hybrid_minus_gold_visual")),
+        "ct_v3_x": f"{ca['generate_s_a10_mean']['visual_k3'] / ca['generate_s_a10_mean']['gold_visual']:.1f}",
+        "ct_rep_t": f"{100 * ca['reproduction']['text']['identical_answer_share']:.1f}",
+        "ct_rep_v": f"{100 * ca['reproduction']['visual']['identical_answer_share']:.1f}",
+        "ct_rep_n": ca["reproduction"]["text"]["n"],
+        "ct_rep_vis_a10": f"{ca['reproduction']['visual']['anls_a10']:.3f}",
+        "ct_rep_vis_ws": f"{ca['reproduction']['visual']['anls_workstation']:.3f}",
+    })
     tp = J("token_pooling.json")["methods"]
     best_f = max((k for k in tp if k.startswith("hier")), key=lambda k: int(k[4:]))
     a10_budget_gib = J("a10/a10_shard_scaling.json")["budget_gib_per_gpu"]
@@ -352,6 +379,21 @@ In <<all_fail>>\% of queries every path fails. For <<fail_nogold>>\% of these, n
 context (page recall@1 is <<r1_bm25>> for BM25 and <<r1_col>> for ColPali; Table~\ref{tab:retrieval}). No router
 can recover these queries; they bound every policy.
 
+Two controls on <<ct_n>> of these questions (<<ct_n_ds>> per dataset; Table~\ref{tab:controls}) show where the
+differences between paths come from. First, the visual advantage is a matter of modality, not of how many pages
+the generator reads: at equal depth, one page image beats one page of OCR text by <<ct_v_t1>> ANLS (95\% interval
+<<ct_v_t1_ci>>), and three page images beat the three-page text path by <<ct_v3_t>> (<<ct_v3_t_ci>>), whereas going
+from one page to three adds only <<ct_t_t1>> for text and <<ct_v3_v>> for images. Second, retrieval errors cost more
+than any choice of path. Given the gold page, the visual path rises from <<ct_vis>> to <<ct_gvis>>, the text path
+from <<ct_txt>> to <<ct_gtxt>> and the hybrid path from <<ct_hyb>> to <<ct_ghyb>>; the gain is largest on DocVQA
+(+<<ct_gv_v_doc>> for the visual path, against +<<ct_gv_v_info>> on InfographicVQA). Even with the gold page, the
+image beats its OCR text by <<ct_gv_gt>> ANLS (<<ct_gv_gt_doc>> on DocVQA, <<ct_gv_gt_info>> on InfographicVQA), and
+adding the OCR text to the gold image adds only <<ct_gh_gv>> (<<ct_gh_gv_ci>>). Three page images reach ANLS
+<<ct_v3>>, above the hybrid path, but take <<ct_v3_x>>$\times$ the generation time of one image; such a path is
+outside the evaluated path set.
+
+\input{tables/controls}
+
 \subsection{Outcome-based route labels}
 \label{sec:res-labels}
 
@@ -493,8 +535,8 @@ million pages (about <<ix1m_gb>>\,GiB) would exceed the memory of most current a
 (Table~\ref{tab:index_scaling}, Figure~\ref{fig:index}). Streaming it from pinned host memory costs
 <<ix100_stream_ms>>\,ms per query; 2$\times$2 pooling shrinks it to <<ix100_pool_gb>>\,GiB and <<ix100_pool_ms>>\,ms
 but lowers recall@1 on the real corpus from <<pool_r1_full>> to <<pool_r1>> (both measured with the same batched
-query encoding). Hierarchical token pooling, which clusters each page's patch vectors and keeps one mean vector per
-cluster, does much better at the same size: with <<tp_vec>> vectors per page it keeps recall@1 at <<tp_r1>> and recall@5 at
+query encoding). Hierarchical token pooling~\cite{tokenpooling}, which clusters each page's patch vectors and keeps
+one mean vector per cluster, does much better at the same size: with <<tp_vec>> vectors per page it keeps recall@1 at <<tp_r1>> and recall@5 at
 <<tp_r5>>, against <<tp_full_r1>> and <<tp_full_r5>> for the full index and <<tp_2x2_r1>> and <<tp_2x2_r5>> for 2$\times$2
 pooling (Table~\ref{tab:token_pooling}). A <<tp_x>>$\times$ smaller index makes a million pages <<tp_gib_1m>>\,GiB,
 which <<tp_a10>> A10s could hold, and scoring cost falls in proportion to the vectors per page. Emulated sharding over
@@ -642,7 +684,8 @@ projected from smaller resident runs, not measured.
 Energy covers the GPU only (NVML); host CPU and memory energy is not counted. Answers are short (at most
 <<max_new_tokens>> tokens), so cost is dominated by processing the input; with longer answers the relative cost of an
 extra context shrinks. The savings are relative to this path set and one shared generator, and they depend on the
-retrieval depth and input caps of each path; routing to a smaller generator was not tested. The router handles text
+retrieval depth and input caps of each path (the depth controls cover <<ct_n>> questions and one more depth per
+modality); routing to a smaller generator was not tested. The router handles text
 queries over visual documents; queries that contain an image are out of scope. The router design was developed on the same five splits that we
 report on, and the feasibility analyses that motivated it looked at their test portions; no parameter of the final
 pipeline is selected on test data, but a held-out confirmation set would give a cleaner estimate. Splits group
@@ -716,8 +759,9 @@ times, serving 100 queries/s at p95 ≤ 2 s needs <<g100_always_hybrid>> GPUs fo
 experiments, a hardware table for each machine, energy per query, router throughput up to batch 1,024, and serial versus
 speculative-parallel escalation.
 *Changes:* Abstract; Introduction (new subsection on why routing is a supercomputing problem; research question
-and contribution); Related work (inference serving and late-interaction retrieval) [AUTHOR ACTION: write and verify
-these citations]; Method (Figure method: the pipeline as built and its deployment); Results, subsection
+and contribution); Related work (new section: visual-document retrieval, adaptive retrieval and model routing,
+efficient late-interaction and vector search, inference serving; every reference checked against its arXiv, DOI
+or publisher record); Method (Figure method: the pipeline as built and its deployment); Results, subsection
 "Scalability, throughput and
 energy" (Tables hardware, hardware_multigpu, load_test, load_test_operating_points, index_scaling,
 multi_gpu_scaling, host_stream, router_throughput; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling,
@@ -805,7 +849,9 @@ remains in the manuscript.]
 **R3.1 — Answer correctness is never checked, and there is no comparison with escalation switched off.**
 This was the central gap and is now the core experiment: every path is run on every query, answers are scored with
 ANLS and exact match, and every policy is evaluated on the answers it produces (Table main_results). Escalation off
-is the "none" row of Table escalation.
+is the "none" row of Table escalation. New controls on <<ct_n>> questions (Table controls) separate the input
+modality from retrieval depth and from retrieval errors: at equal depth a page image beats OCR text by <<ct_v_t1>>
+ANLS, and giving the generator the gold page raises the visual path from <<ct_vis>> to <<ct_gvis>>.
 
 **R3.2 — 229/268 is not 231/268; the rule-based baseline, path counts, training curve and calibration differ across
 the paper.**
@@ -854,8 +900,8 @@ def main():
     md = fill(RESPONSE_MD, V).replace(" $\\pm$ ", " ± ")
     (OUT / "response_to_reviewers.md").write_text(md, encoding="utf-8")
     write_sections(V, OUT, fill)
-    print(f"wrote results_section, abstract, introduction, method, setup, conclusion (.tex), "
-          f"response_to_reviewers.md and citations_needed.md to {OUT}")
+    print(f"wrote results_section, abstract, introduction, related, method, setup, conclusion (.tex), "
+          f"and response_to_reviewers.md to {OUT}")
 
 
 if __name__ == "__main__":

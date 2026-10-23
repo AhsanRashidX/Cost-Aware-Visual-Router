@@ -21,6 +21,7 @@ STEPS = [
     ("simulate", ["simulate.py"]),
     ("sim_experiments (latency-target sweep, batch model, retrieval tier, adaptive lambda)", ["sim_experiments.py"]),
     ("review_analyses (blind mix, escalation vs lambda=0, McNemar power, split coverage)", ["review_analyses.py"]),
+    ("controls_analysis (retrieval-depth and gold-page controls run on the A10 node)", ["controls_analysis.py"]),
     ("bench_index (GPU)", ["bench_index.py"]),
     ("multi_gpu_scaling (results/multi_gpu from the multi-GPU node)", ["multi_gpu_scaling.py"]),
     ("multi_gpu_scaling_a10 (results/a10 from the 2x A10 node)",
@@ -32,6 +33,7 @@ STEPS = [
     ("make_training_figure", ["make_training_figure.py"]),
     ("make_summary", ["make_summary.py"]),
     ("make_paper_text", ["make_paper_text.py"]),
+    ("make_bib (references.bib from paper_out/refs_verified.json)", ["make_bib.py"]),
 ]
 
 

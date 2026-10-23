@@ -1,0 +1,1567 @@
+{
+ "colpali": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "ColPali: Efficient Document Retrieval with Vision Language Models",
+  "booktitle": "International Conference on Learning Representations (ICLR)",
+  "year": 2025,
+  "authors": [
+   [
+    "Manuel",
+    "Faysse"
+   ],
+   [
+    "Hugues",
+    "Sibille"
+   ],
+   [
+    "Tony",
+    "Wu"
+   ],
+   [
+    "Bilel",
+    "Omrani"
+   ],
+   [
+    "Gautier",
+    "Viaud"
+   ],
+   [
+    "Céline",
+    "Hudelot"
+   ],
+   [
+    "Pierre",
+    "Colombo"
+   ]
+  ],
+  "arxiv": "2407.01449",
+  "source": "arXiv comment"
+ },
+ "colbert": {
+  "kind": "doi",
+  "doi": "10.1145/3397271.3401075",
+  "title": "ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval",
+  "year": 2020,
+  "volume": null,
+  "issue": null,
+  "pages": "39-48",
+  "article_number": null,
+  "publisher": "ACM",
+  "authors": [
+   [
+    "Omar",
+    "Khattab"
+   ],
+   [
+    "Matei",
+    "Zaharia"
+   ]
+  ],
+  "arxiv": "2004.12832",
+  "source": "Crossref record by DOI"
+ },
+ "plaid": {
+  "kind": "doi",
+  "doi": "10.1145/3511808.3557325",
+  "title": "PLAID: An Efficient Engine for Late Interaction Retrieval",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Proceedings of the 31st ACM International Conference on Information &amp; Knowledge Management",
+  "year": 2022,
+  "volume": null,
+  "issue": null,
+  "pages": "1747-1756",
+  "article_number": null,
+  "publisher": "ACM",
+  "authors": [
+   [
+    "Keshav",
+    "Santhanam"
+   ],
+   [
+    "Omar",
+    "Khattab"
+   ],
+   [
+    "Christopher",
+    "Potts"
+   ],
+   [
+    "Matei",
+    "Zaharia"
+   ]
+  ],
+  "arxiv": "2205.09707",
+  "source": "Crossref record by DOI"
+ },
+ "docvqa": {
+  "kind": "doi",
+  "doi": "10.1109/wacv48630.2021.00225",
+  "title": "DocVQA: A Dataset for VQA on Document Images",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "2021 IEEE Winter Conference on Applications of Computer Vision (WACV)",
+  "year": 2021,
+  "volume": null,
+  "issue": null,
+  "pages": "2199-2208",
+  "article_number": null,
+  "publisher": "IEEE",
+  "authors": [
+   [
+    "Minesh",
+    "Mathew"
+   ],
+   [
+    "Dimosthenis",
+    "Karatzas"
+   ],
+   [
+    "C. V.",
+    "Jawahar"
+   ]
+  ],
+  "arxiv": "2007.00398",
+  "source": "Crossref record by DOI"
+ },
+ "infovqa": {
+  "kind": "doi",
+  "doi": "10.1109/wacv51458.2022.00264",
+  "title": "InfographicVQA",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "2022 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)",
+  "year": 2022,
+  "volume": null,
+  "issue": null,
+  "pages": "2582-2591",
+  "article_number": null,
+  "publisher": "IEEE",
+  "authors": [
+   [
+    "Minesh",
+    "Mathew"
+   ],
+   [
+    "Viraj",
+    "Bagal"
+   ],
+   [
+    "Ruben",
+    "Tito"
+   ],
+   [
+    "Dimosthenis",
+    "Karatzas"
+   ],
+   [
+    "Ernest",
+    "Valveny"
+   ],
+   [
+    "C. V.",
+    "Jawahar"
+   ]
+  ],
+  "arxiv": "2104.12756",
+  "source": "Crossref record by DOI"
+ },
+ "anls": {
+  "kind": "doi",
+  "doi": "10.1109/iccv.2019.00439",
+  "title": "Scene Text Visual Question Answering",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "2019 IEEE/CVF International Conference on Computer Vision (ICCV)",
+  "year": 2019,
+  "volume": null,
+  "issue": null,
+  "pages": "4290-4300",
+  "article_number": null,
+  "publisher": "IEEE",
+  "authors": [
+   [
+    "Ali Furkan",
+    "Biten"
+   ],
+   [
+    "Ruben",
+    "Tito"
+   ],
+   [
+    "Andres",
+    "Mafla"
+   ],
+   [
+    "Lluis",
+    "Gomez"
+   ],
+   [
+    "Marcal",
+    "Rusinol"
+   ],
+   [
+    "C.V.",
+    "Jawahar"
+   ],
+   [
+    "Ernest",
+    "Valveny"
+   ],
+   [
+    "Dimosthenis",
+    "Karatzas"
+   ]
+  ],
+  "arxiv": "1905.13648",
+  "source": "Crossref record by DOI"
+ },
+ "qwen25vl": {
+  "kind": "arxiv",
+  "title": "Qwen2.5-VL Technical Report",
+  "year": 2025,
+  "authors": [
+   [
+    "Shuai",
+    "Bai"
+   ],
+   [
+    "Keqin",
+    "Chen"
+   ],
+   [
+    "Xuejing",
+    "Liu"
+   ],
+   [
+    "Jialin",
+    "Wang"
+   ],
+   [
+    "Wenbin",
+    "Ge"
+   ],
+   [
+    "Sibo",
+    "Song"
+   ],
+   [
+    "Kai",
+    "Dang"
+   ],
+   [
+    "Peng",
+    "Wang"
+   ],
+   [
+    "Shijie",
+    "Wang"
+   ],
+   [
+    "Jun",
+    "Tang"
+   ],
+   [
+    "Humen",
+    "Zhong"
+   ],
+   [
+    "Yuanzhi",
+    "Zhu"
+   ],
+   [
+    "Mingkun",
+    "Yang"
+   ],
+   [
+    "Zhaohai",
+    "Li"
+   ],
+   [
+    "Jianqiang",
+    "Wan"
+   ],
+   [
+    "Pengfei",
+    "Wang"
+   ],
+   [
+    "Wei",
+    "Ding"
+   ],
+   [
+    "Zheren",
+    "Fu"
+   ],
+   [
+    "Yiheng",
+    "Xu"
+   ],
+   [
+    "Jiabo",
+    "Ye"
+   ],
+   [
+    "Xi",
+    "Zhang"
+   ],
+   [
+    "Tianbao",
+    "Xie"
+   ],
+   [
+    "Zesen",
+    "Cheng"
+   ],
+   [
+    "Hang",
+    "Zhang"
+   ],
+   [
+    "Zhibo",
+    "Yang"
+   ],
+   [
+    "Haiyang",
+    "Xu"
+   ],
+   [
+    "Junyang",
+    "Lin"
+   ]
+  ],
+  "arxiv": "2502.13923",
+  "source": "arXiv record"
+ },
+ "bm25": {
+  "kind": "doi",
+  "doi": "10.1561/1500000019",
+  "title": "The Probabilistic Relevance Framework: BM25 and Beyond",
+  "title_match": true,
+  "type": "journal-article",
+  "container": "Foundations and Trends® in Information Retrieval",
+  "year": 2009,
+  "volume": "4",
+  "issue": "1-2",
+  "pages": "1-174",
+  "article_number": null,
+  "publisher": "Emerald",
+  "authors": [
+   [
+    "Stephen",
+    "Robertson"
+   ],
+   [
+    "Hugo",
+    "Zaragoza"
+   ]
+  ],
+  "arxiv": null,
+  "source": "Crossref record by DOI"
+ },
+ "mpnet": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "MPNet: Masked and Permuted Pre-training for Language Understanding",
+  "booktitle": "Advances in Neural Information Processing Systems (NeurIPS)",
+  "year": 2020,
+  "authors": [
+   [
+    "Kaitao",
+    "Song"
+   ],
+   [
+    "Xu",
+    "Tan"
+   ],
+   [
+    "Tao",
+    "Qin"
+   ],
+   [
+    "Jianfeng",
+    "Lu"
+   ],
+   [
+    "Tie-Yan",
+    "Liu"
+   ]
+  ],
+  "arxiv": "2004.09297",
+  "source": "Semantic Scholar venue"
+ },
+ "sbert": {
+  "kind": "doi",
+  "doi": "10.18653/v1/d19-1410",
+  "title": "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)",
+  "year": 2019,
+  "volume": null,
+  "issue": null,
+  "pages": "3980-3990",
+  "article_number": null,
+  "publisher": "Association for Computational Linguistics",
+  "authors": [
+   [
+    "Nils",
+    "Reimers"
+   ],
+   [
+    "Iryna",
+    "Gurevych"
+   ]
+  ],
+  "arxiv": "1908.10084",
+  "source": "Crossref record by DOI"
+ },
+ "frugalgpt": {
+  "kind": "venue",
+  "entrytype": "article",
+  "title": "FrugalGPT: How to Use Large Language Models While Reducing Cost and Improving Performance",
+  "booktitle": "Transactions on Machine Learning Research",
+  "year": 2024,
+  "authors": [
+   [
+    "Lingjiao",
+    "Chen"
+   ],
+   [
+    "Matei",
+    "Zaharia"
+   ],
+   [
+    "James",
+    "Zou"
+   ]
+  ],
+  "arxiv": "2305.05176",
+  "source": "OpenReview TMLR acceptance (cSimKw5p6R), published 2024-12-20"
+ },
+ "routellm": {
+  "kind": "arxiv",
+  "title": "RouteLLM: Learning to Route LLMs with Preference Data",
+  "year": 2024,
+  "authors": [
+   [
+    "Isaac",
+    "Ong"
+   ],
+   [
+    "Amjad",
+    "Almahairi"
+   ],
+   [
+    "Vincent",
+    "Wu"
+   ],
+   [
+    "Wei-Lin",
+    "Chiang"
+   ],
+   [
+    "Tianhao",
+    "Wu"
+   ],
+   [
+    "Joseph E.",
+    "Gonzalez"
+   ],
+   [
+    "M Waleed",
+    "Kadous"
+   ],
+   [
+    "Ion",
+    "Stoica"
+   ]
+  ],
+  "arxiv": "2406.18665",
+  "source": "arXiv record"
+ },
+ "adaptiverag": {
+  "kind": "doi",
+  "doi": "10.18653/v1/2024.naacl-long.389",
+  "title": "Adaptive-RAG: Learning to Adapt Retrieval-Augmented Large Language Models through Question Complexity",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)",
+  "year": 2024,
+  "volume": null,
+  "issue": null,
+  "pages": "7036-7050",
+  "article_number": null,
+  "publisher": "Association for Computational Linguistics",
+  "authors": [
+   [
+    "Soyeong",
+    "Jeong"
+   ],
+   [
+    "Jinheon",
+    "Baek"
+   ],
+   [
+    "Sukmin",
+    "Cho"
+   ],
+   [
+    "Sung Ju",
+    "Hwang"
+   ],
+   [
+    "Jong",
+    "Park"
+   ]
+  ],
+  "arxiv": "2403.14403",
+  "source": "Crossref record by DOI"
+ },
+ "vllm": {
+  "kind": "doi",
+  "doi": "10.1145/3600006.3613165",
+  "title": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Proceedings of the 29th Symposium on Operating Systems Principles",
+  "year": 2023,
+  "volume": null,
+  "issue": null,
+  "pages": "611-626",
+  "article_number": null,
+  "publisher": "ACM",
+  "authors": [
+   [
+    "Woosuk",
+    "Kwon"
+   ],
+   [
+    "Zhuohan",
+    "Li"
+   ],
+   [
+    "Siyuan",
+    "Zhuang"
+   ],
+   [
+    "Ying",
+    "Sheng"
+   ],
+   [
+    "Lianmin",
+    "Zheng"
+   ],
+   [
+    "Cody Hao",
+    "Yu"
+   ],
+   [
+    "Joseph",
+    "Gonzalez"
+   ],
+   [
+    "Hao",
+    "Zhang"
+   ],
+   [
+    "Ion",
+    "Stoica"
+   ]
+  ],
+  "arxiv": "2309.06180",
+  "source": "Crossref record by DOI"
+ },
+ "orca": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "Orca: A Distributed Serving System for Transformer-Based Generative Models",
+  "booktitle": "USENIX Symposium on Operating Systems Design and Implementation (OSDI)",
+  "year": 2022,
+  "authors": [
+   [
+    "Gyeong-In",
+    "Yu"
+   ],
+   [
+    "Joo Seong",
+    "Jeong"
+   ],
+   [
+    "Geon-Woo",
+    "Kim"
+   ],
+   [
+    "Soojeong",
+    "Kim"
+   ],
+   [
+    "Byung-Gon",
+    "Chun"
+   ]
+  ],
+  "arxiv": null,
+  "source": "USENIX OSDI '22 presentation page (title and authors)"
+ },
+ "clipper": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "Clipper: A Low-Latency Online Prediction Serving System",
+  "booktitle": "USENIX Symposium on Networked Systems Design and Implementation (NSDI)",
+  "year": 2017,
+  "authors": [
+   [
+    "Daniel",
+    "Crankshaw"
+   ],
+   [
+    "Xin",
+    "Wang"
+   ],
+   [
+    "Giulio",
+    "Zhou"
+   ],
+   [
+    "Michael J.",
+    "Franklin"
+   ],
+   [
+    "Joseph E.",
+    "Gonzalez"
+   ],
+   [
+    "Ion",
+    "Stoica"
+   ]
+  ],
+  "arxiv": "1612.03079",
+  "source": "USENIX NSDI '17 presentation page"
+ },
+ "dse": {
+  "kind": "doi",
+  "doi": "10.18653/v1/2024.emnlp-main.373",
+  "title": "Unifying Multimodal Retrieval via Document Screenshot Embedding",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing",
+  "year": 2024,
+  "volume": null,
+  "issue": null,
+  "pages": "6492-6505",
+  "article_number": null,
+  "publisher": "Association for Computational Linguistics",
+  "authors": [
+   [
+    "Xueguang",
+    "Ma"
+   ],
+   [
+    "Sheng-Chieh",
+    "Lin"
+   ],
+   [
+    "Minghan",
+    "Li"
+   ],
+   [
+    "Wenhu",
+    "Chen"
+   ],
+   [
+    "Jimmy",
+    "Lin"
+   ]
+  ],
+  "arxiv": "2406.11251",
+  "source": "Crossref record by DOI"
+ },
+ "visrag": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "VisRAG: Vision-based Retrieval-augmented Generation on Multi-modality Documents",
+  "booktitle": "International Conference on Learning Representations (ICLR)",
+  "year": 2025,
+  "authors": [
+   [
+    "Shi",
+    "Yu"
+   ],
+   [
+    "Chaoyue",
+    "Tang"
+   ],
+   [
+    "Bokai",
+    "Xu"
+   ],
+   [
+    "Junbo",
+    "Cui"
+   ],
+   [
+    "Junhao",
+    "Ran"
+   ],
+   [
+    "Yukun",
+    "Yan"
+   ],
+   [
+    "Zhenghao",
+    "Liu"
+   ],
+   [
+    "Shuo",
+    "Wang"
+   ],
+   [
+    "Xu",
+    "Han"
+   ],
+   [
+    "Zhiyuan",
+    "Liu"
+   ],
+   [
+    "Maosong",
+    "Sun"
+   ]
+  ],
+  "arxiv": "2410.10594",
+  "source": "OpenReview ICLR.cc/2025/Conference (zG459X3Xge)"
+ },
+ "m3docrag": {
+  "kind": "arxiv",
+  "title": "M3DocRAG: Multi-modal Retrieval is What You Need for Multi-page Multi-document Understanding",
+  "year": 2024,
+  "authors": [
+   [
+    "Jaemin",
+    "Cho"
+   ],
+   [
+    "Debanjan",
+    "Mahata"
+   ],
+   [
+    "Ozan",
+    "Irsoy"
+   ],
+   [
+    "Yujie",
+    "He"
+   ],
+   [
+    "Mohit",
+    "Bansal"
+   ]
+  ],
+  "arxiv": "2411.04952",
+  "source": "arXiv record"
+ },
+ "ocrhinders": {
+  "kind": "doi",
+  "doi": "10.1109/iccv51701.2025.01620",
+  "title": "OCR Hinders RAG: Evaluating the Cascading Impact of OCR on Retrieval-Augmented Generation",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "2025 IEEE/CVF International Conference on Computer Vision (ICCV)",
+  "year": 2025,
+  "volume": null,
+  "issue": null,
+  "pages": "17443-17453",
+  "article_number": null,
+  "publisher": "IEEE",
+  "authors": [
+   [
+    "Junyuan",
+    "Zhang"
+   ],
+   [
+    "Qintong",
+    "Zhang"
+   ],
+   [
+    "Bin",
+    "Wang"
+   ],
+   [
+    "Linke",
+    "Ouyang"
+   ],
+   [
+    "Zichen",
+    "Wen"
+   ],
+   [
+    "Ying",
+    "Li"
+   ],
+   [
+    "Ka-Ho",
+    "Chow"
+   ],
+   [
+    "Conghui",
+    "He"
+   ],
+   [
+    "Wentao",
+    "Zhang"
+   ]
+  ],
+  "arxiv": "2412.02592",
+  "source": "Crossref record by DOI"
+ },
+ "selfrag": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection",
+  "booktitle": "International Conference on Learning Representations (ICLR)",
+  "year": 2024,
+  "authors": [
+   [
+    "Akari",
+    "Asai"
+   ],
+   [
+    "Zeqiu",
+    "Wu"
+   ],
+   [
+    "Yizhong",
+    "Wang"
+   ],
+   [
+    "Avirup",
+    "Sil"
+   ],
+   [
+    "Hannaneh",
+    "Hajishirzi"
+   ]
+  ],
+  "arxiv": "2310.11511",
+  "source": "OpenReview ICLR.cc/2024/Conference (hSyW5go0v8)"
+ },
+ "flare": {
+  "kind": "doi",
+  "doi": "10.18653/v1/2023.emnlp-main.495",
+  "title": "Active Retrieval Augmented Generation",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing",
+  "year": 2023,
+  "volume": null,
+  "issue": null,
+  "pages": "7969-7992",
+  "article_number": null,
+  "publisher": "Association for Computational Linguistics",
+  "authors": [
+   [
+    "Zhengbao",
+    "Jiang"
+   ],
+   [
+    "Frank",
+    "Xu"
+   ],
+   [
+    "Luyu",
+    "Gao"
+   ],
+   [
+    "Zhiqing",
+    "Sun"
+   ],
+   [
+    "Qian",
+    "Liu"
+   ],
+   [
+    "Jane",
+    "Dwivedi-Yu"
+   ],
+   [
+    "Yiming",
+    "Yang"
+   ],
+   [
+    "Jamie",
+    "Callan"
+   ],
+   [
+    "Graham",
+    "Neubig"
+   ]
+  ],
+  "arxiv": "2305.06983",
+  "source": "Crossref record by DOI"
+ },
+ "mallen": {
+  "kind": "doi",
+  "doi": "10.18653/v1/2023.acl-long.546",
+  "title": "When Not to Trust Language Models: Investigating Effectiveness of Parametric and Non-Parametric Memories",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+  "year": 2023,
+  "volume": null,
+  "issue": null,
+  "pages": "9802-9822",
+  "article_number": null,
+  "publisher": "Association for Computational Linguistics",
+  "authors": [
+   [
+    "Alex",
+    "Mallen"
+   ],
+   [
+    "Akari",
+    "Asai"
+   ],
+   [
+    "Victor",
+    "Zhong"
+   ],
+   [
+    "Rajarshi",
+    "Das"
+   ],
+   [
+    "Daniel",
+    "Khashabi"
+   ],
+   [
+    "Hannaneh",
+    "Hajishirzi"
+   ]
+  ],
+  "arxiv": "2212.10511",
+  "source": "Crossref record by DOI"
+ },
+ "hybridllm": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "Hybrid LLM: Cost-Efficient and Quality-Aware Query Routing",
+  "booktitle": "International Conference on Learning Representations (ICLR)",
+  "year": 2024,
+  "authors": [
+   [
+    "Dujian",
+    "Ding"
+   ],
+   [
+    "Ankur",
+    "Mallick"
+   ],
+   [
+    "Chi",
+    "Wang"
+   ],
+   [
+    "Robert",
+    "Sim"
+   ],
+   [
+    "Subhabrata",
+    "Mukherjee"
+   ],
+   [
+    "Victor",
+    "Ruhle"
+   ],
+   [
+    "Laks V. S.",
+    "Lakshmanan"
+   ],
+   [
+    "Ahmed Hassan",
+    "Awadallah"
+   ]
+  ],
+  "arxiv": "2404.14618",
+  "source": "arXiv comment"
+ },
+ "automix": {
+  "kind": "doi",
+  "doi": "10.52202/079017-4164",
+  "title": "AutoMix: Automatically Mixing Language Models",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Advances in Neural Information Processing Systems 37",
+  "year": 2024,
+  "volume": null,
+  "issue": null,
+  "pages": "131000-131034",
+  "article_number": null,
+  "publisher": "Neural Information Processing Systems Foundation, Inc. (NeurIPS)",
+  "authors": [
+   [
+    "Pranjal",
+    "Aggarwal"
+   ],
+   [
+    "Aman",
+    "Madaan"
+   ],
+   [
+    "Ankit",
+    "Anand"
+   ],
+   [
+    "Srividya Pranavi",
+    "Potharaju"
+   ],
+   [
+    "Swaroop",
+    "Mishra"
+   ],
+   [
+    "Pei",
+    "Zhou"
+   ],
+   [
+    "Aditya",
+    "Gupta"
+   ],
+   [
+    "Dheeraj",
+    "Rajagopal"
+   ],
+   [
+    "Karthik",
+    "Kappaganthu"
+   ],
+   [
+    "Yiming",
+    "Yang"
+   ],
+   [
+    "Shyam",
+    "Upadhyay"
+   ],
+   [
+    "Manaal",
+    "Faruqui"
+   ],
+   [
+    "Mausam",
+    "Mausam"
+   ]
+  ],
+  "arxiv": "2310.12963",
+  "source": "Crossref record by DOI"
+ },
+ "routerbench": {
+  "kind": "arxiv",
+  "title": "RouterBench: A Benchmark for Multi-LLM Routing System",
+  "year": 2024,
+  "authors": [
+   [
+    "Qitian Jason",
+    "Hu"
+   ],
+   [
+    "Jacob",
+    "Bieker"
+   ],
+   [
+    "Xiuyu",
+    "Li"
+   ],
+   [
+    "Nan",
+    "Jiang"
+   ],
+   [
+    "Benjamin",
+    "Keigwin"
+   ],
+   [
+    "Gaurav",
+    "Ranganath"
+   ],
+   [
+    "Kurt",
+    "Keutzer"
+   ],
+   [
+    "Shriyash Kaustubh",
+    "Upadhyay"
+   ]
+  ],
+  "arxiv": "2403.12031",
+  "source": "arXiv record"
+ },
+ "colbertv2": {
+  "kind": "doi",
+  "doi": "10.18653/v1/2022.naacl-main.272",
+  "title": "ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+  "year": 2022,
+  "volume": null,
+  "issue": null,
+  "pages": "3715-3734",
+  "article_number": null,
+  "publisher": "Association for Computational Linguistics",
+  "authors": [
+   [
+    "Keshav",
+    "Santhanam"
+   ],
+   [
+    "Omar",
+    "Khattab"
+   ],
+   [
+    "Jon",
+    "Saad-Falcon"
+   ],
+   [
+    "Christopher",
+    "Potts"
+   ],
+   [
+    "Matei",
+    "Zaharia"
+   ]
+  ],
+  "arxiv": "2112.01488",
+  "source": "Crossref record by DOI"
+ },
+ "tokenpooling": {
+  "kind": "arxiv",
+  "title": "Reducing the Footprint of Multi-Vector Retrieval with Minimal Performance Impact via Token Pooling",
+  "year": 2024,
+  "authors": [
+   [
+    "Benjamin",
+    "Clavié"
+   ],
+   [
+    "Antoine",
+    "Chaffin"
+   ],
+   [
+    "Griffin",
+    "Adams"
+   ]
+  ],
+  "arxiv": "2409.14683",
+  "source": "arXiv record"
+ },
+ "muvera": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "MUVERA: Multi-Vector Retrieval via Fixed Dimensional Encodings",
+  "booktitle": "Advances in Neural Information Processing Systems (NeurIPS)",
+  "year": 2024,
+  "authors": [
+   [
+    "Laxman",
+    "Dhulipala"
+   ],
+   [
+    "Majid",
+    "Hadian"
+   ],
+   [
+    "Rajesh",
+    "Jayaram"
+   ],
+   [
+    "Jason",
+    "Lee"
+   ],
+   [
+    "Vahab",
+    "Mirrokni"
+   ]
+  ],
+  "arxiv": "2405.19504",
+  "source": "Semantic Scholar venue"
+ },
+ "faiss": {
+  "kind": "doi",
+  "doi": "10.1109/tbdata.2019.2921572",
+  "title": "Billion-Scale Similarity Search with GPUs",
+  "title_match": true,
+  "type": "journal-article",
+  "container": "IEEE Transactions on Big Data",
+  "year": 2021,
+  "volume": "7",
+  "issue": "3",
+  "pages": "535-547",
+  "article_number": null,
+  "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+  "authors": [
+   [
+    "Jeff",
+    "Johnson"
+   ],
+   [
+    "Matthijs",
+    "Douze"
+   ],
+   [
+    "Herve",
+    "Jegou"
+   ]
+  ],
+  "arxiv": "1702.08734",
+  "source": "Crossref record by DOI"
+ },
+ "diskann": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a Single Node",
+  "booktitle": "Advances in Neural Information Processing Systems (NeurIPS)",
+  "year": 2019,
+  "authors": [
+   [
+    "Suhas Jayaram",
+    "Subramanya"
+   ],
+   [
+    "Fnu",
+    "Devvrit"
+   ],
+   [
+    "Harsha Vardhan",
+    "Simhadri"
+   ],
+   [
+    "Ravishankar",
+    "Krishnawamy"
+   ],
+   [
+    "Rohan",
+    "Kadekodi"
+   ]
+  ],
+  "arxiv": null,
+  "source": "OpenAlex primary location"
+ },
+ "clockwork": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "Serving DNNs like Clockwork: Performance Predictability from the Bottom Up",
+  "booktitle": "USENIX Symposium on Operating Systems Design and Implementation (OSDI)",
+  "year": 2020,
+  "authors": [
+   [
+    "Arpan",
+    "Gujarati"
+   ],
+   [
+    "Reza",
+    "Karimi"
+   ],
+   [
+    "Safya",
+    "Alzayat"
+   ],
+   [
+    "Wei",
+    "Hao"
+   ],
+   [
+    "Antoine",
+    "Kaufmann"
+   ],
+   [
+    "Ymir",
+    "Vigfusson"
+   ],
+   [
+    "Jonathan",
+    "Mace"
+   ]
+  ],
+  "arxiv": "2006.02464",
+  "source": "arXiv comment"
+ },
+ "infaas": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "INFaaS: Automated Model-less Inference Serving",
+  "booktitle": "USENIX Annual Technical Conference (ATC)",
+  "year": 2021,
+  "authors": [
+   [
+    "Francisco",
+    "Romero"
+   ],
+   [
+    "Qian",
+    "Li"
+   ],
+   [
+    "Neeraja J.",
+    "Yadwadkar"
+   ],
+   [
+    "Christos",
+    "Kozyrakis"
+   ]
+  ],
+  "arxiv": null,
+  "source": "OpenAlex primary location"
+ },
+ "alpaserve": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "AlpaServe: Statistical Multiplexing with Model Parallelism for Deep Learning Serving",
+  "booktitle": "USENIX Symposium on Operating Systems Design and Implementation (OSDI)",
+  "year": 2023,
+  "authors": [
+   [
+    "Zhuohan",
+    "Li"
+   ],
+   [
+    "Lianmin",
+    "Zheng"
+   ],
+   [
+    "Yinmin",
+    "Zhong"
+   ],
+   [
+    "Vincent",
+    "Liu"
+   ],
+   [
+    "Ying",
+    "Sheng"
+   ],
+   [
+    "Xin",
+    "Jin"
+   ],
+   [
+    "Yanping",
+    "Huang"
+   ],
+   [
+    "Zhifeng",
+    "Chen"
+   ],
+   [
+    "Hao",
+    "Zhang"
+   ],
+   [
+    "Joseph E.",
+    "Gonzalez"
+   ],
+   [
+    "Ion",
+    "Stoica"
+   ]
+  ],
+  "arxiv": "2302.11665",
+  "source": "arXiv comment"
+ },
+ "distserve": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "DistServe: Disaggregating Prefill and Decoding for Goodput-optimized Large Language Model Serving",
+  "booktitle": "USENIX Symposium on Operating Systems Design and Implementation (OSDI)",
+  "year": 2024,
+  "authors": [
+   [
+    "Yinmin",
+    "Zhong"
+   ],
+   [
+    "Shengyu",
+    "Liu"
+   ],
+   [
+    "Junda",
+    "Chen"
+   ],
+   [
+    "Jianbo",
+    "Hu"
+   ],
+   [
+    "Yibo",
+    "Zhu"
+   ],
+   [
+    "Xuanzhe",
+    "Liu"
+   ],
+   [
+    "Xin",
+    "Jin"
+   ],
+   [
+    "Hao",
+    "Zhang"
+   ]
+  ],
+  "arxiv": "2401.09670",
+  "source": "arXiv comment"
+ },
+ "splitwise": {
+  "kind": "doi",
+  "doi": "10.1109/isca59077.2024.00019",
+  "title": "Splitwise: Efficient Generative LLM Inference Using Phase Splitting",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "2024 ACM/IEEE 51st Annual International Symposium on Computer Architecture (ISCA)",
+  "year": 2024,
+  "volume": null,
+  "issue": null,
+  "pages": "118-132",
+  "article_number": null,
+  "publisher": "IEEE",
+  "authors": [
+   [
+    "Pratyush",
+    "Patel"
+   ],
+   [
+    "Esha",
+    "Choukse"
+   ],
+   [
+    "Chaojie",
+    "Zhang"
+   ],
+   [
+    "Aashaka",
+    "Shah"
+   ],
+   [
+    "Íñigo",
+    "Goiri"
+   ],
+   [
+    "Saeed",
+    "Maleki"
+   ],
+   [
+    "Ricardo",
+    "Bianchini"
+   ]
+  ],
+  "arxiv": "2311.18677",
+  "source": "Crossref record by DOI"
+ },
+ "sglang": {
+  "kind": "doi",
+  "doi": "10.52202/079017-2000",
+  "title": "SGLang: Efficient Execution of Structured Language Model Programs",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Advances in Neural Information Processing Systems 37",
+  "year": 2024,
+  "volume": null,
+  "issue": null,
+  "pages": "62557-62583",
+  "article_number": null,
+  "publisher": "Neural Information Processing Systems Foundation, Inc. (NeurIPS)",
+  "authors": [
+   [
+    "Lianmin",
+    "Zheng"
+   ],
+   [
+    "Liangsheng",
+    "Yin"
+   ],
+   [
+    "Zhiqiang",
+    "Xie"
+   ],
+   [
+    "Chuyue",
+    "Sun"
+   ],
+   [
+    "Jeff",
+    "Huang"
+   ],
+   [
+    "Cody",
+    "Yu"
+   ],
+   [
+    "Shiyi",
+    "Cao"
+   ],
+   [
+    "Christos",
+    "Kozyrakis"
+   ],
+   [
+    "Ion",
+    "Stoica"
+   ],
+   [
+    "Joseph",
+    "Gonzalez"
+   ],
+   [
+    "Clark",
+    "Barrett"
+   ],
+   [
+    "Ying",
+    "Sheng"
+   ]
+  ],
+  "arxiv": "2312.07104",
+  "source": "Crossref record by DOI"
+ },
+ "mpdocvqa": {
+  "kind": "doi",
+  "doi": "10.1016/j.patcog.2023.109834",
+  "title": "Hierarchical multimodal transformers for Multipage DocVQA",
+  "title_match": true,
+  "type": "journal-article",
+  "container": "Pattern Recognition",
+  "year": 2023,
+  "volume": "144",
+  "issue": null,
+  "pages": "109834",
+  "article_number": "109834",
+  "publisher": "Elsevier BV",
+  "authors": [
+   [
+    "Rubèn",
+    "Tito"
+   ],
+   [
+    "Dimosthenis",
+    "Karatzas"
+   ],
+   [
+    "Ernest",
+    "Valveny"
+   ]
+  ],
+  "arxiv": "2212.05935",
+  "source": "Crossref record by DOI"
+ },
+ "doctr": {
+  "kind": "software",
+  "title": "docTR: Document Text Recognition",
+  "author_org": "Mindee",
+  "year": 2021,
+  "url": "https://github.com/mindee/doctr",
+  "source": "GitHub repository (checked)"
+ }
+}

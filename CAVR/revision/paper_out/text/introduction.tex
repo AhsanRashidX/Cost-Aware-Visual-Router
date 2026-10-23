@@ -26,7 +26,7 @@ as many as content-aware routing.
 \emph{Memory grows with the corpus.} ColPali stores 1,031 vectors per page; at 100k pages the index needs
 24.6\,GiB in bf16, more than our 24\,GiB GPU, and a million pages (about 246\,GiB) exceed the
 memory of most current accelerators. With exhaustive MaxSim, as measured here, such an index must be sharded, streamed from host memory or compressed;
-hierarchical token pooling, evaluated here, shrinks it about fourfold with little loss of recall, and engines
+hierarchical token pooling~\cite{tokenpooling}, evaluated here, shrinks it about fourfold with little loss of recall, and engines
 such as PLAID~\cite{plaid} avoid exhaustive scoring (not evaluated here).
 Measured on three older GPUs (Tesla P40) and two data-centre NVIDIA A10 GPUs, sharding keeps
 exhaustive search at constant latency when the number of GPUs grows with the corpus (327\,ms for
@@ -46,9 +46,10 @@ that still answers it, and an operator should be able to trade quality for capac
 
 Cost-aware routing and cascades have been studied for large language models~\cite{frugalgpt,routellm} and for
 adaptive retrieval~\cite{adaptiverag}; serving systems batch and schedule model inference under latency
-targets~\cite{clipper,orca,vllm}, and efficient engines reduce late-interaction scoring cost~\cite{plaid}. We bring
-these threads together for multimodal document RAG, where the choice is between context modalities that share one
-generator, and evaluate routing end to end on answer quality and measured cost.
+targets~\cite{clipper,orca,vllm}, and efficient engines reduce late-interaction scoring cost~\cite{plaid}
+(Section~\ref{sec:related}). We bring these threads together for multimodal document RAG, where the choice is
+between context modalities that share one generator, and evaluate routing end to end on answer quality and
+measured cost.
 Routing, retrieval and generation are measured on a single GPU with Hugging Face (HF) Transformers generation, and capacity at
 larger scale is simulated from measured service times; multi-GPU sharding and host-memory placement of the index are
 measured on two further nodes, with three older GPUs (Tesla P40) and with two NVIDIA A10 GPUs.

@@ -64,8 +64,9 @@ times, serving 100 queries/s at p95 ≤ 2 s needs 106 GPUs for always-hybrid and
 experiments, a hardware table for each machine, energy per query, router throughput up to batch 1,024, and serial versus
 speculative-parallel escalation.
 *Changes:* Abstract; Introduction (new subsection on why routing is a supercomputing problem; research question
-and contribution); Related work (inference serving and late-interaction retrieval) [AUTHOR ACTION: write and verify
-these citations]; Method (Figure method: the pipeline as built and its deployment); Results, subsection
+and contribution); Related work (new section: visual-document retrieval, adaptive retrieval and model routing,
+efficient late-interaction and vector search, inference serving; every reference checked against its arXiv, DOI
+or publisher record); Method (Figure method: the pipeline as built and its deployment); Results, subsection
 "Scalability, throughput and
 energy" (Tables hardware, hardware_multigpu, load_test, load_test_operating_points, index_scaling,
 multi_gpu_scaling, host_stream, router_throughput; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling,
@@ -153,7 +154,9 @@ remains in the manuscript.]
 **R3.1 — Answer correctness is never checked, and there is no comparison with escalation switched off.**
 This was the central gap and is now the core experiment: every path is run on every query, answers are scored with
 ANLS and exact match, and every policy is evaluated on the answers it produces (Table main_results). Escalation off
-is the "none" row of Table escalation.
+is the "none" row of Table escalation. New controls on 1,500 questions (Table controls) separate the input
+modality from retrieval depth and from retrieval errors: at equal depth a page image beats OCR text by 0.22
+ANLS, and giving the generator the gold page raises the visual path from 0.544 to 0.826.
 
 **R3.2 — 229/268 is not 231/268; the rule-based baseline, path counts, training curve and calibration differ across
 the paper.**

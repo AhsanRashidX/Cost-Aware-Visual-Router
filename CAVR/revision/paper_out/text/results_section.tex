@@ -28,6 +28,21 @@ In 35\% of queries every path fails. For 76\% of these, no path had the gold pag
 context (page recall@1 is 0.44 for BM25 and 0.57 for ColPali; Table~\ref{tab:retrieval}). No router
 can recover these queries; they bound every policy.
 
+Two controls on 1,500 of these questions (750 per dataset; Table~\ref{tab:controls}) show where the
+differences between paths come from. First, the visual advantage is a matter of modality, not of how many pages
+the generator reads: at equal depth, one page image beats one page of OCR text by 0.22 ANLS (95\% interval
+0.194, 0.247), and three page images beat the three-page text path by 0.22 (0.189, 0.245), whereas going
+from one page to three adds only 0.041 for text and 0.038 for images. Second, retrieval errors cost more
+than any choice of path. Given the gold page, the visual path rises from 0.544 to 0.826, the text path
+from 0.364 to 0.604 and the hybrid path from 0.556 to 0.839; the gain is largest on DocVQA
+(+0.42 for the visual path, against +0.14 on InfographicVQA). Even with the gold page, the
+image beats its OCR text by 0.22 ANLS (0.16 on DocVQA, 0.28 on InfographicVQA), and
+adding the OCR text to the gold image adds only 0.013 (0.000, 0.024). Three page images reach ANLS
+0.582, above the hybrid path, but take 3.3$\times$ the generation time of one image; such a path is
+outside the evaluated path set.
+
+\input{tables/controls}
+
 \subsection{Outcome-based route labels}
 \label{sec:res-labels}
 
@@ -169,8 +184,8 @@ million pages (about 246\,GiB) would exceed the memory of most current accelerat
 (Table~\ref{tab:index_scaling}, Figure~\ref{fig:index}). Streaming it from pinned host memory costs
 1,044\,ms per query; 2$\times$2 pooling shrinks it to 6.3\,GiB and 10.3\,ms
 but lowers recall@1 on the real corpus from 0.577 to 0.525 (both measured with the same batched
-query encoding). Hierarchical token pooling, which clusters each page's patch vectors and keeps one mean vector per
-cluster, does much better at the same size: with 263 vectors per page it keeps recall@1 at 0.574 and recall@5 at
+query encoding). Hierarchical token pooling~\cite{tokenpooling}, which clusters each page's patch vectors and keeps
+one mean vector per cluster, does much better at the same size: with 263 vectors per page it keeps recall@1 at 0.574 and recall@5 at
 0.747, against 0.578 and 0.751 for the full index and 0.525 and 0.712 for 2$\times$2
 pooling (Table~\ref{tab:token_pooling}). A 3.9$\times$ smaller index makes a million pages 63\,GiB,
 which 5 A10s could hold, and scoring cost falls in proportion to the vectors per page. Emulated sharding over
@@ -318,7 +333,8 @@ projected from smaller resident runs, not measured.
 Energy covers the GPU only (NVML); host CPU and memory energy is not counted. Answers are short (at most
 32 tokens), so cost is dominated by processing the input; with longer answers the relative cost of an
 extra context shrinks. The savings are relative to this path set and one shared generator, and they depend on the
-retrieval depth and input caps of each path; routing to a smaller generator was not tested. The router handles text
+retrieval depth and input caps of each path (the depth controls cover 1,500 questions and one more depth per
+modality); routing to a smaller generator was not tested. The router handles text
 queries over visual documents; queries that contain an image are out of scope. The router design was developed on the same five splits that we
 report on, and the feasibility analyses that motivated it looked at their test portions; no parameter of the final
 pipeline is selected on test data, but a held-out confirmation set would give a cleaner estimate. Splits group

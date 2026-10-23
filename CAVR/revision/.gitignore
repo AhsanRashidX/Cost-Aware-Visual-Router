@@ -9,3 +9,13 @@ p40_package/
 data/colpali_query_emb.pt
 p40/p40_env.json
 t4_package/
+data_confirm/pages/
+data_confirm/colpali_index.pt
+data_confirm/embeddings.npz
+data_confirm/ocr_windows.npz
+results_confirm/confirm_ce_inputs.npz
+results_confirm/aborted_run1/
+results_confirm/path_outputs_0.jsonl
+results_confirm/path_outputs_1a.jsonl
+results_confirm/path_outputs_1b.jsonl
+results_confirm/path_outputs_1b.oom.jsonl

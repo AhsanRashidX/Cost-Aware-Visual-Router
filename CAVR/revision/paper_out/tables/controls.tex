@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\caption{Retrieval-depth and gold-page controls on 1,500 questions (750 per dataset): mean ANLS of the same generator given each context, and mean input tokens. Main paths are the cached workstation runs; the other rows were run on the A10 node.}
+\label{tab:controls}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Context} & \textbf{ANLS (all)} & \textbf{DocVQA} & \textbf{InfoVQA} & \textbf{Input tokens} \\
+\midrule
+Text, top-1 BM25 page & 0.323 & 0.301 & 0.345 & 559 \\
+Text, top-3 BM25 pages (main) & 0.364 & 0.366 & 0.362 & 1,556 \\
+Visual, top-1 ColPali image (main) & 0.544 & 0.512 & 0.576 & 1,251 \\
+Visual, top-3 ColPali images & 0.582 & 0.556 & 0.608 & 3,636 \\
+Hybrid (main) & 0.556 & 0.535 & 0.576 & 2,746 \\
+Gold page as text & 0.604 & 0.770 & 0.438 & 543 \\
+Gold page as image & 0.826 & 0.935 & 0.717 & 1,258 \\
+Gold page, image and text & 0.839 & 0.945 & 0.732 & 1,740 \\
+\bottomrule
+\end{tabular}
+\end{table}
