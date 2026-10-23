@@ -79,7 +79,7 @@ COMMENTS = [
       "accelerators needed to meet a latency target. In a Poisson load test with dynamic batching, simulated from "
       "measured service times, serving 100 queries/s at a p95 latency of 2 s needs <<g100_always_hybrid>> GPUs for "
       "always-hybrid and <<g100_cavr_ce_valsel>> for the content-aware router CAVR-CE (<<g100_save>>% fewer; mean "
-      "over five splits).",
+      "over five splits). We then served the generation stage live with vLLM on one and two A10 GPUs. At a p95 latency of 5 s, CAVR-CE sustained <<vl_ce_hyb_r1_5_measured>>× and <<vl_ce_hyb_r2_5_measured>>× the arrival rate of always-hybrid, more than the simulator predicts (<<vl_ce_hyb_r1_5_a10>>× and <<vl_ce_hyb_r2_5_a10>>×), so the relative saving holds under a production serving engine. The same test showed that the simulator overestimates absolute capacity by up to <<vl_over_max>>×, because it does not model idle-to-busy delays or the interference of new prefills with running requests; the paper now reads the simulated GPU counts as lower bounds.",
       "Late-interaction visual retrieval stores 1,031 vectors per page, so the index grows with the corpus: at 100k "
       "pages it needs <<ix100_gb>> GiB, more than our <<gpu_mem>> GiB GPU holds, and a million pages (about "
       "<<ix1m_gb>> GiB) would exceed the memory of most current accelerators. Such an index must be streamed from host memory "
@@ -90,11 +90,11 @@ COMMENTS = [
       "index (<<mg_weak_gib>> GiB, more than any one of these GPUs holds) is searched in <<mg_weak_ms>> ms, as fast as "
       "<<mg_weak_k>> pages on one GPU. We repeated the run, unchanged, on a node with <<a10_n_word>> <<a10_gpu>> GPUs: 50k pages in <<a10_50k_ms1>> and <<a10_50k_ms2>> ms on one and two GPUs (efficiency <<a10_50k_eff2>>%), and a <<a10_weak_pages>>-page index (<<a10_weak_gib>> GiB) in <<a10_weak_ms>> ms. We also held an index of <<hs_max_words>> pages (<<hs_gib>> GiB) in host memory on that node and streamed it to the GPUs for every query batch: two A10s search it at <<hs_qps2>> queries/s at batch <<hs_b>>, close to the GPU-seconds per query of GPU-resident search (<<hs_vs_res>>% of its throughput where both were measured, at <<hs_res_pages>> pages), whereas a GPU-resident index would need <<hs_res_gpus>> A10s (projected). A single query takes <<hs_p50_2>> s, bound by PCIe, so this placement suits batch rather than interactive search. We state that routing saves generation compute rather than index memory.",
       "New material: a hardware table for each machine, energy per query from NVML, router throughput up to batch "
-      "1,024, serving capacity and GPUs needed per policy, visual-index latency from 1k to 100k pages, an index of <<hs_max_words>> pages streamed from host memory, index sharding "
+      "1,024, serving capacity and GPUs needed per policy, live serving with vLLM on two A10 GPUs, visual-index latency from 1k to 100k pages, an index of <<hs_max_words>> pages streamed from host memory, index sharding "
       "measured on two multi-GPU nodes (strong and weak scaling, with energy), and serial versus speculative "
       "escalation. The method figure was redrawn as the pipeline actually built, including its "
       "deployment on a GPU pool. We are explicit about scale: routing and generation are measured on one GPU, "
-      "capacity beyond it is simulated from measured service times, sharding is measured for retrieval only, on server nodes with older and data-centre "
+      "capacity beyond it is simulated from measured service times and checked against live serving on two A10 GPUs, sharding is measured for retrieval only, on server nodes with older and data-centre "
       "GPUs whose absolute times do not transfer to the workstation, and larger indexes are built from replicated "
       "page embeddings. [AUTHOR ACTION: write and verify the related-work citations on inference serving "
       "and late-interaction retrieval.]"]),
@@ -103,8 +103,8 @@ COMMENTS = [
      ["Every number now comes from one cached run of every path on every query, and tables and figures are "
       "generated from the results files. The withdrawn claims are listed above. Policy results are means and "
       "standard deviations over five page-grouped splits, with McNemar and paired-bootstrap tests, and every "
-      "comparison states its cost. A new Limitations subsection covers the single GPU, simulated rather than live "
-      "traffic, escalation latencies computed from measured per-stage times, synthetic index scaling, sharding "
+      "comparison states its cost. A new Limitations subsection covers the single GPU, the simulator's error "
+      "against live serving, escalation latencies computed from measured per-stage times, synthetic index scaling, sharding "
       "measured on separate server nodes for retrieval only, GPU-only energy, text-only queries, and the <<all_fail>>% of queries that no path answers."]),
 
     ("Reviewer 1", "Comment 1: Latency of perplexity-based escalation",

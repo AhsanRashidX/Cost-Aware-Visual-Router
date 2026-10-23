@@ -51,7 +51,7 @@ targets~\cite{clipper,orca,vllm}, and efficient engines reduce late-interaction 
 between context modalities that share one generator, and evaluate routing end to end on answer quality and
 measured cost.
 Routing, retrieval and generation are measured on a single GPU with Hugging Face (HF) Transformers generation, and capacity at
-larger scale is simulated from measured service times; multi-GPU sharding and host-memory placement of the index are
+larger scale is simulated from measured service times and checked against live serving with vLLM on two A10 GPUs; multi-GPU sharding and host-memory placement of the index are
 measured on two further nodes, with three older GPUs (Tesla P40) and with two NVIDIA A10 GPUs.
 
 \subsection{Research questions}
@@ -85,7 +85,8 @@ measured on two further nodes, with three older GPUs (Tesla P40) and with two NV
   \item An analysis of confidence-based escalation that separates pre-generation re-routing from serial and
   speculative cascades, with their latency and GPU cost computed from measured per-stage times.
   \item A serving study: capacity per GPU and GPUs needed at a p95 target under Poisson load (simulated from measured
-  service times), router throughput (measured), and visual-index latency up to 100k pages with GPU-resident,
+  service times and checked against live vLLM serving on two A10 GPUs, where the policy comparison held but absolute
+  capacity was up to 2.0$	imes$ lower than simulated), router throughput (measured), and visual-index latency up to 100k pages with GPU-resident,
   host-streamed and pooled placement (measured; larger indexes built from replicated page embeddings).
   \item Index placement beyond one GPU, measured: multi-GPU sharding on two nodes (up to three Tesla P40 and two NVIDIA A10 GPUs), with near-linear strong and weak scaling up to
   150k pages, and an index of a million pages held in host memory and streamed to two GPUs, with

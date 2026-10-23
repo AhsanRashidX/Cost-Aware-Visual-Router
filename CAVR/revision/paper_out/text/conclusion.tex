@@ -11,7 +11,10 @@ router kept a 35\% saving over always-hybrid, but always-visual came within 0.00
 16\% less GPU compute: whether routing beats the best single path depends on whether the OCR text
 helps on a given question distribution. In a load test simulated from
 measured service times, it reduces the GPUs needed for 100 queries/s at p95 $\le$ 2\,s from 106 to
-72, while always using the page image alone needs 64 at lower ANLS. Its cost
+72, while always using the page image alone needs 64 at lower ANLS. Served live
+with vLLM on two A10 GPUs, CAVR-CE sustained 1.82$	imes$ the arrival rate of always-hybrid at
+p95 $\le$ 5\,s, more than simulated, whereas absolute capacity was up to 2.0$	imes$ lower than the
+simulator predicts, so the simulated GPU counts are lower bounds. Its cost
 weight is set at serving time; confidence-based escalation reached the same operating point as lowering this
 weight.
 
@@ -27,6 +30,8 @@ questions, keyword-derived route labels do not reflect which path answers correc
 not a cheap path. A per-query oracle (ANLS 0.630 at 0.486 GPU-s) shows how much remains: the
 bottleneck is predicting, before generation, whether a path will succeed.
 
-The routing results come from one GPU and simulated load, and sharding and the host-memory index were measured on
-separate server nodes for retrieval only. Future work should validate routing on a multi-GPU cluster with a production serving engine, find an overload signal that lets $\lambda$ follow load, improve per-query success
+The routing results come from one GPU, the serving results from a simulation checked live on two GPUs for generation
+only, and sharding and the host-memory index were measured on
+separate server nodes for retrieval only. Future work should serve retrieval, routing and generation together on a larger cluster, model the interference
+of prefills with running requests in the capacity simulator, find an overload signal that lets $\lambda$ follow load, improve per-query success
 prediction, and extend routing to queries that contain images.

@@ -191,6 +191,23 @@ queries/s is the smallest pool, up to 256 GPUs, that holds p95 within the target
 search. Results at p95 $\le$ 2\,s are averaged over the 5 splits; the 5\,s sensitivity check, the latency
 curves and the $\lambda$ operating points use split 1.
 
+\paragraph{Live serving.} To check the simulator, the generation stage was also served live on the node with two
+NVIDIA A10 GPUs (Table~\ref{tab:hardware_multigpu}). vLLM 0.31.0~\cite{vllm} (PyTorch 2.13.0) runs in
+Ubuntu 24.04 under version 2 of the Windows Subsystem for Linux (WSL), with the GPUs in the Microsoft Compute Driver Model
+(MCDM), the Windows driver mode that gives WSL access to a GPU without a display. Each GPU holds one replica of
+Qwen2.5-VL-7B in bf16 with the same model revision, image-size limits and greedy decoding as the cached run, at most 16
+concurrent sequences and prefix caching off. FlashInfer's sampler is disabled because it compiles at start-up with a
+CUDA toolkit that the WSL image lacks; under greedy decoding this does not change the tokens. Retrieval and routing
+ran beforehand, so only generation is served: the client sends each query's prompt as built for the cached run and
+dispatches it to the replica with the fewest outstanding requests. A pilot of 50 requests per path
+checked the prompts against the workstation run. Service times were measured one request at a time on all
+1,606 split-1 test queries for every path, and the batching curve as the latency ratio at 1 to 16 concurrent
+requests. The load test sends open-loop Poisson arrivals (fixed seed) at 15--110\% of the replicas' measured peak
+throughput for the policy's path mix, with at most 400 arrivals per rate, the first 10\% discarded, and stops once p95
+exceeds 30\,s. Each measured arrival trace is then replayed through the simulator above, once with the A10's service
+times and batching curve and once with the workstation's, so that predicted and measured p95 refer to the same
+arrivals; the capacity at a p95 target is interpolated between tested rates.
+
 \paragraph{Sensitivity and control experiments.} With the same simulator, the GPUs needed for 100 queries/s are
 found for p95 targets of 1.5, 2, 3, 5, 7.5 and 10\,s on all five splits for always-visual, always-hybrid and
 CAVR-CE; the 2 and 5\,s targets are repeated with each batch charged its longest member's generation time. For a

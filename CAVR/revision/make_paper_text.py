@@ -375,6 +375,62 @@ def values():
                                                   f"{b['by_batch'][str(b['best_batch'])]['pages_per_s']:.1f}", b["best_batch"])
     vidx = vi["index"]
     V["full_build_pps"], V["full_build_b"] = f"{vidx['pages'] / vidx['gpu_s']:.1f}", vidx["page_batch"]
+    # live vLLM serving on the A10 node, and the simulator checked against it
+    vl = J("vllm_a10.json")
+    pk, pc, sv, runs = vl["run_metadata"]["packages"], vl["pilot_correctness"], vl["service_stage"], vl["runs"]
+    ptok = [tuple(map(int, pc[p]["prompt_tokens_equal_4090"].split("/"))) for p in ("text", "visual", "hybrid")]
+    V.update({
+        "vl_ver": pk["vllm"], "vl_torch": pk["torch"], "vl_tf": pk["transformers"],
+        "vl_ptok": f"{sum(a for a, _ in ptok)}", "vl_pn": f"{sum(b for _, b in ptok)}", "vl_pn_path": ptok[0][1],
+        "vl_nq": f"{sv['text']['n']:,}", "vl_nreq": f"{3 * sv['text']['n']:,}", "vl_svc_err": sv["errors_in_file"],
+        "vl_anls_d": f"{max(abs(sv[p]['anls_t4'] - sv[p]['anls_4090']) for p in ('text', 'visual', 'hybrid')):.3f}",
+        "vl_ident_min": f"{100 * min(sv[p]['answer_identical_to_4090'] for p in ('text', 'visual', 'hybrid')):.0f}",
+        "vl_ident_max": f"{100 * max(sv[p]['answer_identical_to_4090'] for p in ('text', 'visual', 'hybrid')):.0f}",
+    })
+    for p in ("text", "visual", "hybrid"):
+        V[f"vl_svc_{p}"] = f"{sv[p]['latency_s']['mean']:.2f}"
+        V[f"vl_ref_{p}"] = f"{sv[p]['ref_generate_s_mean_4090']:.2f}"
+        V[f"vl_thr_{p}"] = f"{vl['sweep'][p]['max_steady_throughput_rps']:.2f}"
+        V[f"vl_tok_{p}"] = f"{vl['request_tokens_mean'][p]['input_tokens']:,.0f}"
+    V["vl_out_tok"] = f"{max(v['output_tokens'] for v in vl['request_tokens_mean'].values()):.0f}"
+    short = {"always_visual": "vis", "always_hybrid": "hyb", "cavr_ce_valsel": "ce"}
+    over, errs, idle = [], [], []
+    for key, r in runs.items():
+        k = f"vl_{short[r['policy']]}{r['replicas']}"
+        for t, c in r["capacity_rps_at_p95_target"].items():
+            tt = f"{float(t):g}"
+            V[f"{k}_{tt}"] = f"{c['measured']:.2f}"
+            V[f"{k}_{tt}_sim"], V[f"{k}_{tt}_ws"] = f"{c['predicted_a10']:.2f}", f"{c['predicted_ws']:.2f}"
+            if t == "5.0" and c["measured"]:
+                over.append(c["predicted_a10"] / c["measured"])
+        errs.append(r["p95_rel_error_median"]["a10"])
+        lo = min(r["rates"].values(), key=lambda v: v["offered_rps"])
+        idle.append(lo["idle_arrival_latency_over_service_median"])
+        V[f"{k}_anls"] = f"{r['anls_mean_over_rates']:.3f}"
+        hi = max(r["rates"].values(), key=lambda v: v["offered_rps"])   # GPU energy per request near saturation
+        V[f"{k}_j"] = f"{hi['energy_j_per_request']:.0f}"
+    V.update({"vl_over_min": f"{min(over):.1f}", "vl_over_max": f"{max(over):.1f}",
+              "vl_err_min": f"{100 * min(errs):.0f}", "vl_err_max": f"{100 * max(errs):.0f}",
+              "vl_idle_min": f"{min(idle):.2f}", "vl_idle_max": f"{max(idle):.2f}",
+              "vl_idle_w": f"{np.mean([r['idle_power_w'][0] for r in runs.values()]):.0f}"})
+    for p, s in short.items():   # 1 -> 2 replicas at p95 <= 5 s, as the simulator predicts it
+        c1, c2 = (runs[f"{p}_r{n}"]["capacity_rps_at_p95_target"]["5.0"]["predicted_a10"] for n in (1, 2))
+        V[f"vl_ssim_{s}_5"] = f"{c2 / c1:.1f}"
+    V["vl_j_save"] = f"{100 * (1 - float(V['vl_ce2_j']) / float(V['vl_hyb2_j'])):.0f}"
+    for t, cmp in vl["comparisons"].items():
+        tt = f"{float(t):g}"
+        for rn, c in cmp.items():
+            if rn == "scaling_r2_over_r1":
+                for p, x in c.items():
+                    V[f"vl_scale_{short[p]}_{tt}"] = f"{x:.1f}"
+                continue
+            for name, x in c.items():   # e.g. ce_over_hybrid_measured -> vl_ce_hyb_r1_5_measured
+                if x is not None:
+                    pol, kind = name.split("_over_")[1].split("_", 1)
+                    V[f"vl_ce_{pol[:3]}_{rn}_{tt}_{kind.replace('predicted_', '')}"] = f"{x:.2f}"
+    for k in ("ssim", "scale"):
+        xs = [float(V[f"vl_{k}_{s}_5"]) for s in short.values()]
+        V[f"vl_{k}_min"], V[f"vl_{k}_max"] = f"{min(xs):.1f}", f"{max(xs):.1f}"
     return V
 
 
@@ -569,6 +625,51 @@ The simulator charges a batch the mean generation time of its members, scaled by
 charging the longest member instead, a conservative bound, the saving over always-hybrid is <<bm_long_2>>\% at 2\,s and
 <<bm_long_5>>\% at 5\,s (against <<bm_mean_5>>\% with the mean member).
 
+\paragraph{Live serving on two A10 GPUs.} To test the simulator, we served the generation stage live with
+vLLM on one and two A10 GPUs (Table~\ref{tab:live_serving}, Figure~\ref{fig:live_serving}). The served model
+closely reproduced the cached run. All <<vl_pn>> pilot prompts had the same token count as on the workstation; over the
+<<vl_nreq>> service-time requests (<<vl_nq>> queries on each path), path ANLS differed from the workstation run by at
+most <<vl_anls_d>>, and <<vl_ident_min>>--<<vl_ident_max>>\% of answers were identical. With one request at a time, an
+A10 took <<vl_svc_text>>, <<vl_svc_visual>> and <<vl_svc_hybrid>>\,s per text, visual and hybrid request, against
+<<vl_ref_text>>, <<vl_ref_visual>> and <<vl_ref_hybrid>>\,s of generation on the workstation.
+
+Under Poisson load the policies kept the order the simulation gives, and routing gained more than simulated. At
+p95 $\le$ 5\,s, CAVR-CE sustained <<vl_ce_hyb_r1_5_measured>>$\times$ the arrival rate of always-hybrid on one GPU and
+<<vl_ce_hyb_r2_5_measured>>$\times$ on two, where the simulator, given the A10's own service times and batching curve,
+predicted <<vl_ce_hyb_r1_5_a10>>$\times$ and <<vl_ce_hyb_r2_5_a10>>$\times$. On two GPUs at p95 $\le$ 2\,s the ratio was
+<<vl_ce_hyb_r2_2_measured>> (simulated <<vl_ce_hyb_r2_2_a10>>). Always-visual remained ahead of CAVR-CE, which sustained
+<<vl_ce_vis_r1_5_measured>>$\times$ and <<vl_ce_vis_r2_5_measured>>$\times$ its rate at 5\,s, as in the simulation. Answer
+quality did not change under load: ANLS over the tested rates was <<vl_ce2_anls>> for CAVR-CE, <<vl_hyb2_anls>> for
+always-hybrid and <<vl_vis2_anls>> for always-visual on two GPUs, close to the workstation's ANLS on the same requests.
+At each policy's highest tested rate, CAVR-CE used <<vl_ce2_j>>\,J of GPU energy per request, against <<vl_hyb2_j>>\,J for
+always-hybrid (<<vl_j_save>>\% less) and <<vl_vis2_j>>\,J for always-visual.
+
+Absolute capacity, by contrast, was lower than simulated. At p95 $\le$ 5\,s the simulator predicted
+<<vl_over_min>>--<<vl_over_max>>$\times$ the measured capacity, and on the measured arrival traces its p95 was off by a
+median of <<vl_err_min>>--<<vl_err_max>>\% per run; inputs from the workstation gave similar predictions. At
+p95 $\le$ 2\,s, one A10 met the target only with always-visual, up to <<vl_vis1_2>> queries/s, where the simulator
+predicted <<vl_vis1_2_sim>>. The test points to two effects that the simulator leaves out. First, at the lowest rate a
+request that reached an idle replica took <<vl_idle_min>>--<<vl_idle_max>>$\times$ the time the same request took back to
+back with others; GPU clocks dropping between requests are a likely cause. Second, vLLM batches continuously: the
+prefill of a new request (on average <<vl_tok_visual>> prompt tokens on the visual path and <<vl_tok_hybrid>> on the
+hybrid path, while answers average at most <<vl_out_tok>> tokens) runs alongside the requests already in progress
+and slows them down, whereas the simulator treats a batch as uninterrupted once it starts. Adding a second GPU raised
+the measured capacity at 5\,s by <<vl_scale_min>>--<<vl_scale_max>>$\times$, more than the
+<<vl_ssim_min>>--<<vl_ssim_max>>$\times$ predicted, which is consistent with the larger pooling gain of a shared
+dispatcher when service times vary more than the model assumes. The GPU counts of Table~\ref{tab:load_test} are
+therefore probably underestimates for live serving, by up to about a factor of two on this hardware, whereas the
+comparison between policies held and was, if anything, conservative.
+
+\input{tables/live_serving}
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figures/live_serving.png}
+  \caption{Live serving with vLLM on one and two A10 GPUs: measured p95 latency against Poisson arrival rate (solid)
+  and the simulator's prediction for the same arrivals from the A10's service times and batching curve (dashed).
+  Dotted lines mark the 2\,s and 5\,s targets.}
+  \label{fig:live_serving}
+\end{figure*}
+
 \paragraph{Generation and retrieval together.} The load test keeps the small evaluation index on every GPU. For a
 large corpus, a retrieval tier is needed as well. Projected from the workstation's measured MaxSim throughput at
 batch 64, scaled linearly in pages and at full utilisation, 100 queries/s over <<jn_pages>> pages needs <<jn_ret>> GPUs
@@ -723,11 +824,13 @@ batch. CAVR-CE takes <<ce_ms>>\,ms and <<ce_j>>\,J per query at batch 1, and its
 \label{sec:res-limits}
 
 All measurements except index sharding and the host-memory index use one consumer GPU (<<gpu>>) under Windows; caps on visual tokens and OCR length keep memory
-below the point where the driver spills to system RAM. Generation uses HF Transformers rather than a serving
-engine such as vLLM~\cite{vllm}, so absolute capacity is pessimistic; the comparison between policies is the main
-result. The 2\,s latency target is our choice; the saving is smaller at looser targets.
+below the point where the driver spills to system RAM. The cached run generates with HF Transformers. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 
-The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
+The workstation load test is a simulation driven by measured service times. Checked against live vLLM serving on one
+and two A10 GPUs, it overestimated capacity by up to <<vl_over_max>>$\times$, so its GPU counts are best read as lower
+bounds; the live test confirmed the comparison between policies, which is the main result. That test serves
+generation only, with retrieval and routing run beforehand, on at most two GPUs under WSL, with one model and
+greedy decoding. Escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. The simulator assumes an ideal
 global queue and unlimited CPU, charges a batch the mean generation time of its members (the longest-member bound is reported), and keeps the
 <<n_pages>>-page evaluation index on every GPU, so the retrieval tier for a large corpus is projected rather than simulated. Costs
@@ -791,8 +894,8 @@ withdrawn; we list them first so that nothing is hidden behind the new results.
    splits (Section "Held-out confirmation"): the saving over always-hybrid holds (<<cf_save>>%, at <<cf_dh>> higher
    ANLS), but always-visual comes within <<cf_dv>> ANLS of the router at <<cf_vis_less>>% less GPU, and the paper says
    so. Retrieval-depth and gold-page controls (Table controls) separate input modality from retrieval depth and errors.
-7. **Supercomputing case.** New experiments on serving under load, GPUs needed at a latency target, visual-index
-   scaling to 100k pages, router throughput and energy.
+7. **Supercomputing case.** New experiments on serving under load, GPUs needed at a latency target, live serving
+   with vLLM on two A10 GPUs as a check of the simulator, visual-index scaling to 100k pages, router throughput and energy.
 8. **Related work and verified references.** A new related-work section; every reference was checked against its
    DOI, arXiv, OpenReview or publisher record.
 9. **Narrowed claims and a full limitations section.**
@@ -823,7 +926,7 @@ with <<mg_n_word>> <<mg_gpu>> GPUs: sharded search returns the same top page as 
 <<mg_weak_pages>>-page index (<<mg_weak_gib>> GiB, more than one GPU holds) is searched in <<mg_weak_ms>> ms, as fast as
 <<mg_weak_k>> pages on one GPU. On a second node with <<a10_n_word>> <<a10_gpu>> GPUs, the same benchmark searches 50k pages in <<a10_50k_ms1>> and <<a10_50k_ms2>> ms on one and two GPUs (efficiency <<a10_50k_eff2>>%) and a <<a10_weak_pages>>-page index (<<a10_weak_gib>> GiB) in <<a10_weak_ms>> ms. We also held an index of <<hs_max_words>> pages (<<hs_gib>> GiB) in host memory on that node and streamed it to the GPUs for every query batch: two A10s search it at <<hs_qps2>> queries/s at batch <<hs_b>>, close to the GPU-seconds per query of GPU-resident search (<<hs_vs_res>>% of its throughput where both were measured, at <<hs_res_pages>> pages), whereas a GPU-resident index would need <<hs_res_gpus>> A10s (projected). A single query takes <<hs_p50_2>> s, bound by PCIe, so this placement suits batch rather than interactive search. Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
 times, serving 100 queries/s at p95 ≤ 2 s needs <<g100_always_hybrid>> GPUs for always-hybrid and
-<<g100_cavr_ce_valsel>> for CAVR-CE (<<g100_save>>% fewer; means over <<n_seeds>> seeds). We added these
+<<g100_cavr_ce_valsel>> for CAVR-CE (<<g100_save>>% fewer; means over <<n_seeds>> seeds). We then served the generation stage live with vLLM on one and two A10 GPUs: at p95 ≤ 5 s, CAVR-CE sustained <<vl_ce_hyb_r1_5_measured>>× and <<vl_ce_hyb_r2_5_measured>>× the arrival rate of always-hybrid, more than the simulator predicts, whereas the simulator overestimated absolute capacity by up to <<vl_over_max>>×. The paper reports both. We added these
 experiments, a hardware table for each machine, energy per query, router throughput up to batch 1,024, and serial versus
 speculative-parallel escalation.
 *Changes:* Abstract; Introduction (new subsection on why routing is a supercomputing problem; research question
@@ -832,16 +935,16 @@ efficient late-interaction and vector search, inference serving; every reference
 or publisher record); Method (Figure method: the pipeline as built and its deployment); Results, subsection
 "Scalability, throughput and
 energy" (Tables hardware, hardware_multigpu, load_test, load_test_operating_points, index_scaling,
-multi_gpu_scaling, host_stream, router_throughput; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling,
-host_stream); Setup (multi-GPU sharding and index in host memory); Conclusion.
+multi_gpu_scaling, host_stream, router_throughput, live_serving; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling,
+host_stream, live_serving); Setup (multi-GPU sharding, index in host memory, live serving); Limitations; Conclusion.
 Routing and generation were measured on one <<gpu>>, capacity projections come from a simulation driven by
-measured service times, and multi-GPU sharding and the host-memory index were measured on separate nodes for retrieval only,
+measured service times and checked against live vLLM serving on two A10 GPUs, and multi-GPU sharding and the host-memory index were measured on separate nodes for retrieval only,
 with GPU-resident search at <<hs_max_words>> pages projected rather than measured; the paper states all of this.
 
 **E.2 — Report results accurately, rewrite overstated conclusions and explain limitations fully.**
 Every number now comes from one cached run, and tables and figures are generated from the results files. The
-withdrawn claims are listed above. A new Limitations subsection covers the single GPU, simulation versus live
-traffic, computed rather than measured escalation latencies, synthetic index scaling, sharding measured on separate server nodes for retrieval only,
+withdrawn claims are listed above. A new Limitations subsection covers the single GPU, the simulator's error against live
+serving, computed rather than measured escalation latencies, synthetic index scaling, sharding measured on separate server nodes for retrieval only,
 GPU-only energy, text-only queries, and the <<all_fail>>% of queries that no path answers.
 
 ## Reviewer 1
@@ -953,7 +1056,7 @@ With λ chosen on validation data, CAVR-CE uses <<cavr_ce_valsel_gpu>> instead o
 <<ce_lower_n>> of <<ce_n>> seeds, with the 95% interval excluding zero on <<ce_ci_excl>> of <<ce_n>> splits. On exact match the
 difference is not significant on <<ce_nonsig_h>> of <<ce_n>> seeds. CAVR-CE beats always-visual by
 <<ce_dv_min>> to <<ce_dv_max>> ANLS for <<ce_vs_vis_cost>>% more GPU. At 100 queries/s and p95 ≤ 2 s it needs
-<<g100_cavr_ce_valsel>> GPUs instead of <<g100_always_hybrid>> (simulated). The per-query oracle (ANLS <<oracle_anls>>
+<<g100_cavr_ce_valsel>> GPUs instead of <<g100_always_hybrid>> (simulated; live serving on two A10 GPUs confirmed the saving and showed the simulated GPU counts to be optimistic). The per-query oracle (ANLS <<oracle_anls>>
 at <<oracle_gpu>> GPU-s) shows that predicting per-query success remains the open problem, and the paper says so.
 On <<cf_n>> held-out questions, the frozen router keeps a <<cf_save>>% saving over always-hybrid, but there
 always-visual comes within <<cf_dv>> ANLS of it at <<cf_vis_less>>% less GPU; the paper reports this as a limit on

@@ -1,0 +1,12 @@
+date: 2026-10-23T21:30:07+0500
+mode: native   replicas: 2   base_port: 8000
+model: Qwen/Qwen2.5-VL-7B-Instruct   revision: cc594898137f460bfe9f0759e9844b3ce807cfb5   served_name: qwen2.5-vl-7b
+image_transport: data   cpu_pin: 0 (server cpus 16-31,48-63)   attn_backend: default
+host: Linux a10 6.18.54.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Tue Oct  6 19:13:07 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+index, name, driver_version, memory.total [MiB], power.limit [W]
+0, NVIDIA A10, 616.92, 23028 MiB, 150.00 W
+1, NVIDIA A10, 616.92, 23028 MiB, 150.00 W
+vllm 0.31.0 | torch 2.13.0+cu130 | cuda 13.0
+launch[0]: env CUDA_VISIBLE_DEVICES=0 CUDA_DEVICE_ORDER=PCI_BUS_ID HF_HOME=/home/a10gpu/hf_cache HF_HUB_OFFLINE=1 nohup setsid /home/a10gpu/vllm-env/bin/python -m vllm.entrypoints.openai.api_server --model Qwen/Qwen2.5-VL-7B-Instruct --revision cc594898137f460bfe9f0759e9844b3ce807cfb5 --host 0.0.0.0 --port 8000 --served-model-name qwen2.5-vl-7b --dtype bfloat16 --max-model-len 8192 --gpu-memory-utilization 0.90 --max-num-seqs 16 --seed 1234 --limit-mm-per-prompt \{\"image\":\ 1\} --mm-processor-kwargs \{\"min_pixels\":\ 200704\,\ \"max_pixels\":\ 1003520\} --chat-template-content-format openai --generation-config vllm --no-enable-prefix-caching
+launch[1]: env CUDA_VISIBLE_DEVICES=1 CUDA_DEVICE_ORDER=PCI_BUS_ID HF_HOME=/home/a10gpu/hf_cache HF_HUB_OFFLINE=1 nohup setsid /home/a10gpu/vllm-env/bin/python -m vllm.entrypoints.openai.api_server --model Qwen/Qwen2.5-VL-7B-Instruct --revision cc594898137f460bfe9f0759e9844b3ce807cfb5 --host 0.0.0.0 --port 8001 --served-model-name qwen2.5-vl-7b --dtype bfloat16 --max-model-len 8192 --gpu-memory-utilization 0.90 --max-num-seqs 16 --seed 1234 --limit-mm-per-prompt \{\"image\":\ 1\} --mm-processor-kwargs \{\"min_pixels\":\ 200704\,\ \"max_pixels\":\ 1003520\} --chat-template-content-format openai --generation-config vllm --no-enable-prefix-caching

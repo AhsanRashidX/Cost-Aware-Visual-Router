@@ -1,0 +1,1112 @@
+{
+  "policy": "always_hybrid",
+  "replicas": [
+    "http://127.0.0.1:8000"
+  ],
+  "path_share": {
+    "text": 0.0,
+    "visual": 0.0,
+    "hybrid": 1.0
+  },
+  "rates_planned": [
+    0.204,
+    0.408,
+    0.681,
+    0.953,
+    1.089,
+    1.225,
+    1.361,
+    1.498
+  ],
+  "rate_plan": {
+    "capacity_per_replica_rps": 1.3614636249959102,
+    "path_throughput_rps": {
+      "hybrid": 1.3614636249959102
+    },
+    "fractions": "0.15,0.3,0.5,0.7,0.8,0.9,1.0,1.1"
+  },
+  "seed": 1234,
+  "p95_cap_s": 30.0,
+  "meta": {
+    "timestamp": "2026-10-23T17:41:25+0500",
+    "hostname": "a10",
+    "argv": [
+      "loadgen.py",
+      "--policy",
+      "always_hybrid",
+      "--replicas",
+      "1",
+      "--rate-fractions",
+      "0.15,0.3,0.5,0.7,0.8,0.9,1.0,1.1"
+    ],
+    "args": {
+      "replicas": 1,
+      "host": "127.0.0.1",
+      "base_port": 8000,
+      "urls": null,
+      "requests": "/home/a10gpu/cavr_serve/requests.jsonl",
+      "image_transport": "data",
+      "server_image_dir": "/home/a10gpu/cavr_serve",
+      "timeout": 600.0,
+      "gpu_ids": null,
+      "policy": "always_hybrid",
+      "rates": null,
+      "rate_fractions": "0.15,0.3,0.5,0.7,0.8,0.9,1.0,1.1",
+      "pilot": "/home/a10gpu/cavr_serve/results/pilot.json",
+      "seed": 1234,
+      "n_requests": 400,
+      "min_requests": 150,
+      "max_rate_seconds": 900,
+      "warmup_frac": 0.1,
+      "min_warmup": 10,
+      "p95_cap": 30.0,
+      "max_errors": 0,
+      "abort_latency": 120.0,
+      "server_warmup": 2,
+      "idle_s": 10.0,
+      "pause": 5.0,
+      "metrics": true,
+      "model": null,
+      "tag": "",
+      "overwrite": false,
+      "out_dir": "/home/a10gpu/cavr_serve/results/load"
+    },
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "os_release": "PRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.5 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n",
+    "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
+    "cpu_count": 112,
+    "cpu_affinity": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111
+    ],
+    "ram_gb": 503.6,
+    "packages": {
+      "aiohttp": "3.14.5",
+      "numpy": "2.3.5",
+      "vllm": "0.31.0",
+      "torch": "2.13.0",
+      "transformers": "5.17.0",
+      "nvidia-ml-py": "13.615.71",
+      "pynvml": null,
+      "flashinfer-python": "0.7.0.post1",
+      "xformers": null
+    },
+    "nvidia_smi": "Fri Oct 23 17:41:25 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 615.71.08              KMD Version: 616.92        CUDA UMD Version: 13.4     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA A10                     On  |   00000000:17:00.0 Off |                    0 |\n|  0%   40C    P0             40W /  150W |   19948MiB /  23028MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n|   1  NVIDIA A10                     On  |   00000000:65:00.0 Off |                    0 |\n|  0%   29C    P8             12W /  150W |       0MiB /  23028MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|  No running processes found                                                             |\n+-----------------------------------------------------------------------------------------+\n",
+    "nvidia_smi_query": "index, name, uuid, memory.total [MiB], driver_version, power.limit [W], clocks.max.sm [MHz], clocks.max.memory [MHz], pcie.link.gen.current, pcie.link.width.current\n0, NVIDIA A10, GPU-a171aefc-3e2a-5fd4-585f-65ad33172c02, 23028 MiB, 616.92, 150.00 W, 1695 MHz, 6251 MHz, 4, 16\n1, NVIDIA A10, GPU-f35f011d-911b-b667-1701-0319c25dcc55, 23028 MiB, 616.92, 150.00 W, 1695 MHz, 6251 MHz, 4, 16\n",
+    "nvidia_smi_topo": "nvidia-smi topo is not supported on WSL.\n",
+    "energy_mode": "nvml_counter",
+    "env": {
+      "CAVR_MODE": "native",
+      "VLLM_IMAGE": "vllm/vllm-openai:PIN_ME",
+      "MODEL": "Qwen/Qwen2.5-VL-7B-Instruct",
+      "MODEL_REVISION": "cc594898137f460bfe9f0759e9844b3ce807cfb5",
+      "SERVED_NAME": "qwen2.5-vl-7b",
+      "CUDA_VISIBLE_DEVICES": null,
+      "NVIDIA_VISIBLE_DEVICES": null,
+      "IMAGE_TRANSPORT": "data"
+    },
+    "servers": [
+      {
+        "url": "http://127.0.0.1:8000",
+        "version": {
+          "version": "0.31.0"
+        },
+        "models": {
+          "object": "list",
+          "data": [
+            {
+              "id": "qwen2.5-vl-7b",
+              "object": "model",
+              "created": 1792759285,
+              "owned_by": "vllm",
+              "root": "Qwen/Qwen2.5-VL-7B-Instruct",
+              "parent": null,
+              "max_model_len": 8192,
+              "permission": [
+                {
+                  "id": "modelperm-889126253a2c272b",
+                  "object": "model_permission",
+                  "created": 1792759285,
+                  "allow_create_engine": false,
+                  "allow_sampling": true,
+                  "allow_logprobs": true,
+                  "allow_search_indices": false,
+                  "allow_view": true,
+                  "allow_fine_tuning": false,
+                  "organization": "*",
+                  "group": null,
+                  "is_blocking": false
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "serve_info": "date: 2026-10-23T17:40:18+0500\nmode: native   replicas: 1   base_port: 8000\nmodel: Qwen/Qwen2.5-VL-7B-Instruct   revision: cc594898137f460bfe9f0759e9844b3ce807cfb5   served_name: qwen2.5-vl-7b\nimage_transport: data   cpu_pin: 0 (server cpus 16-31,48-63)   attn_backend: default\nhost: Linux a10 6.18.54.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Tue Oct  6 19:13:07 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\nPRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nindex, name, driver_version, memory.total [MiB], power.limit [W]\n0, NVIDIA A10, 616.92, 23028 MiB, 150.00 W\n1, NVIDIA A10, 616.92, 23028 MiB, 150.00 W\nvllm 0.31.0 | torch 2.13.0+cu130 | cuda 13.0\nlaunch[0]: env CUDA_VISIBLE_DEVICES=0 CUDA_DEVICE_ORDER=PCI_BUS_ID HF_HOME=/home/a10gpu/hf_cache HF_HUB_OFFLINE=1 nohup setsid /home/a10gpu/vllm-env/bin/python -m vllm.entrypoints.openai.api_server --model Qwen/Qwen2.5-VL-7B-Instruct --revision cc594898137f460bfe9f0759e9844b3ce807cfb5 --host 0.0.0.0 --port 8000 --served-model-name qwen2.5-vl-7b --dtype bfloat16 --max-model-len 8192 --gpu-memory-utilization 0.90 --max-num-seqs 16 --seed 1234 --limit-mm-per-prompt \\{\\\"image\\\":\\ 1\\} --mm-processor-kwargs \\{\\\"min_pixels\\\":\\ 200704\\,\\ \\\"max_pixels\\\":\\ 1003520\\} --chat-template-content-format openai --generation-config vllm --no-enable-prefix-caching\n",
+    "package_info": {
+      "built": "2026-10-13T14:27:28",
+      "git_commit": "62cf400612e9d63c5ad614e1e78378d6369e5099",
+      "git_dirty_revision_dir": true,
+      "n_requests": 1606,
+      "n_images": 634,
+      "n_files": 649,
+      "size_mb": 257.8,
+      "verification": {
+        "split_equals_group_split_seed1234": true,
+        "eval_main_per_seed0": {
+          "always_text": {
+            "recomputed": {
+              "anls": 0.36429062868580686,
+              "em": 0.3069738480697385,
+              "gpu_s": 0.43531342552895663,
+              "energy_j": 143.52407222914073,
+              "path_mix": {
+                "text": 1.0,
+                "visual": 0.0,
+                "hybrid": 0.0
+              }
+            },
+            "max_abs_diff": 0.0,
+            "match": true,
+            "diffs": {
+              "anls": 0.0,
+              "em": 0.0,
+              "gpu_s": 0.0,
+              "energy_j": 0.0,
+              "path_mix.text": 0.0,
+              "path_mix.visual": 0.0,
+              "path_mix.hybrid": 0.0
+            }
+          },
+          "always_visual": {
+            "recomputed": {
+              "anls": 0.5487631070644855,
+              "em": 0.5012453300124533,
+              "gpu_s": 0.6260183744075544,
+              "energy_j": 171.41769738480696,
+              "path_mix": {
+                "text": 0.0,
+                "visual": 1.0,
+                "hybrid": 0.0
+              }
+            },
+            "max_abs_diff": 0.0,
+            "match": true,
+            "diffs": {
+              "anls": 0.0,
+              "em": 0.0,
+              "gpu_s": 0.0,
+              "energy_j": 0.0,
+              "path_mix.text": 0.0,
+              "path_mix.visual": 0.0,
+              "path_mix.hybrid": 0.0
+            }
+          },
+          "always_hybrid": {
+            "recomputed": {
+              "anls": 0.577895590691583,
+              "em": 0.5286425902864259,
+              "gpu_s": 1.0071041856153105,
+              "energy_j": 327.43635056039847,
+              "path_mix": {
+                "text": 0.0,
+                "visual": 0.0,
+                "hybrid": 1.0
+              }
+            },
+            "max_abs_diff": 0.0,
+            "match": true,
+            "diffs": {
+              "anls": 0.0,
+              "em": 0.0,
+              "gpu_s": 0.0,
+              "energy_j": 0.0,
+              "path_mix.text": 0.0,
+              "path_mix.visual": 0.0,
+              "path_mix.hybrid": 0.0
+            }
+          },
+          "cavr_ce_valsel": {
+            "recomputed": {
+              "anls": 0.5662397549390585,
+              "em": 0.5180572851805728,
+              "gpu_s": 0.7305893123968331,
+              "energy_j": 210.67809287256122,
+              "path_mix": {
+                "text": 0.15379825653798257,
+                "visual": 0.5834371108343711,
+                "hybrid": 0.2627646326276463
+              }
+            },
+            "max_abs_diff": 0.0,
+            "match": true,
+            "diffs": {
+              "anls": 0.0,
+              "em": 0.0,
+              "gpu_s": 0.0,
+              "energy_j": 0.0,
+              "path_mix.text": 0.0,
+              "path_mix.visual": 0.0,
+              "path_mix.hybrid": 0.0
+            },
+            "lambda_recomputed": 0.075,
+            "lambda_eval_main": 0.075,
+            "lambda_fallback": false,
+            "stored": {
+              "anls": 0.5662397549390585,
+              "em": 0.5180572851805728,
+              "gpu_s": 0.7305893123968331,
+              "energy_j": 210.67809287256122,
+              "path_mix": {
+                "text": 0.15379825653798257,
+                "visual": 0.5834371108343711,
+                "hybrid": 0.2627646326276463
+              }
+            }
+          },
+          "oracle": {
+            "recomputed": {
+              "anls": 0.6346227459611273,
+              "em": 0.5859277708592777,
+              "gpu_s": 0.49072338723467235,
+              "energy_j": 151.38085429638855,
+              "path_mix": {
+                "text": 0.6270236612702366,
+                "visual": 0.3424657534246575,
+                "hybrid": 0.030510585305105854
+              }
+            },
+            "max_abs_diff": 0.0,
+            "match": true,
+            "diffs": {
+              "anls": 0.0,
+              "em": 0.0,
+              "gpu_s": 0.0,
+              "energy_j": 0.0,
+              "path_mix.text": 0.0,
+              "path_mix.visual": 0.0,
+              "path_mix.hybrid": 0.0
+            }
+          }
+        },
+        "cache_matches_retrieval_files": {
+          "mismatched_rows": 0
+        },
+        "image_grid_equals_4090_visual_tokens": {
+          "mismatched_rows": 0,
+          "rows_checked": 3212
+        },
+        "png_roundtrip_lossless": {
+          "checked": 40,
+          "all_equal": true
+        },
+        "vqa_metrics_reproduces_stored_anls_em": {
+          "mismatched_rows": 0,
+          "rows_checked": 4818
+        },
+        "prompt_equivalence": {
+          "prompts_checked": 4818,
+          "queries_checked": 1606,
+          "messages_equal_generate_build_messages": 4818,
+          "rendered_chat_identical": 4818,
+          "input_tokens_equal_4090": 4818,
+          "visual_tokens_equal_4090": 4818,
+          "examples_mismatch": [],
+          "processor": "AutoProcessor(Qwen/Qwen2.5-VL-7B-Instruct) offline, transformers 5.18.0"
+        }
+      }
+    },
+    "git_commit": null
+  },
+  "rates": {
+    "0.204": {
+      "rate": 0.204,
+      "n_planned": 184,
+      "warmup": 18,
+      "n_sent": 184,
+      "n_measured": 166,
+      "n_measured_ok": 166,
+      "n_errors": 0,
+      "error_examples": [],
+      "aborted": false,
+      "latency_s": {
+        "n": 166,
+        "mean": 1.449537573742966,
+        "p50": 1.217707143923917,
+        "p90": 2.2787099875340573,
+        "p95": 2.786776626863798,
+        "p99": 3.8404191683775473,
+        "max": 4.187280529007694
+      },
+      "ttft_s": {
+        "n": 166,
+        "mean": 1.0474964966345133,
+        "p50": 0.9548646994576302,
+        "p90": 1.540509930837061,
+        "p95": 1.76165533085873,
+        "p99": 2.0376071210632043,
+        "max": 2.2889555285355527
+      },
+      "send_lag_s": {
+        "p95": 0.0019754892562332317,
+        "max": 0.0025652830722719955
+      },
+      "per_path": {
+        "text": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "visual": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "hybrid": {
+          "n": 166,
+          "mean": 1.449537573742966,
+          "p50": 1.217707143923917,
+          "p95": 2.786776626863798
+        }
+      },
+      "per_replica": {
+        "0": {
+          "n": 184,
+          "p95": 2.786776626863798
+        }
+      },
+      "offered_rate_rps": 0.204,
+      "realised_arrival_rate_rps": 0.1995556089129701,
+      "duration_s": 917.9912298249997,
+      "throughput_rps": 0.20043764474207085,
+      "max_outstanding": 5,
+      "tokens": {
+        "prompt_mean": 2641.397590361446,
+        "completion_mean": 6.524096385542169
+      },
+      "quality": {
+        "anls": 0.49773514703528876,
+        "em": 0.42771084337349397,
+        "anls_4090_same_requests": 0.510502344858841,
+        "answer_identical_to_4090": 0.9578313253012049
+      },
+      "energy": {
+        "per_gpu_j": [
+          51698.045000000006
+        ],
+        "total_j": 51698.045000000006,
+        "avg_power_w": 56.31649118244344,
+        "j_per_completed_request": 280.96763586956524,
+        "j_per_completed_request_above_idle": 63.61076133602799
+      },
+      "p95_cap_exceeded": false
+    },
+    "0.408": {
+      "rate": 0.408,
+      "n_planned": 368,
+      "warmup": 37,
+      "n_sent": 368,
+      "n_measured": 331,
+      "n_measured_ok": 331,
+      "n_errors": 0,
+      "error_examples": [],
+      "aborted": false,
+      "latency_s": {
+        "n": 331,
+        "mean": 1.7081518298658416,
+        "p50": 1.3141791104462754,
+        "p90": 3.066423771274458,
+        "p95": 3.8856919607596865,
+        "p99": 5.0425733004657545,
+        "max": 6.139407366108571
+      },
+      "ttft_s": {
+        "n": 331,
+        "mean": 1.1965557815455958,
+        "p50": 0.9656856047258771,
+        "p90": 2.047675967108262,
+        "p95": 2.5172120911806815,
+        "p99": 3.0836140256405074,
+        "max": 3.8938373769842656
+      },
+      "send_lag_s": {
+        "p95": 0.0020976071842596857,
+        "max": 0.002825049273269542
+      },
+      "per_path": {
+        "text": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "visual": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "hybrid": {
+          "n": 331,
+          "mean": 1.7081518298658416,
+          "p50": 1.3141791104462754,
+          "p95": 3.8856919607596865
+        }
+      },
+      "per_replica": {
+        "0": {
+          "n": 368,
+          "p95": 3.8856919607596865
+        }
+      },
+      "offered_rate_rps": 0.408,
+      "realised_arrival_rate_rps": 0.39536833079142497,
+      "duration_s": 929.2591323750003,
+      "throughput_rps": 0.39601440241912467,
+      "max_outstanding": 7,
+      "tokens": {
+        "prompt_mean": 2661.543806646526,
+        "completion_mean": 5.9637462235649545
+      },
+      "quality": {
+        "anls": 0.5701110235853438,
+        "em": 0.5287009063444109,
+        "anls_4090_same_requests": 0.5670898755490901,
+        "answer_identical_to_4090": 0.9697885196374623
+      },
+      "energy": {
+        "per_gpu_j": [
+          76999.96900000001
+        ],
+        "total_j": 76999.96900000001,
+        "avg_power_w": 82.86167584191882,
+        "j_per_completed_request": 209.2390461956522,
+        "j_per_completed_request_above_idle": 99.22663317767542
+      },
+      "p95_cap_exceeded": false
+    },
+    "0.681": {
+      "rate": 0.681,
+      "n_planned": 400,
+      "warmup": 40,
+      "n_sent": 400,
+      "n_measured": 360,
+      "n_measured_ok": 360,
+      "n_errors": 0,
+      "error_examples": [],
+      "aborted": false,
+      "latency_s": {
+        "n": 360,
+        "mean": 2.4421492963505873,
+        "p50": 1.9666814704296485,
+        "p90": 4.567751174689875,
+        "p95": 5.56125652205442,
+        "p99": 7.498753314204399,
+        "max": 10.079596790220421
+      },
+      "ttft_s": {
+        "n": 360,
+        "mean": 1.4936781209422938,
+        "p50": 1.185242412372645,
+        "p90": 2.6536551295888797,
+        "p95": 3.3684124932886794,
+        "p99": 4.148265359782455,
+        "max": 4.3612823748972005
+      },
+      "send_lag_s": {
+        "p95": 0.0020216898056787595,
+        "max": 0.006421827943995595
+      },
+      "per_path": {
+        "text": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "visual": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "hybrid": {
+          "n": 360,
+          "mean": 2.4421492963505873,
+          "p50": 1.9666814704296485,
+          "p95": 5.56125652205442
+        }
+      },
+      "per_replica": {
+        "0": {
+          "n": 400,
+          "p95": 5.56125652205442
+        }
+      },
+      "offered_rate_rps": 0.681,
+      "realised_arrival_rate_rps": 0.662862900703888,
+      "duration_s": 603.0151211010007,
+      "throughput_rps": 0.6633332830355392,
+      "max_outstanding": 11,
+      "tokens": {
+        "prompt_mean": 2659.027777777778,
+        "completion_mean": 6.222222222222222
+      },
+      "quality": {
+        "anls": 0.5719258256046874,
+        "em": 0.5333333333333333,
+        "anls_4090_same_requests": 0.5756295293083912,
+        "answer_identical_to_4090": 0.9611111111111111
+      },
+      "energy": {
+        "per_gpu_j": [
+          64884.261
+        ],
+        "total_j": 64884.261,
+        "avg_power_w": 107.59972466616199,
+        "j_per_completed_request": 162.2106525,
+        "j_per_completed_request_above_idle": 96.53250681638313
+      },
+      "p95_cap_exceeded": false
+    },
+    "0.953": {
+      "rate": 0.953,
+      "n_planned": 400,
+      "warmup": 40,
+      "n_sent": 400,
+      "n_measured": 360,
+      "n_measured_ok": 360,
+      "n_errors": 0,
+      "error_examples": [],
+      "aborted": false,
+      "latency_s": {
+        "n": 360,
+        "mean": 3.847492548390975,
+        "p50": 3.1564230812118694,
+        "p90": 7.617940928318694,
+        "p95": 8.820068308962254,
+        "p99": 10.836416749349944,
+        "max": 11.955688178777564
+      },
+      "ttft_s": {
+        "n": 360,
+        "mean": 2.317089699590972,
+        "p50": 1.7756481261853878,
+        "p90": 4.737266840122357,
+        "p95": 5.542947493684188,
+        "p99": 7.129449479141657,
+        "max": 8.379266462397936
+      },
+      "send_lag_s": {
+        "p95": 0.0017648193213062764,
+        "max": 0.006242427781216975
+      },
+      "per_path": {
+        "text": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "visual": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "hybrid": {
+          "n": 360,
+          "mean": 3.847492548390975,
+          "p50": 3.1564230812118694,
+          "p95": 8.820068308962254
+        }
+      },
+      "per_replica": {
+        "0": {
+          "n": 400,
+          "p95": 8.820068308962254
+        }
+      },
+      "offered_rate_rps": 0.953,
+      "realised_arrival_rate_rps": 0.927618714200888,
+      "duration_s": 432.6736513300002,
+      "throughput_rps": 0.9244843053660321,
+      "max_outstanding": 16,
+      "tokens": {
+        "prompt_mean": 2659.027777777778,
+        "completion_mean": 6.222222222222222
+      },
+      "quality": {
+        "anls": 0.5728517515306133,
+        "em": 0.5361111111111111,
+        "anls_4090_same_requests": 0.5756295293083912,
+        "answer_identical_to_4090": 0.9694444444444444
+      },
+      "energy": {
+        "per_gpu_j": [
+          55107.09600000002
+        ],
+        "total_j": 55107.09600000002,
+        "avg_power_w": 127.36411341574815,
+        "j_per_completed_request": 137.76774000000006,
+        "j_per_completed_request_above_idle": 90.64254842332892
+      },
+      "p95_cap_exceeded": false
+    },
+    "1.089": {
+      "rate": 1.089,
+      "n_planned": 400,
+      "warmup": 40,
+      "n_sent": 400,
+      "n_measured": 360,
+      "n_measured_ok": 360,
+      "n_errors": 0,
+      "error_examples": [],
+      "aborted": false,
+      "latency_s": {
+        "n": 360,
+        "mean": 5.080209613598213,
+        "p50": 5.024928969390203,
+        "p90": 9.301523375639864,
+        "p95": 10.324257559538458,
+        "p99": 13.429206577238391,
+        "max": 15.240995915952226
+      },
+      "ttft_s": {
+        "n": 360,
+        "mean": 3.1482110174815263,
+        "p50": 2.5776041282424558,
+        "p90": 6.1155600983554,
+        "p95": 7.159083882956839,
+        "p99": 8.461552226162054,
+        "max": 9.71726223418682
+      },
+      "send_lag_s": {
+        "p95": 0.0019139319990244973,
+        "max": 0.005961248898529448
+      },
+      "per_path": {
+        "text": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "visual": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "hybrid": {
+          "n": 360,
+          "mean": 5.080209613598213,
+          "p50": 5.024928969390203,
+          "p95": 10.324257559538458
+        }
+      },
+      "per_replica": {
+        "0": {
+          "n": 400,
+          "p95": 10.324257559538458
+        }
+      },
+      "offered_rate_rps": 1.089,
+      "realised_arrival_rate_rps": 1.0599966209493885,
+      "duration_s": 379.7256908729996,
+      "throughput_rps": 1.0533919869377002,
+      "max_outstanding": 18,
+      "tokens": {
+        "prompt_mean": 2659.027777777778,
+        "completion_mean": 6.230555555555555
+      },
+      "quality": {
+        "anls": 0.5747036033824652,
+        "em": 0.5361111111111111,
+        "anls_4090_same_requests": 0.5756295293083912,
+        "answer_identical_to_4090": 0.9694444444444444
+      },
+      "energy": {
+        "per_gpu_j": [
+          51074.19
+        ],
+        "total_j": 51074.19,
+        "avg_power_w": 134.50285621333404,
+        "j_per_completed_request": 127.68547500000001,
+        "j_per_completed_request_above_idle": 86.32717672145365
+      },
+      "p95_cap_exceeded": false
+    },
+    "1.225": {
+      "rate": 1.225,
+      "n_planned": 400,
+      "warmup": 40,
+      "n_sent": 400,
+      "n_measured": 360,
+      "n_measured_ok": 360,
+      "n_errors": 0,
+      "error_examples": [],
+      "aborted": false,
+      "latency_s": {
+        "n": 360,
+        "mean": 8.42038417183185,
+        "p50": 8.707372681728884,
+        "p90": 14.072835515539737,
+        "p95": 15.232965090520024,
+        "p99": 19.193162517031308,
+        "max": 21.57582512470617
+      },
+      "ttft_s": {
+        "n": 360,
+        "mean": 6.020406363629069,
+        "p50": 5.605122687548828,
+        "p90": 11.662099276900063,
+        "p95": 12.247662948428252,
+        "p99": 13.562280742958592,
+        "max": 14.455481326931476
+      },
+      "send_lag_s": {
+        "p95": 0.0019085745517259038,
+        "max": 0.007535840939453919
+      },
+      "per_path": {
+        "text": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "visual": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "hybrid": {
+          "n": 360,
+          "mean": 8.42038417183185,
+          "p50": 8.707372681728884,
+          "p95": 15.232965090520024
+        }
+      },
+      "per_replica": {
+        "0": {
+          "n": 400,
+          "p95": 15.232965090520024
+        }
+      },
+      "offered_rate_rps": 1.225,
+      "realised_arrival_rate_rps": 1.1923745276978899,
+      "duration_s": 338.62026886999956,
+      "throughput_rps": 1.1812641970158166,
+      "max_outstanding": 24,
+      "tokens": {
+        "prompt_mean": 2659.027777777778,
+        "completion_mean": 6.222222222222222
+      },
+      "quality": {
+        "anls": 0.5728517515306133,
+        "em": 0.5361111111111111,
+        "anls_4090_same_requests": 0.5756295293083912,
+        "answer_identical_to_4090": 0.9722222222222222
+      },
+      "energy": {
+        "per_gpu_j": [
+          47642.158999999985
+        ],
+        "total_j": 47642.158999999985,
+        "avg_power_w": 140.69494173808712,
+        "j_per_completed_request": 119.10539749999997,
+        "j_per_completed_request_above_idle": 82.22414764068787
+      },
+      "p95_cap_exceeded": false
+    },
+    "1.361": {
+      "rate": 1.361,
+      "n_planned": 400,
+      "warmup": 40,
+      "n_sent": 400,
+      "n_measured": 360,
+      "n_measured_ok": 360,
+      "n_errors": 0,
+      "error_examples": [],
+      "aborted": false,
+      "latency_s": {
+        "n": 360,
+        "mean": 13.737135995907979,
+        "p50": 13.969794460726007,
+        "p90": 21.43980167048421,
+        "p95": 23.385833490808366,
+        "p99": 26.227609723440217,
+        "max": 34.5972828597578
+      },
+      "ttft_s": {
+        "n": 360,
+        "mean": 10.890968195652409,
+        "p50": 10.605479512236343,
+        "p90": 18.677423943816574,
+        "p95": 19.305362242346018,
+        "p99": 20.26515847151678,
+        "max": 20.810400188445783
+      },
+      "send_lag_s": {
+        "p95": 0.002084586395130827,
+        "max": 0.005774136196123436
+      },
+      "per_path": {
+        "text": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "visual": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "hybrid": {
+          "n": 360,
+          "mean": 13.737135995907979,
+          "p50": 13.969794460726007,
+          "p95": 23.385833490808366
+        }
+      },
+      "per_replica": {
+        "0": {
+          "n": 400,
+          "p95": 23.385833490808366
+        }
+      },
+      "offered_rate_rps": 1.361,
+      "realised_arrival_rate_rps": 1.324752434446389,
+      "duration_s": 306.92392395000024,
+      "throughput_rps": 1.3032545487238147,
+      "max_outstanding": 34,
+      "tokens": {
+        "prompt_mean": 2659.027777777778,
+        "completion_mean": 6.233333333333333
+      },
+      "quality": {
+        "anls": 0.5728517515306133,
+        "em": 0.5361111111111111,
+        "anls_4090_same_requests": 0.5756295293083912,
+        "answer_identical_to_4090": 0.9722222222222222
+      },
+      "energy": {
+        "per_gpu_j": [
+          44991.744999999995
+        ],
+        "total_j": 44991.744999999995,
+        "avg_power_w": 146.58924081567986,
+        "j_per_completed_request": 112.4793625,
+        "j_per_completed_request_above_idle": 79.05035966808076
+      },
+      "p95_cap_exceeded": false
+    },
+    "1.498": {
+      "rate": 1.498,
+      "n_planned": 400,
+      "warmup": 40,
+      "n_sent": 400,
+      "n_measured": 360,
+      "n_measured_ok": 360,
+      "n_errors": 0,
+      "error_examples": [],
+      "aborted": false,
+      "latency_s": {
+        "n": 360,
+        "mean": 20.963295579590923,
+        "p50": 21.94424671928664,
+        "p90": 31.513422283630735,
+        "p95": 33.40744113410492,
+        "p99": 38.63435239547592,
+        "max": 44.67442988361108
+      },
+      "ttft_s": {
+        "n": 360,
+        "mean": 18.069070679149277,
+        "p50": 19.842005741221328,
+        "p90": 28.270396775377503,
+        "p95": 29.041464027254733,
+        "p99": 30.377285109887527,
+        "max": 31.330747163122396
+      },
+      "send_lag_s": {
+        "p95": 0.0019277254075404913,
+        "max": 0.00553282432792912
+      },
+      "per_path": {
+        "text": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "visual": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "hybrid": {
+          "n": 360,
+          "mean": 20.963295579590923,
+          "p50": 21.94424671928664,
+          "p95": 33.40744113410492
+        }
+      },
+      "per_replica": {
+        "0": {
+          "n": 400,
+          "p95": 33.40744113410492
+        }
+      },
+      "offered_rate_rps": 1.498,
+      "realised_arrival_rate_rps": 1.4581037081562775,
+      "duration_s": 297.2002958430003,
+      "throughput_rps": 1.3458936804400252,
+      "max_outstanding": 48,
+      "tokens": {
+        "prompt_mean": 2659.027777777778,
+        "completion_mean": 6.233333333333333
+      },
+      "quality": {
+        "anls": 0.5728517515306133,
+        "em": 0.5361111111111111,
+        "anls_4090_same_requests": 0.5756295293083912,
+        "answer_identical_to_4090": 0.9722222222222222
+      },
+      "energy": {
+        "per_gpu_j": [
+          44303.282999999996
+        ],
+        "total_j": 44303.282999999996,
+        "avg_power_w": 149.068771531115,
+        "j_per_completed_request": 110.75820749999998,
+        "j_per_completed_request_above_idle": 78.38826577788981
+      },
+      "p95_cap_exceeded": true
+    }
+  },
+  "stop_reason": "p95_cap at rate 1.498",
+  "idle_power_w": [
+    43.566500000000005
+  ]
+}

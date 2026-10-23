@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\caption{Live serving with vLLM on one and two A10 GPUs (one replica per GPU, open-loop Poisson arrivals): highest arrival rate (queries/s) at which the measured p95 latency stays within the target, interpolated between tested rates, against the simulator's prediction from the A10's own service times and batching curve. ANLS is the mean over the tested rates; in brackets, the 4090 reference run on the same requests.}
+\label{tab:live_serving}
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Policy} & \textbf{GPUs} & \textbf{p95$\leq$2\,s live} & \textbf{sim.} & \textbf{p95$\leq$5\,s live} & \textbf{sim.} & \textbf{ANLS (4090)} \\
+\midrule
+Always visual & 1 & 0.37 & 1.06 & 1.27 & 2.48 & 0.545 (0.544) \\
+CAVR-CE & 1 & 0.00 & 0.73 & 1.10 & 1.68 & 0.564 (0.566) \\
+Always hybrid & 1 & 0.00 & 0.35 & 0.59 & 1.15 & 0.563 (0.566) \\
+Always visual & 2 & 1.73 & 2.74 & 3.37 & 5.13 & 0.542 (0.541) \\
+CAVR-CE & 2 & 1.52 & 2.18 & 3.02 & 4.08 & 0.567 (0.569) \\
+Always hybrid & 2 & 0.54 & 1.03 & 1.66 & 2.51 & 0.573 (0.575) \\
+\bottomrule
+\end{tabular}
+\end{table}

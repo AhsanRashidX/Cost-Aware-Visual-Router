@@ -1,0 +1,163 @@
+=== 2026-10-23 17:11:06 driver start: stages service matrix  sampler_flashinfer=0
+stopped replica 0 (pid 574; log logs/replica_0_20261023_171106.log)
+0, 0 MiB
+1, 0 MiB
+started replica 0 (GPU 0, port 8000, mode native)
+started replica 1 (GPU 1, port 8001, mode native)
+replica 0 healthy: http://127.0.0.1:8000  (139s)
+replica 1 healthy: http://127.0.0.1:8001  (139s)
+all 2 replica(s) up. Stop with: bash stop.sh
+servers: ['http://127.0.0.1:8000', 'http://127.0.0.1:8001']  model: qwen2.5-vl-7b  vLLM: {'version': '0.31.0'}  energy: nvml_counter
+[service] 4818 requests to run (0 already done) on 2 replica(s)
+[service] 100/4818 (24 min left)
+[service] 200/4818 (25 min left)
+[service] 300/4818 (24 min left)
+[service] 400/4818 (24 min left)
+[service] 500/4818 (23 min left)
+[service] 600/4818 (23 min left)
+[service] 700/4818 (23 min left)
+[service] 800/4818 (22 min left)
+[service] 900/4818 (22 min left)
+[service] 1000/4818 (21 min left)
+[service] 1100/4818 (21 min left)
+[service] 1200/4818 (20 min left)
+[service] 1300/4818 (20 min left)
+[service] 1400/4818 (19 min left)
+[service] 1500/4818 (19 min left)
+[service] 1600/4818 (18 min left)
+[service] 1700/4818 (18 min left)
+[service] 1800/4818 (17 min left)
+[service] 1900/4818 (16 min left)
+[service] 2000/4818 (16 min left)
+[service] 2100/4818 (15 min left)
+[service] 2200/4818 (15 min left)
+[service] 2300/4818 (14 min left)
+[service] 2400/4818 (14 min left)
+[service] 2500/4818 (13 min left)
+[service] 2600/4818 (13 min left)
+[service] 2700/4818 (12 min left)
+[service] 2800/4818 (11 min left)
+[service] 2900/4818 (11 min left)
+[service] 3000/4818 (10 min left)
+[service] 3100/4818 (10 min left)
+[service] 3200/4818 (9 min left)
+[service] 3300/4818 (9 min left)
+[service] 3400/4818 (8 min left)
+[service] 3500/4818 (7 min left)
+[service] 3600/4818 (7 min left)
+[service] 3700/4818 (6 min left)
+[service] 3800/4818 (6 min left)
+[service] 3900/4818 (5 min left)
+[service] 4000/4818 (5 min left)
+[service] 4100/4818 (4 min left)
+[service] 4200/4818 (3 min left)
+[service] 4300/4818 (3 min left)
+[service] 4400/4818 (2 min left)
+[service] 4500/4818 (2 min left)
+[service] 4600/4818 (1 min left)
+[service] 4700/4818 (1 min left)
+[service] 4800/4818 (0 min left)
+wrote /home/a10gpu/cavr_serve/results/pilot.json
+stopped replica 0 (pid 1679; log logs/replica_0_20261023_174015.log)
+stopped replica 1 (pid 1680; log logs/replica_1_20261023_174015.log)
+0, 0 MiB
+1, 0 MiB
+=== 2026-10-23 17:40:17 starting 1 replica(s)
+started replica 0 (GPU 0, port 8000, mode native)
+replica 0 healthy: http://127.0.0.1:8000  (67s)
+all 1 replica(s) up. Stop with: bash stop.sh
+=== 2026-10-23 17:41:24 always_hybrid on 1 replica(s)
+always_hybrid on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.204, 0.408, 0.681, 0.953, 1.089, 1.225, 1.361, 1.498]
+rate   0.204/s n= 184 p50=  1.218s p95=  2.787s p99=  3.840s thr=0.200/s err=0 aborted=False replicas=[184]
+rate   0.408/s n= 368 p50=  1.314s p95=  3.886s p99=  5.043s thr=0.396/s err=0 aborted=False replicas=[368]
+rate   0.681/s n= 400 p50=  1.967s p95=  5.561s p99=  7.499s thr=0.663/s err=0 aborted=False replicas=[400]
+rate   0.953/s n= 400 p50=  3.156s p95=  8.820s p99= 10.836s thr=0.924/s err=0 aborted=False replicas=[400]
+rate   1.089/s n= 400 p50=  5.025s p95= 10.324s p99= 13.429s thr=1.053/s err=0 aborted=False replicas=[400]
+rate   1.225/s n= 400 p50=  8.707s p95= 15.233s p99= 19.193s thr=1.181/s err=0 aborted=False replicas=[400]
+rate   1.361/s n= 400 p50= 13.970s p95= 23.386s p99= 26.228s thr=1.303/s err=0 aborted=False replicas=[400]
+rate   1.498/s n= 400 p50= 21.944s p95= 33.407s p99= 38.634s thr=1.346/s err=0 aborted=False replicas=[400]
+wrote /home/a10gpu/cavr_serve/results/load/always_hybrid_r1  (p95_cap at rate 1.498)
+=== 2026-10-23 18:52:42 always_visual on 1 replica(s)
+always_visual on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.35, 0.7, 1.166, 1.632, 1.865, 2.099, 2.332, 2.565]
+rate   0.350/s n= 315 p50=  0.826s p95=  1.961s p99=  2.639s thr=0.354/s err=0 aborted=False replicas=[315]
+rate   0.700/s n= 400 p50=  0.991s p95=  2.599s p99=  4.597s thr=0.682/s err=0 aborted=False replicas=[400]
+rate   1.166/s n= 400 p50=  1.364s p95=  4.473s p99=  5.912s thr=1.135/s err=0 aborted=False replicas=[400]
+rate   1.632/s n= 400 p50=  2.157s p95=  6.934s p99=  8.439s thr=1.580/s err=0 aborted=False replicas=[400]
+rate   1.865/s n= 400 p50=  3.736s p95=  8.281s p99= 12.456s thr=1.799/s err=0 aborted=False replicas=[400]
+rate   2.099/s n= 400 p50=  6.546s p95= 12.542s p99= 16.387s thr=2.019/s err=0 aborted=False replicas=[400]
+rate   2.332/s n= 400 p50=  9.880s p95= 17.962s p99= 24.688s thr=2.231/s err=0 aborted=False replicas=[400]
+rate   2.565/s n= 400 p50= 16.365s p95= 26.095s p99= 31.699s thr=2.281/s err=0 aborted=False replicas=[400]
+wrote /home/a10gpu/cavr_serve/results/load/always_visual_r1  (all rates done)
+=== 2026-10-23 19:41:31 cavr_ce_valsel on 1 replica(s)
+cavr_ce_valsel on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.303, 0.605, 1.009, 1.412, 1.614, 1.815, 2.017, 2.219]
+rate   0.303/s n= 273 p50=  0.933s p95=  2.136s p99=  2.913s thr=0.310/s err=0 aborted=False replicas=[273]
+rate   0.605/s n= 400 p50=  1.062s p95=  2.803s p99=  4.801s thr=0.590/s err=0 aborted=False replicas=[400]
+rate   1.009/s n= 400 p50=  1.408s p95=  4.682s p99=  6.433s thr=0.982/s err=0 aborted=False replicas=[400]
+=== 2026-10-23 20:33:41 resume after WSL shutdown (partial cavr_ce_valsel_r1 kept as cavr_ce_valsel_r1_interrupted_2014)
+=== 2026-10-23 20:33:41 driver start: stages matrix  sampler_flashinfer=0
+=== 2026-10-23 20:33:41 starting 1 replica(s)
+started replica 0 (GPU 0, port 8000, mode native)
+replica 0 healthy: http://127.0.0.1:8000  (154s)
+all 1 replica(s) up. Stop with: bash stop.sh
+=== 2026-10-23 20:36:15 cavr_ce_valsel on 1 replica(s)
+cavr_ce_valsel on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.303, 0.605, 1.009, 1.412, 1.614, 1.815, 2.017, 2.219]
+rate   0.303/s n= 273 p50=  0.905s p95=  2.128s p99=  2.908s thr=0.310/s err=0 aborted=False replicas=[273]
+rate   0.605/s n= 400 p50=  1.072s p95=  2.850s p99=  4.811s thr=0.589/s err=0 aborted=False replicas=[400]
+rate   1.009/s n= 400 p50=  1.394s p95=  4.616s p99=  6.169s thr=0.982/s err=0 aborted=False replicas=[400]
+rate   1.412/s n= 400 p50=  2.204s p95=  6.363s p99=  8.210s thr=1.366/s err=0 aborted=False replicas=[400]
+rate   1.614/s n= 400 p50=  3.294s p95=  8.168s p99= 10.643s thr=1.555/s err=0 aborted=False replicas=[400]
+rate   1.815/s n= 400 p50=  5.907s p95= 11.362s p99= 14.602s thr=1.742/s err=0 aborted=False replicas=[400]
+rate   2.017/s n= 400 p50=  9.744s p95= 16.052s p99= 20.178s thr=1.930/s err=0 aborted=False replicas=[400]
+rate   2.219/s n= 400 p50= 14.101s p95= 23.110s p99= 27.109s thr=2.019/s err=0 aborted=False replicas=[400]
+wrote /home/a10gpu/cavr_serve/results/load/cavr_ce_valsel_r1  (all rates done)
+stopped replica 0 (pid 526; log logs/replica_0_20261023_213001.log)
+0, 0 MiB
+1, 0 MiB
+=== 2026-10-23 21:30:07 matrix done; send back: tar czf t4_results.tar.gz results logs
+=== 2026-10-23 21:30:07 driver done
+=== 2026-10-23 21:30:07 driver start: stages matrix  sampler_flashinfer=0
+=== 2026-10-23 21:30:07 starting 2 replica(s)
+started replica 0 (GPU 0, port 8000, mode native)
+started replica 1 (GPU 1, port 8001, mode native)
+replica 0 healthy: http://127.0.0.1:8000  (118s)
+replica 1 healthy: http://127.0.0.1:8001  (118s)
+all 2 replica(s) up. Stop with: bash stop.sh
+=== 2026-10-23 21:32:05 always_hybrid on 2 replica(s)
+always_hybrid on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.408, 0.817, 1.361, 1.906, 2.178, 2.451, 2.723, 2.995]
+rate   0.408/s n= 368 p50=  1.081s p95=  1.880s p99=  2.354s thr=0.396/s err=0 aborted=False replicas=[184, 184]
+rate   0.817/s n= 400 p50=  1.098s p95=  2.248s p99=  3.491s thr=0.796/s err=0 aborted=False replicas=[200, 200]
+rate   1.361/s n= 400 p50=  1.394s p95=  3.799s p99=  5.002s thr=1.322/s err=0 aborted=False replicas=[201, 199]
+rate   1.906/s n= 400 p50=  2.038s p95=  5.981s p99=  7.217s thr=1.848/s err=0 aborted=False replicas=[200, 200]
+rate   2.178/s n= 400 p50=  2.956s p95=  6.994s p99=  9.822s thr=2.105/s err=0 aborted=False replicas=[200, 200]
+rate   2.451/s n= 400 p50=  5.490s p95= 10.291s p99= 13.127s thr=2.360/s err=0 aborted=False replicas=[200, 200]
+rate   2.723/s n= 400 p50=  8.380s p95= 14.665s p99= 16.950s thr=2.608/s err=0 aborted=False replicas=[200, 200]
+rate   2.995/s n= 400 p50= 12.620s p95= 20.253s p99= 26.344s thr=2.688/s err=0 aborted=False replicas=[196, 204]
+wrote /home/a10gpu/cavr_serve/results/load/always_hybrid_r2  (all rates done)
+=== 2026-10-23 22:16:49 always_visual on 2 replica(s)
+always_visual on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.7, 1.399, 2.332, 3.265, 3.731, 4.197, 4.664, 5.13]
+rate   0.700/s n= 400 p50=  0.759s p95=  1.353s p99=  1.708s thr=0.682/s err=0 aborted=False replicas=[200, 200]
+rate   1.399/s n= 400 p50=  0.745s p95=  1.619s p99=  2.513s thr=1.362/s err=0 aborted=False replicas=[200, 200]
+rate   2.332/s n= 400 p50=  1.019s p95=  2.695s p99=  3.449s thr=2.266/s err=0 aborted=False replicas=[200, 200]
+rate   3.265/s n= 400 p50=  1.721s p95=  4.583s p99=  5.624s thr=3.152/s err=0 aborted=False replicas=[200, 200]
+rate   3.731/s n= 400 p50=  2.512s p95=  6.423s p99=  8.165s thr=3.590/s err=0 aborted=False replicas=[200, 200]
+rate   4.197/s n= 400 p50=  4.324s p95=  8.969s p99= 12.768s thr=4.022/s err=0 aborted=False replicas=[200, 200]
+rate   4.664/s n= 400 p50=  6.668s p95= 12.823s p99= 18.910s thr=4.386/s err=0 aborted=False replicas=[200, 200]
+rate   5.130/s n= 400 p50=  9.519s p95= 17.402s p99= 23.406s thr=4.569/s err=0 aborted=False replicas=[199, 201]
+wrote /home/a10gpu/cavr_serve/results/load/always_visual_r2  (all rates done)
+=== 2026-10-23 22:44:09 cavr_ce_valsel on 2 replica(s)
+cavr_ce_valsel on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.605, 1.21, 2.017, 2.824, 3.228, 3.631, 4.034, 4.438]
+rate   0.605/s n= 400 p50=  0.792s p95=  1.430s p99=  1.837s thr=0.589/s err=0 aborted=False replicas=[200, 200]
+rate   1.210/s n= 400 p50=  0.846s p95=  1.670s p99=  2.673s thr=1.177/s err=0 aborted=False replicas=[200, 200]
+rate   2.017/s n= 400 p50=  1.016s p95=  2.516s p99=  3.715s thr=1.955/s err=0 aborted=False replicas=[200, 200]
+rate   2.824/s n= 400 p50=  1.558s p95=  4.397s p99=  5.812s thr=2.721/s err=0 aborted=False replicas=[200, 200]
+rate   3.228/s n= 400 p50=  2.253s p95=  5.634s p99=  7.717s thr=3.098/s err=0 aborted=False replicas=[200, 200]
+rate   3.631/s n= 400 p50=  3.851s p95=  7.604s p99= 11.203s thr=3.469/s err=0 aborted=False replicas=[200, 200]
+rate   4.034/s n= 400 p50=  5.869s p95= 11.333s p99= 16.295s thr=3.847/s err=0 aborted=False replicas=[200, 200]
+rate   4.438/s n= 400 p50=  8.502s p95= 15.508s p99= 19.053s thr=4.030/s err=0 aborted=False replicas=[203, 197]
+wrote /home/a10gpu/cavr_serve/results/load/cavr_ce_valsel_r2  (all rates done)
+stopped replica 0 (pid 2535; log logs/replica_0_20261023_231539.log)
+stopped replica 1 (pid 2536; log logs/replica_1_20261023_231539.log)
+0, 0 MiB
+1, 0 MiB
+=== 2026-10-23 23:15:46 matrix done; send back: tar czf t4_results.tar.gz results logs
+=== 2026-10-23 23:15:46 driver done

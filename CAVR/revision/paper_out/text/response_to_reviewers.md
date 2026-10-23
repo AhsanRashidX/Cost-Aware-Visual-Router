@@ -34,8 +34,8 @@ withdrawn; we list them first so that nothing is hidden behind the new results.
    splits (Section "Held-out confirmation"): the saving over always-hybrid holds (35%, at 0.014 higher
    ANLS), but always-visual comes within 0.005 ANLS of the router at 16% less GPU, and the paper says
    so. Retrieval-depth and gold-page controls (Table controls) separate input modality from retrieval depth and errors.
-7. **Supercomputing case.** New experiments on serving under load, GPUs needed at a latency target, visual-index
-   scaling to 100k pages, router throughput and energy.
+7. **Supercomputing case.** New experiments on serving under load, GPUs needed at a latency target, live serving
+   with vLLM on two A10 GPUs as a check of the simulator, visual-index scaling to 100k pages, router throughput and energy.
 8. **Related work and verified references.** A new related-work section; every reference was checked against its
    DOI, arXiv, OpenReview or publisher record.
 9. **Narrowed claims and a full limitations section.**
@@ -66,7 +66,7 @@ with three Tesla P40 GPUs: sharded search returns the same top page as one GPU, 
 150k-page index (36.9 GiB, more than one GPU holds) is searched in 328 ms, as fast as
 50k pages on one GPU. On a second node with two NVIDIA A10 GPUs, the same benchmark searches 50k pages in 41.1 and 21.0 ms on one and two GPUs (efficiency 97.6%) and a 100k-page index (24.6 GiB) in 41.4 ms. We also held an index of a million pages (246 GiB) in host memory on that node and streamed it to the GPUs for every query batch: two A10s search it at 4.50 queries/s at batch 64, close to the GPU-seconds per query of GPU-resident search (94% of its throughput where both were measured, at 100k pages), whereas a GPU-resident index would need 16 A10s (projected). A single query takes 6.4 s, bound by PCIe, so this placement suits batch rather than interactive search. Routing saves generation compute rather than index memory. In a simulated Poisson load test with dynamic batching, driven by measured service
 times, serving 100 queries/s at p95 ≤ 2 s needs 106 GPUs for always-hybrid and
-72 for CAVR-CE (32% fewer; means over 5 seeds). We added these
+72 for CAVR-CE (32% fewer; means over 5 seeds). We then served the generation stage live with vLLM on one and two A10 GPUs: at p95 ≤ 5 s, CAVR-CE sustained 1.86× and 1.82× the arrival rate of always-hybrid, more than the simulator predicts, whereas the simulator overestimated absolute capacity by up to 2.0×. The paper reports both. We added these
 experiments, a hardware table for each machine, energy per query, router throughput up to batch 1,024, and serial versus
 speculative-parallel escalation.
 *Changes:* Abstract; Introduction (new subsection on why routing is a supercomputing problem; research question
@@ -75,16 +75,16 @@ efficient late-interaction and vector search, inference serving; every reference
 or publisher record); Method (Figure method: the pipeline as built and its deployment); Results, subsection
 "Scalability, throughput and
 energy" (Tables hardware, hardware_multigpu, load_test, load_test_operating_points, index_scaling,
-multi_gpu_scaling, host_stream, router_throughput; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling,
-host_stream); Setup (multi-GPU sharding and index in host memory); Conclusion.
+multi_gpu_scaling, host_stream, router_throughput, live_serving; Figures gpus_vs_quality, index_scaling, multi_gpu_scaling,
+host_stream, live_serving); Setup (multi-GPU sharding, index in host memory, live serving); Limitations; Conclusion.
 Routing and generation were measured on one GeForce RTX 4090, capacity projections come from a simulation driven by
-measured service times, and multi-GPU sharding and the host-memory index were measured on separate nodes for retrieval only,
+measured service times and checked against live vLLM serving on two A10 GPUs, and multi-GPU sharding and the host-memory index were measured on separate nodes for retrieval only,
 with GPU-resident search at a million pages projected rather than measured; the paper states all of this.
 
 **E.2 — Report results accurately, rewrite overstated conclusions and explain limitations fully.**
 Every number now comes from one cached run, and tables and figures are generated from the results files. The
-withdrawn claims are listed above. A new Limitations subsection covers the single GPU, simulation versus live
-traffic, computed rather than measured escalation latencies, synthetic index scaling, sharding measured on separate server nodes for retrieval only,
+withdrawn claims are listed above. A new Limitations subsection covers the single GPU, the simulator's error against live
+serving, computed rather than measured escalation latencies, synthetic index scaling, sharding measured on separate server nodes for retrieval only,
 GPU-only energy, text-only queries, and the 35% of queries that no path answers.
 
 ## Reviewer 1
@@ -196,7 +196,7 @@ With λ chosen on validation data, CAVR-CE uses 0.716 instead of 1.009 GPU-s per
 4 of 5 seeds, with the 95% interval excluding zero on 2 of 5 splits. On exact match the
 difference is not significant on 5 of 5 seeds. CAVR-CE beats always-visual by
 +0.012 to +0.018 ANLS for 15% more GPU. At 100 queries/s and p95 ≤ 2 s it needs
-72 GPUs instead of 106 (simulated). The per-query oracle (ANLS 0.630
+72 GPUs instead of 106 (simulated; live serving on two A10 GPUs confirmed the saving and showed the simulated GPU counts to be optimistic). The per-query oracle (ANLS 0.630
 at 0.486 GPU-s) shows that predicting per-query success remains the open problem, and the paper says so.
 On 1,499 held-out questions, the frozen router keeps a 35% saving over always-hybrid, but there
 always-visual comes within 0.005 ANLS of it at 16% less GPU; the paper reports this as a limit on

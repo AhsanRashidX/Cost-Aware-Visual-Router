@@ -183,6 +183,51 @@ The simulator charges a batch the mean generation time of its members, scaled by
 charging the longest member instead, a conservative bound, the saving over always-hybrid is 30\% at 2\,s and
 15\% at 5\,s (against 24\% with the mean member).
 
+\paragraph{Live serving on two A10 GPUs.} To test the simulator, we served the generation stage live with
+vLLM on one and two A10 GPUs (Table~\ref{tab:live_serving}, Figure~\ref{fig:live_serving}). The served model
+closely reproduced the cached run. All 150 pilot prompts had the same token count as on the workstation; over the
+4,818 service-time requests (1,606 queries on each path), path ANLS differed from the workstation run by at
+most 0.003, and 96--98\% of answers were identical. With one request at a time, an
+A10 took 0.52, 0.59 and 0.88\,s per text, visual and hybrid request, against
+0.44, 0.58 and 0.96\,s of generation on the workstation.
+
+Under Poisson load the policies kept the order the simulation gives, and routing gained more than simulated. At
+p95 $\le$ 5\,s, CAVR-CE sustained 1.86$\times$ the arrival rate of always-hybrid on one GPU and
+1.82$\times$ on two, where the simulator, given the A10's own service times and batching curve,
+predicted 1.46$\times$ and 1.62$\times$. On two GPUs at p95 $\le$ 2\,s the ratio was
+2.82 (simulated 2.13). Always-visual remained ahead of CAVR-CE, which sustained
+0.87$\times$ and 0.90$\times$ its rate at 5\,s, as in the simulation. Answer
+quality did not change under load: ANLS over the tested rates was 0.567 for CAVR-CE, 0.573 for
+always-hybrid and 0.542 for always-visual on two GPUs, close to the workstation's ANLS on the same requests.
+At each policy's highest tested rate, CAVR-CE used 74\,J of GPU energy per request, against 111\,J for
+always-hybrid (33\% less) and 65\,J for always-visual.
+
+Absolute capacity, by contrast, was lower than simulated. At p95 $\le$ 5\,s the simulator predicted
+1.4--2.0$\times$ the measured capacity, and on the measured arrival traces its p95 was off by a
+median of 37--57\% per run; inputs from the workstation gave similar predictions. At
+p95 $\le$ 2\,s, one A10 met the target only with always-visual, up to 0.37 queries/s, where the simulator
+predicted 1.06. The test points to two effects that the simulator leaves out. First, at the lowest rate a
+request that reached an idle replica took 1.22--1.37$\times$ the time the same request took back to
+back with others; GPU clocks dropping between requests are a likely cause. Second, vLLM batches continuously: the
+prefill of a new request (on average 1,265 prompt tokens on the visual path and 2,675 on the
+hybrid path, while answers average at most 6 tokens) runs alongside the requests already in progress
+and slows them down, whereas the simulator treats a batch as uninterrupted once it starts. Adding a second GPU raised
+the measured capacity at 5\,s by 2.7--2.8$\times$, more than the
+2.1--2.4$\times$ predicted, which is consistent with the larger pooling gain of a shared
+dispatcher when service times vary more than the model assumes. The GPU counts of Table~\ref{tab:load_test} are
+therefore probably underestimates for live serving, by up to about a factor of two on this hardware, whereas the
+comparison between policies held and was, if anything, conservative.
+
+\input{tables/live_serving}
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figures/live_serving.png}
+  \caption{Live serving with vLLM on one and two A10 GPUs: measured p95 latency against Poisson arrival rate (solid)
+  and the simulator's prediction for the same arrivals from the A10's service times and batching curve (dashed).
+  Dotted lines mark the 2\,s and 5\,s targets.}
+  \label{fig:live_serving}
+\end{figure*}
+
 \paragraph{Generation and retrieval together.} The load test keeps the small evaluation index on every GPU. For a
 large corpus, a retrieval tier is needed as well. Projected from the workstation's measured MaxSim throughput at
 batch 64, scaled linearly in pages and at full utilisation, 100 queries/s over a million pages needs 20 GPUs
@@ -337,11 +382,13 @@ batch. CAVR-CE takes 24.8\,ms and 1.74\,J per query at batch 1, and its cross-en
 \label{sec:res-limits}
 
 All measurements except index sharding and the host-memory index use one consumer GPU (GeForce RTX 4090) under Windows; caps on visual tokens and OCR length keep memory
-below the point where the driver spills to system RAM. Generation uses HF Transformers rather than a serving
-engine such as vLLM~\cite{vllm}, so absolute capacity is pessimistic; the comparison between policies is the main
-result. The 2\,s latency target is our choice; the saving is smaller at looser targets.
+below the point where the driver spills to system RAM. The cached run generates with HF Transformers. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 
-The load test is a simulation driven by measured service times, not live traffic, and escalation latencies are
+The workstation load test is a simulation driven by measured service times. Checked against live vLLM serving on one
+and two A10 GPUs, it overestimated capacity by up to 2.0$\times$, so its GPU counts are best read as lower
+bounds; the live test confirmed the comparison between policies, which is the main result. That test serves
+generation only, with retrieval and routing run beforehand, on at most two GPUs under WSL, with one model and
+greedy decoding. Escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. The simulator assumes an ideal
 global queue and unlimited CPU, charges a batch the mean generation time of its members (the longest-member bound is reported), and keeps the
 1,786-page evaluation index on every GPU, so the retrieval tier for a large corpus is projected rather than simulated. Costs

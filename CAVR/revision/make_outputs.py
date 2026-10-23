@@ -9,7 +9,9 @@ from statistics import mean, stdev
 
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.lines  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker  # noqa: E402
 
 from common import DATA, RESULTS, ROOT  # noqa: E402
 
@@ -612,6 +614,61 @@ def load_test():
           ["Policy", "ANLS", "QPS/GPU", "GPUs@10", "GPUs@25", "GPUs@50", "GPUs@100"], rows)
 
 
+def live_serving():
+    vl = load("vllm_a10.json")
+    if not vl:
+        return
+    runs = vl["runs"]
+    order = [(p, n) for n in (1, 2) for p in ("always_visual", "cavr_ce_valsel", "always_hybrid") if f"{p}_r{n}" in runs]
+    rows = []
+    for p, n in order:
+        r = runs[f"{p}_r{n}"]
+        c, lb = r["capacity_rps_at_p95_target"], r["measured_capacity_is_lower_bound"]
+        cells = []
+        for t in ("2.0", "5.0"):
+            cells += [("$\\geq$" if lb[t] else "") + f"{c[t]['measured']:.2f}", f"{c[t]['predicted_a10']:.2f}"]
+        ok = [v for v in r["rates"].values() if not v["aborted"] and v["n_errors"] == 0]
+        anls = mean(v["anls"] for v in ok)
+        ref = mean(v["anls_4090_same_requests"] for v in ok)
+        rows.append([LABEL[p].split(",")[0], n] + cells + [f"{anls:.3f} ({ref:.3f})"])
+    table("live_serving", "Live serving with vLLM on one and two A10 GPUs (one replica per GPU, open-loop Poisson "
+          "arrivals): highest arrival rate (queries/s) at which the measured p95 latency stays within the target, "
+          "interpolated between tested rates, against the simulator's prediction from the A10's own service times "
+          "and batching curve. ANLS is the mean over the tested rates; in brackets, the 4090 reference run on the "
+          "same requests.", "tab:live_serving",
+          ["Policy", "GPUs", "p95$\\leq$2\\,s live", "sim.", "p95$\\leq$5\\,s live", "sim.", "ANLS (4090)"], rows)
+    reps = sorted({n for _, n in order})
+    fig, axes = plt.subplots(1, len(reps), figsize=(3.4 * len(reps), 3.0), sharey=True, squeeze=False)
+    for ax, n in zip(axes[0], reps):
+        for p in ("always_visual", "cavr_ce_valsel", "always_hybrid"):
+            r = runs.get(f"{p}_r{n}")
+            if not r:
+                continue
+            ok = sorted((v["offered_rps"], v["p95_s"], v["predicted"]["a10"]["p95_s"]) for v in r["rates"].values()
+                        if not v["aborted"] and v["n_errors"] == 0)
+            x, live, sim = zip(*ok)
+            ax.plot(x, live, marker=MARK[p], color=COLOR[p], label=LABEL[p].split(",")[0])
+            ax.plot(x, sim, color=COLOR[p], linestyle="--", linewidth=1.2)
+        for t in (2.0, 5.0):
+            ax.axhline(t, color=INK2, linewidth=1, linestyle=":")
+        ax.set_yscale("log")
+        ax.set_yticks([1, 2, 5, 10, 20])
+        ax.yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+        ax.set_xlabel("Arrival rate (queries/s, Poisson)")
+        ax.set_title(f"{n} A10 GPU" + ("s" if n > 1 else ""), fontsize=9, color=INK, loc="left")
+    axes[0][0].set_ylabel("p95 latency (s)")
+    h, lab = axes[0][0].get_legend_handles_labels()
+    h += [matplotlib.lines.Line2D([], [], color=INK2, linestyle="-"),
+          matplotlib.lines.Line2D([], [], color=INK2, linestyle="--", linewidth=1.2)]
+    axes[0][0].legend(h, lab + ["live (vLLM)", "simulated"], fontsize=6.5, loc="upper left")
+    fig.tight_layout()
+    fig.savefig(FIG / "live_serving.png")
+    fig.savefig(FIG / "live_serving.pdf")
+    plt.close(fig)
+    print("  figure live_serving.png")
+
+
 def router_cost():
     rc = load("router_cost.json")
     if not rc:
@@ -649,6 +706,7 @@ def main():
     host_stream()
     load_test()
     slo_sweep()
+    live_serving()
     router_cost()
 
 
