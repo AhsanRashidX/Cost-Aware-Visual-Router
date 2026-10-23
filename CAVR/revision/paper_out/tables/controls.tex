@@ -2,6 +2,7 @@
 \centering
 \caption{Retrieval-depth and gold-page controls on 1,500 questions (750 per dataset): mean ANLS of the same generator given each context, and mean input tokens. Main paths are the cached workstation runs; the other rows were run on the A10 node.}
 \label{tab:controls}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrr}
 \toprule
 \textbf{Context} & \textbf{ANLS (all)} & \textbf{DocVQA} & \textbf{InfoVQA} & \textbf{Input tokens} \\
@@ -16,4 +17,5 @@ Gold page as image & 0.826 & 0.935 & 0.717 & 1,258 \\
 Gold page, image and text & 0.839 & 0.945 & 0.732 & 1,740 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}

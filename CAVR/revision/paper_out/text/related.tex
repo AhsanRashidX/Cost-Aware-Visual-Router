@@ -9,7 +9,10 @@ how much of the answer lives in layout, tables and graphics. Retrievers that emb
 step: DSE~\cite{dse} encodes a document screenshot into one vector, and ColPali~\cite{colpali} keeps a vector per
 image patch and scores queries by late interaction~\cite{colbert}. VisRAG~\cite{visrag} and M3DocRAG~\cite{m3docrag}
 feed retrieved page images to a vision-language generator, and OHRBench~\cite{ocrhinders} measures how OCR errors
-propagate through text-based RAG. These systems fix one context modality for every query. We keep both and ask, per
+propagate through text-based RAG. Document collection VQA~\cite{doccvqa} poses questions over a whole collection
+rather than one page, and VisDoM~\cite{visdom} and VDocRAG~\cite{vdocrag} retrieve and answer over collections of
+visually rich documents. These systems fix one context modality for every query, or combine modalities to improve
+answers rather than to save compute. We keep both and ask, per
 query, whether the image, the OCR text or both are worth their cost, measured end to end with one generator.
 
 \paragraph{Adaptive retrieval and model routing.} Several methods decide per query how much retrieval to do.
@@ -20,7 +23,10 @@ multi-step retrieval. A parallel line routes queries between language models of 
 FrugalGPT~\cite{frugalgpt} cascades models with a learned answer scorer, Hybrid LLM~\cite{hybridllm} and
 RouteLLM~\cite{routellm} train routers whose threshold sets the cost--quality trade-off at run time,
 AutoMix~\cite{automix} escalates after the small model verifies its own answer, and RouterBench~\cite{routerbench}
-compares such routers on cached outputs. CAVR shares the run-time cost weight and the cached-output evaluation with
+compares such routers on cached outputs; Dekoninck et al.~\cite{unifiedrouting} treat routing and cascading as
+one optimisation problem. UniversalRAG~\cite{universalrag} routes each query to the corpus of the right modality and
+granularity, which selects the source of evidence rather than the context fed to one generator, and does not charge
+a measured cost to the choice. CAVR shares the cost weight set without retraining and the cached-output evaluation with
 this work, but routes between context modalities for one generator, so the cost difference comes from input
 processing rather than model size, and it predicts quality from what retrieval returned before any generation.
 

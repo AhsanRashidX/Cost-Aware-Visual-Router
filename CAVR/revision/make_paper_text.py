@@ -431,6 +431,43 @@ def values():
     for k in ("ssim", "scale"):
         xs = [float(V[f"vl_{k}_{s}_5"]) for s in short.values()]
         V[f"vl_{k}_min"], V[f"vl_{k}_max"] = f"{min(xs):.1f}", f"{max(xs):.1f}"
+    # second review round: gradient-boosting policy, pooled intervals, training-split exposure, compressed index
+    rr = J("review_round2.json")
+    pm, pc, gb = rr["pooled_main_splits"], rr["pooled_confirmation"], rr["gbm_router"]["aggregate"]
+    ci = lambda d, s=1, f="{:+.3f}": f"[{f.format(s * d[0])}, {f.format(s * d[1])}]"
+    V.update({
+        "rr_dv": f"{pm['anls_diff_vs_visual']['mean']:.3f}", "rr_dv_ci": ci(pm["anls_diff_vs_visual"]["ci95_t_over_splits"]),
+        "rr_xv": f"{100 * pm['extra_gpu_vs_visual']['mean']:.0f}",
+        "rr_xv_ci": ci(pm["extra_gpu_vs_visual"]["ci95_t_over_splits"], 100, "{:.0f}"),
+        "rr_dh": f"{pm['anls_diff_vs_hybrid']['mean']:+.3f}", "rr_dh_ci": ci(pm["anls_diff_vs_hybrid"]["ci95_t_over_splits"]),
+        "rr_sh_ci": ci(pm["saving_vs_hybrid"]["ci95_t_over_splits"], 100, "{:.0f}"),
+        "rr_mix_ci": ci(pm["saving_vs_blind_mix"]["ci95_t_over_splits"], 100, "{:.0f}"),
+        "rr_cf_dv": f"{pc['anls_diff_vs_visual']['mean']:+.3f}", "rr_cf_dv_abs": f"{abs(pc['anls_diff_vs_visual']['mean']):.3f}", "rr_cf_dv_ci": ci(pc["anls_diff_vs_visual"]["ci95"]),
+        "rr_cf_dh": f"{pc['anls_diff_vs_hybrid']['mean']:+.3f}", "rr_cf_dh_ci": ci(pc["anls_diff_vs_hybrid"]["ci95"]),
+        "rr_cf_xv": f"{100 * pc['extra_gpu_vs_visual']['mean']:.0f}",
+        "rr_cf_xv_ci": ci(pc["extra_gpu_vs_visual"]["ci95"], 100, "{:.0f}"),
+        "rr_cf_sh": f"{100 * pc['saving_vs_hybrid']['mean']:.0f}", "rr_cf_sh_ci": ci(pc["saving_vs_hybrid"]["ci95"], 100, "{:.0f}"),
+        "rr_cf_pages": f"{pc['pages']:,}",
+        "rr_gbm_anls": f"{gb['gbm_tab_tok']['anls']['mean']:.3f}", "rr_gbm_gpu": f"{gb['gbm_tab_tok']['gpu_s']['mean']:.3f}",
+        "rr_gbm_sh": f"{100 * gb['gbm_tab_tok']['saving_vs_hybrid']['mean']:.0f}",
+        "rr_gbm_d": f"{gb['gbm_tab_tok']['anls_diff_vs_cavr_ce']['mean']:+.3f}",
+        "rr_gbm_d_ci": ci(gb["gbm_tab_tok"]["anls_diff_vs_cavr_ce"]["ci95_t_over_splits"]),
+        "rr_gbm_fb": sum(r["gbm_tab_tok"]["lambda_fallback"] for r in rr["gbm_router"]["per_split"]),
+        "rr_ce_sh": f"{100 * gb['cavr_ce_valsel']['saving_vs_hybrid']['mean']:.0f}",
+        "rr_gap_min": f"{100 * min((r['gbm_tab_tok']['gpu_s'] - r['cavr_ce_valsel']['gpu_s']) / r['always_hybrid']['gpu_s'] for r in rr['gbm_router']['per_split']):.0f}",
+        "rr_gap_max": f"{100 * max((r['gbm_tab_tok']['gpu_s'] - r['cavr_ce_valsel']['gpu_s']) / r['always_hybrid']['gpu_s'] for r in rr['gbm_router']['per_split']):.0f}",
+    })
+    ex = rr["training_split_exposure"]
+    for ds, k in (("docvqa", "d"), ("infovqa", "i")):
+        for p in ("text", "visual", "hybrid"):
+            for g, gk in (("gold_in_context", "in"), ("gold_not_in_context", "out")):
+                e = ex[ds][p][g]
+                V[f"ex_{k}_{p}_{gk}_v"] = f"{e['validation']:.2f}"
+                V[f"ex_{k}_{p}_{gk}_t"] = f"{e['training_split']:.2f}"
+    gib = rr["compressed_index"]["gib_1m_pages"]
+    V.update({"ix1m_res2": f"{gib['residual, 2-bit (ColBERTv2-style: 4-byte centroid id + 2 bits/dim)']:.0f}",
+              "ix1m_res1": f"{gib['residual, 1-bit (4-byte centroid id + 1 bit/dim)']:.0f}",
+              "ix1m_bin": f"{gib['binary (1 bit/dim)']:.0f}"})
     # verified references written by make_bib.py (every key cited in the paper)
     V["n_refs"] = sum(line.startswith("@") for line in open(ROOT / "paper_out" / "references.bib", encoding="utf-8"))
     return V
@@ -470,7 +507,7 @@ The real cost differences are between one context and two (hybrid costs <<hyb_x_
 <<hyb_x_txt>>$\times$ the text path) and the size of the visual index at scale (Section~\ref{sec:res-scale}).
 In <<all_fail>>\% of queries every path fails. For <<fail_nogold>>\% of these, no path had the gold page in its
 context (page recall@1 is <<r1_bm25>> for BM25 and <<r1_col>> for ColPali; Table~\ref{tab:retrieval}). No router
-can recover these queries; they bound every policy.
+can recover these queries from the retrieved contexts; they bound every policy that uses this retrieval.
 
 Two controls on <<ct_n>> of these questions (<<ct_n_ds>> per dataset; Table~\ref{tab:controls}) show where the
 differences between paths come from. First, the visual advantage is a matter of modality, not of how many pages
@@ -506,7 +543,9 @@ quality.
 
 Table~\ref{tab:main_results} compares fixed policies, a keyword rule, simple learned baselines,
 CAVR, the content-aware CAVR-CE and the per-query oracle. All router costs include the router's own measured
-overhead and, where the router reads ColPali scores, ColPali retrieval for every query.
+overhead and, where the router reads ColPali scores, ColPali retrieval for every query. Always-visual is the
+strongest fixed policy per GPU-second, and always-hybrid the one that matches CAVR-CE's answer quality; we compare
+the routers with both.
 
 CAVR on question embeddings alone (ANLS <<cavr_anls_pm>>) shows no significant difference from always-visual:
 on every seed the 95\% bootstrap interval of the ANLS difference includes zero and lies within
@@ -526,16 +565,26 @@ discordant pairs per seed it is underpowered, so this does not show that the two
 Against always-visual, CAVR-CE gains $<<ce_dv_min>>$ to $<<ce_dv_max>>$ ANLS (bootstrap interval above zero on
 <<ce_v_ci_excl>> of <<ce_n>> seeds; McNemar on exact match $p \le <<ce_pv_max>>$ on <<ce_sig_v>> of <<ce_n>> seeds)
 for <<ce_vs_vis_cost>>\% more GPU.
+Pooled over the five splits (a $t$ interval over splits, which is optimistic because the test sets overlap), the
+ANLS difference to always-hybrid is <<rr_dh>> <<rr_dh_ci>> and the saving <<ce_save>>\% <<rr_sh_ci>>; against
+always-visual, CAVR-CE gains <<rr_dv>> <<rr_dv_ci>> ANLS for <<rr_xv>>\% <<rr_xv_ci>> more GPU compute.
 Part of the saving over always-hybrid comes from using the hybrid path less often, whichever queries are chosen.
 A quality-blind random mix of always-visual and always-hybrid at CAVR-CE's GPU cost reaches ANLS <<bm_mix_anls>>
 (in expectation, computed per seed), and at CAVR-CE's ANLS it costs <<bm_mix_gpu>> GPU-s. The saving attributable
-to choosing queries is therefore <<bm_save>>\% (<<bm_save_min>>--<<bm_save_max>>\% across seeds), or $+<<bm_diff>>$
-ANLS at equal cost.
+to choosing queries on these splits is therefore <<bm_save>>\% (<<bm_save_min>>--<<bm_save_max>>\% across seeds;
+pooled interval <<rr_mix_ci>>\%), or $+<<bm_diff>>$ ANLS at equal cost. This saving was not confirmed on the held-out
+set (Section~\ref{sec:res-confirm}), where always-visual dominates the mix.
 
 The per-query oracle reaches ANLS <<oracle_anls_pm>> at only <<oracle_gpu>> GPU-s, so substantial headroom
 remains. It is limited by prediction: CAVR-CE predicts per-path success with a mean AUC of <<ce_auc>>
 (<<gbm_auc>> for gradient boosting on the same tabular features), and a learning curve over 25--100\% of the
-training pages (<<lc_seeds>> seeds) rises only from <<lc_25>> to <<lc_100>>.
+training pages (<<lc_seeds>> seeds) rises only from <<lc_25>> to <<lc_100>>. Run through the same decision rule,
+gradient boosting on all of CAVR-CE's tabular features, including the ColPali token statistics, reaches ANLS <<rr_gbm_anls>> at <<rr_gbm_gpu>> GPU-s: the same ANLS as CAVR-CE
+(difference <<rr_gbm_d>> <<rr_gbm_d_ci>>) but a <<rr_gbm_sh>>\% rather than <<rr_ce_sh>>\% saving over always-hybrid
+(no $\lambda$ reached the validation target on <<rr_gbm_fb>> of 5 splits, where the $\lambda$ with the highest
+validation ANLS was used). Most of the gain therefore comes from the content features both predictors share; the
+cross-encoder adds the remaining <<rr_gap_min>>--<<rr_gap_max>> points of saving across splits, measured at a
+fallback operating point for gradient boosting.
 
 \input{tables/main_results}
 \input{tables/router_ce_tests}
@@ -561,21 +610,40 @@ so always-visual is the best fixed policy: CAVR-CE exceeds it by only <<cf_dv>> 
 hybrid paths is then dominated by always-visual, so the query-selection saving of Section~\ref{sec:res-policies} is
 not confirmed on this set. GPU-seconds here are measured on the <<a10_gpu>>, about <<ct_slow>>$\times$ slower per
 query than the workstation, so they are comparable within the set but not with Table~\ref{tab:main_results}.
+Averaged over the five frozen routers, with one page-cluster bootstrap over the <<rr_cf_pages>> pages, CAVR-CE is
+<<rr_cf_dh>> <<rr_cf_dh_ci>> ANLS above always-hybrid at <<rr_cf_sh>>\% <<rr_cf_sh_ci>> less GPU compute, and
+<<rr_cf_dv>> <<rr_cf_dv_ci>> above always-visual at <<rr_cf_xv>>\% <<rr_cf_xv_ci>> more.
+
+These questions come from the datasets' training splits. ColPali's training data include the DocVQA and
+InfographicVQA training sets~\cite{colpali}; we could not establish from public documentation whether the generator
+saw them. Two diagnostics point to such exposure. On DocVQA, when the gold page was not in the context, training-split questions
+still scored higher than validation questions on every path (visual <<ex_d_visual_out_t>> against
+<<ex_d_visual_out_v>>, hybrid <<ex_d_hybrid_out_t>> against <<ex_d_hybrid_out_v>>, text <<ex_d_text_out_t>> against
+<<ex_d_text_out_v>>, reweighted to the validation mix of question types). Memorised answers would produce this, and
+so would answers repeated on a retrieved sibling page of the same document. On InfographicVQA, with the gold page in
+context, the visual path scored <<ex_i_visual_in_t>> on training-split questions against <<ex_i_visual_in_v>> on
+validation questions (its training split carries no question types to reweight by). The confirmation set therefore
+tests the frozen routers on new questions, but not on unseen data: the higher accuracy of the visual path there, and
+with it the reversal of the visual and hybrid paths, may partly reflect exposure. We take from it only the
+qualitative findings: the saving over always-hybrid persists, although its size may also be affected, and a gain
+over always-visual is not established.
 
 \input{tables/confirmation}
 
 \subsection{Runtime budget control}
 \label{sec:res-lambda}
 
-The decision rule $\arg\max_p \hat{q}_p - \lambda c_p$ takes the cost weight $\lambda$ at serving time, so one
-trained router covers a range of budgets without retraining. Sweeping $\lambda$ from 1 to 0 moves CAVR-CE from
+The decision rule $\arg\max_p \hat{q}_p - \lambda c_p$ takes the cost weight $\lambda$ as an input, so one trained
+router covers a range of budgets without retraining; $\lambda$ is a per-deployment setting, chosen from the
+operating points below for a target quality or capacity. Its cost estimates are specific to the hardware and serving
+stack, so a new deployment should re-measure the per-path costs before choosing $\lambda$. Sweeping $\lambda$ from 1 to 0 moves CAVR-CE from
 ANLS <<sw_lo_anls>> at <<sw_lo_gpu>> GPU-s to <<sw_hi_anls>> at <<sw_hi_gpu>> GPU-s (mean over seeds;
 Figure~\ref{fig:pareto} shows seed 1). Table~\ref{tab:load_test_ops} gives the serving capacity of each operating
 point on seed 1.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{figures/pareto.png}
+  \includegraphics[width=\columnwidth]{figures/pareto.pdf}
   \caption{Cost--quality frontier of each router as $\lambda$ is swept (seed 1), with fixed policies and the
   per-query oracle. Costs are measured GPU-seconds per query including router overhead.}
   \label{fig:pareto}
@@ -602,7 +670,7 @@ concurrent workers).
 \input{tables/escalation}
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{figures/escalation.png}
+  \includegraphics[width=\columnwidth]{figures/escalation.pdf}
   \caption{Escalation on CAVR-CE: answer quality against measured GPU cost as $\tau$ is swept (seed 1).}
   \label{fig:escalation}
 \end{figure}
@@ -658,14 +726,16 @@ hybrid path, while answers average at most <<vl_out_tok>> tokens) runs alongside
 and slows them down, whereas the simulator treats a batch as uninterrupted once it starts. Adding a second GPU raised
 the measured capacity at 5\,s by <<vl_scale_min>>--<<vl_scale_max>>$\times$, more than the
 <<vl_ssim_min>>--<<vl_ssim_max>>$\times$ predicted, which is consistent with the larger pooling gain of a shared
-dispatcher when service times vary more than the model assumes. The GPU counts of Table~\ref{tab:load_test} are
-therefore probably underestimates for live serving, by up to about a factor of two on this hardware, whereas the
-comparison between policies held and was, if anything, conservative.
+dispatcher when service times vary more than the model assumes. The simulated GPU counts of Table~\ref{tab:load_test} are therefore reported as simulated: on one and two A10
+GPUs the simulator overestimated capacity at p95 $\le$ 5\,s by <<vl_over_min>>--<<vl_over_max>>$\times$, the
+error was smaller with two GPUs than with one, and how it changes with pool size beyond two GPUs is not known. At
+2\,s the error was larger: on one A10, CAVR-CE and always-hybrid missed the target even at the lowest tested rate. The order of the policies
+and CAVR-CE's advantage over always-hybrid held in the live test.
 
 \input{tables/live_serving}
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.75\textwidth]{figures/live_serving.png}
+  \includegraphics[width=0.75\textwidth]{figures/live_serving.pdf}
   \caption{Live serving with vLLM on one and two A10 GPUs: measured p95 latency against Poisson arrival rate (solid)
   and the simulator's prediction for the same arrivals from the A10's service times and batching curve (dashed).
   Dotted lines mark the 2\,s and 5\,s targets.}
@@ -793,13 +863,13 @@ batch. CAVR-CE takes <<ce_ms>>\,ms and <<ce_j>>\,J per query at batch 1, and its
 \input{tables/router_throughput}
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{figures/gpus_vs_quality.png}
+  \includegraphics[width=\columnwidth]{figures/gpus_vs_quality.pdf}
   \caption{GPUs needed to serve 100 queries/s at p95 $\le$ 2\,s against answer quality (seed 1).}
   \label{fig:gpus}
 \end{figure}
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{figures/index_scaling.png}
+  \includegraphics[width=\columnwidth]{figures/index_scaling.pdf}
   \caption{ColPali MaxSim query latency against index size for a GPU-resident, host-streamed and pooled index.}
   \label{fig:index}
 \end{figure}
@@ -829,13 +899,22 @@ All measurements except index sharding and the host-memory index use one consume
 below the point where the driver spills to system RAM. The cached run generates with HF Transformers. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 
 The workstation load test is a simulation driven by measured service times. Checked against live vLLM serving on one
-and two A10 GPUs, it overestimated capacity by up to <<vl_over_max>>$\times$, so its GPU counts are best read as lower
-bounds; the live test confirmed the comparison between policies, which is the main result. That test serves
+and two A10 GPUs, it overestimated capacity at p95 $\le$ 5\,s by <<vl_over_min>>--<<vl_over_max>>$\times$, and
+by more at 2\,s, so its GPU counts are simulated estimates whose error beyond two GPUs is unknown; the live test kept
+the order of the policies at 5\,s. Each live rate is a single arrival trace, so the live capacities carry no
+interval. That test serves
 generation only, with retrieval and routing run beforehand, on at most two GPUs under WSL, with one model and
 greedy decoding. Escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. The simulator assumes an ideal
 global queue and unlimited CPU, charges a batch the mean generation time of its members (the longest-member bound is reported), and keeps the
-<<n_pages>>-page evaluation index on every GPU, so the retrieval tier for a large corpus is projected rather than simulated. Costs
+<<n_pages>>-page evaluation index on every GPU, so the retrieval tier for a large corpus is projected rather than simulated. Retrieval
+searches each dataset's whole page pool with questions written for a single page, so page recall@1 is only
+<<r1_col>> for ColPali (Section~\ref{sec:res-paths}); how many misses come from questions that do not identify their
+page was not annotated. The visual-token cap that keeps memory
+within the GPU may lower the visual path on InfographicVQA's large images; a higher budget was not tested, so the
+comparison of the visual and hybrid paths on InfographicVQA holds for this cap. The
+confirmation set comes from training splits the generator and ColPali may have seen (Section~\ref{sec:res-confirm}).
+Costs
 are measured without prefix or encoder caching, which would favour paths whose page image repeats across
 questions. Indexes of 10k--<<hs_max_k>> pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that
@@ -894,8 +973,9 @@ withdrawn; we list them first so that nothing is hidden behind the new results.
    GPU compute than always-hybrid, at a mean ANLS cost of <<ce_dh_mean>>.
 6. **Held-out confirmation and controls.** The frozen routers were applied to <<cf_n>> new questions from the training
    splits (Section "Held-out confirmation"): the saving over always-hybrid holds (<<cf_save>>%, at <<cf_dh>> higher
-   ANLS), but always-visual comes within <<cf_dv>> ANLS of the router at <<cf_vis_less>>% less GPU, and the paper says
-   so. Retrieval-depth and gold-page controls (Table controls) separate input modality from retrieval depth and errors.
+   ANLS), but the gain over always-visual is not significant (<<rr_cf_dv>> ANLS, interval <<rr_cf_dv_ci>>, at
+   <<rr_cf_xv>>% more GPU). These questions come from the training splits, which the generator may have seen, and a
+   diagnostic in the paper points to such exposure; the paper draws only exposure-robust conclusions from this set. Retrieval-depth and gold-page controls (Table controls) separate input modality from retrieval depth and errors.
 7. **Supercomputing case.** New experiments on serving under load, GPUs needed at a latency target, live serving
    with vLLM on two A10 GPUs as a check of the simulator, visual-index scaling to 100k pages, router throughput and energy.
 8. **Related work and verified references.** A new related-work section; every reference was checked against its
@@ -966,7 +1046,7 @@ escalation" (Table escalation, Figure escalation).
 
 **R1.2 — No runtime budget control without retraining.**
 The decision rule is now $\arg\max_p \hat{q}_p - \lambda c_p$, where the router predicts per-path quality and the
-cost weight λ is set at serving time. One trained router covers a range of budgets: sweeping λ from 1 to 0 moves
+cost weight λ is set per deployment without retraining. One trained router covers a range of budgets: sweeping λ from 1 to 0 moves
 CAVR-CE from ANLS <<sw_lo_anls>> at <<sw_lo_gpu>> GPU-s to <<sw_hi_anls>> at <<sw_hi_gpu>> GPU-s (mean over seeds).
 We also added a load-adaptive experiment. On a fixed pool of <<ad_pool>> GPUs under bursts alternating between <<ad_base>> and <<ad_burst>> queries/s, a controller that raises λ when the oldest queued request has waited too long serves <<ad_adp_slo>>% of requests within 2 s, against <<ad_fix_slo>>% at the fixed validation-chosen λ, at almost the same ANLS (<<ad_adp_anls>> vs <<ad_fix_anls>>); a fixed λ = 0.2 reaches <<ad_02_slo>>% at ANLS <<ad_02_anls>>. The gain is small because in our simulator overload appears mainly as larger batches rather than long queues, so a better overload signal is left as future work, and the paper says so.
 *Changes:* Method (decision rule); Results, subsection "Runtime budget control" (Figure pareto, Table
@@ -1056,11 +1136,13 @@ With λ chosen on validation data, CAVR-CE uses <<cavr_ce_valsel_gpu>> instead o
 <<ce_lower_n>> of <<ce_n>> seeds, with the 95% interval excluding zero on <<ce_ci_excl>> of <<ce_n>> splits. On exact match the
 difference is not significant on <<ce_nonsig_h>> of <<ce_n>> seeds. CAVR-CE beats always-visual by
 <<ce_dv_min>> to <<ce_dv_max>> ANLS for <<ce_vs_vis_cost>>% more GPU. At 100 queries/s and p95 ≤ 2 s it needs
-<<g100_cavr_ce_valsel>> GPUs instead of <<g100_always_hybrid>> (simulated; live serving on two A10 GPUs confirmed the saving and showed the simulated GPU counts to be optimistic). The per-query oracle (ANLS <<oracle_anls>>
+<<g100_cavr_ce_valsel>> GPUs instead of <<g100_always_hybrid>>, and always-visual <<g100_always_visual>> (simulated; live
+serving on one and two A10 GPUs kept this order at p95 ≤ 5 s but reached <<vl_over_min>>–<<vl_over_max>>× less capacity than simulated there). The per-query oracle (ANLS <<oracle_anls>>
 at <<oracle_gpu>> GPU-s) shows that predicting per-query success remains the open problem, and the paper says so.
 On <<cf_n>> held-out questions, the frozen router keeps a <<cf_save>>% saving over always-hybrid, but there
-always-visual comes within <<cf_dv>> ANLS of it at <<cf_vis_less>>% less GPU; the paper reports this as a limit on
-what routing gains over the best single path.
+its gain over always-visual is not significant (<<rr_cf_dv>> ANLS, interval <<rr_cf_dv_ci>>); the paper reports this
+as a limit on what routing gains over the best single path, and states that these training-split questions may
+have been seen by the generator.
 
 Sincerely,
 [AUTHOR ACTION: authors]

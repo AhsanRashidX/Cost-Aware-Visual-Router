@@ -1,7 +1,8 @@
 \begin{table}[t]
 \centering
-\caption{CAVR operating points ($\lambda$ is set at run time): test ANLS, capacity of one GPU and GPUs needed at p95 $\leq$ 2\,s (seed 1).}
+\caption{CAVR operating points ($\lambda$ is set per deployment): test ANLS, capacity of one GPU in queries per second (QPS) and GPUs needed at p95 $\leq$ 2\,s (seed 1).}
 \label{tab:load_test_ops}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrrr}
 \toprule
 \textbf{Policy} & \textbf{ANLS} & \textbf{QPS/GPU} & \textbf{GPUs@10} & \textbf{GPUs@25} & \textbf{GPUs@50} & \textbf{GPUs@100} \\
@@ -23,4 +24,5 @@ CAVR-CE, $\lambda$=0.1 & 0.565 & 0.5 & 9 & 19 & 38 & 71 \\
 CAVR-CE, $\lambda$=0.2 & 0.554 & 0.75 & 8 & 18 & 34 & 66 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}

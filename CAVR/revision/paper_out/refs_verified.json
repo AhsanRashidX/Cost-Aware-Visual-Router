@@ -1563,5 +1563,171 @@
   "year": 2021,
   "url": "https://github.com/mindee/doctr",
   "source": "GitHub repository (checked)"
+ },
+ "universalrag": {
+  "kind": "doi",
+  "doi": "10.18653/v1/2026.acl-long.177",
+  "title": "UniversalRAG: Retrieval-Augmented Generation over Corpora of Diverse Modalities and Granularities",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+  "year": 2026,
+  "volume": null,
+  "issue": null,
+  "pages": "3843-3871",
+  "article_number": null,
+  "publisher": "Association for Computational Linguistics",
+  "authors": [
+   [
+    "Woongyeong",
+    "Yeo"
+   ],
+   [
+    "Kangsan",
+    "Kim"
+   ],
+   [
+    "Soyeong",
+    "Jeong"
+   ],
+   [
+    "Jinheon",
+    "Baek"
+   ],
+   [
+    "Sung Ju",
+    "Hwang"
+   ]
+  ],
+  "arxiv": "2504.20734",
+  "source": "Crossref record by DOI"
+ },
+ "visdom": {
+  "kind": "doi",
+  "doi": "10.18653/v1/2025.naacl-long.310",
+  "title": "VisDoM: Multi-Document QA with Visually Rich Elements Using Multimodal Retrieval-Augmented Generation",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)",
+  "year": 2025,
+  "volume": null,
+  "issue": null,
+  "pages": "6088-6109",
+  "article_number": null,
+  "publisher": "Association for Computational Linguistics",
+  "authors": [
+   [
+    "Manan",
+    "Suri"
+   ],
+   [
+    "Puneet",
+    "Mathur"
+   ],
+   [
+    "Franck",
+    "Dernoncourt"
+   ],
+   [
+    "Kanika",
+    "Goswami"
+   ],
+   [
+    "Ryan A.",
+    "Rossi"
+   ],
+   [
+    "Dinesh",
+    "Manocha"
+   ]
+  ],
+  "arxiv": "2412.10704",
+  "source": "Crossref record by DOI"
+ },
+ "doccvqa": {
+  "kind": "doi",
+  "doi": "10.1007/978-3-030-86331-9_50",
+  "title": "Document Collection Visual Question Answering",
+  "title_match": true,
+  "type": "proceedings-article",
+  "container": "Document Analysis and Recognition – ICDAR 2021",
+  "year": 2021,
+  "volume": null,
+  "issue": null,
+  "pages": "778-792",
+  "article_number": null,
+  "publisher": "Springer International Publishing",
+  "authors": [
+   [
+    "Rubèn",
+    "Tito"
+   ],
+   [
+    "Dimosthenis",
+    "Karatzas"
+   ],
+   [
+    "Ernest",
+    "Valveny"
+   ]
+  ],
+  "arxiv": "2104.14336",
+  "source": "Crossref record by DOI"
+ },
+ "vdocrag": {
+  "kind": "venue",
+  "entrytype": "inproceedings",
+  "title": "VDocRAG: Retrieval-Augmented Generation over Visually-Rich Documents",
+  "booktitle": "IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)",
+  "year": 2025,
+  "authors": [
+   [
+    "Ryota",
+    "Tanaka"
+   ],
+   [
+    "Taichi",
+    "Iki"
+   ],
+   [
+    "Taku",
+    "Hasegawa"
+   ],
+   [
+    "Kyosuke",
+    "Nishida"
+   ],
+   [
+    "Kuniko",
+    "Saito"
+   ],
+   [
+    "Jun",
+    "Suzuki"
+   ]
+  ],
+  "arxiv": "2504.09795",
+  "source": "arXiv comment: Accepted by CVPR 2025; project page: https://vdocrag.github.io"
+ },
+ "unifiedrouting": {
+  "kind": "arxiv",
+  "title": "A Unified Approach to Routing and Cascading for LLMs",
+  "year": 2024,
+  "authors": [
+   [
+    "Jasper",
+    "Dekoninck"
+   ],
+   [
+    "Maximilian",
+    "Baader"
+   ],
+   [
+    "Martin",
+    "Vechev"
+   ]
+  ],
+  "arxiv": "2410.10347",
+  "source": "arXiv record (no venue stated in the record)"
  }
 }

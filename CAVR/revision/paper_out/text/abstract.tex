@@ -2,20 +2,18 @@
 \begin{abstract}
 Multimodal retrieval-augmented generation can answer a document question from optical character
 recognition (OCR) text, a retrieved page image, or both, at different GPU cost. Serving it at scale is
-a GPU provisioning problem: generation compute grows with the request rate, and late-interaction visual indexes grow
-with the corpus, to about 246\,GiB at a million pages. We present the Cost-Aware Visual Router (CAVR), which
-chooses the answer path per query with a run-time cost weight. On one RTX 4090, we run every path on
-8,150 DocVQA and InfographicVQA questions with one shared generator, measuring average normalised Levenshtein
-similarity (ANLS), GPU-seconds, energy and latency. Its content-aware variant CAVR-CE, a cross-encoder (CE) over
-the retrieved passages, uses
-29\% less GPU compute than always using both contexts, at 0.008 lower mean ANLS, and 20\%
-less than a quality-blind visual/hybrid mix at equal ANLS. Simulated from measured service times, it cuts the GPUs
-needed for 100 queries/s at a p95 latency of 2\,s from 106 to 72 (page image
-alone: 64, at lower ANLS). Live vLLM serving on two A10 GPUs confirmed the saving, though
-simulated capacity was up to 2.0$	imes$ too high. On 1,499
-held-out questions, the frozen router saved 35\% against always using both contexts, but the page image
-alone came within 0.005 ANLS at 16\% less compute. Keyword-derived route labels agree with
-measured outcomes no better than chance. On two further nodes, index sharding
-scales near-linearly, and a 1M-page index in host memory is batch-searched at near-resident
-GPU cost.
+a GPU provisioning problem: generation compute grows with the request rate, and an uncompressed late-interaction
+visual index grows with the corpus, to 246\,GiB at a million pages. We present the Cost-Aware Visual
+Router (CAVR), which chooses the answer path per query under a cost weight set per deployment. On one
+RTX 4090, we run every path on 8,150 DocVQA and InfographicVQA questions with one shared generator, measuring
+average normalised Levenshtein similarity (ANLS), GPU-seconds, energy and latency. Against the strongest fixed
+policy, the page image alone, the content-aware variant CAVR-CE, a cross-encoder (CE) over the retrieved passages,
+gains 0.016 ANLS for 15\% more GPU compute; against always using both contexts, it saves 29\% at
+0.008 lower ANLS. In simulation, 100 queries/s at a p95 latency of
+2\,s needs 72 GPUs with CAVR-CE, 106 with both contexts and
+64 with the page image alone; served live with vLLM on one and two A10 GPUs, the policies kept
+this order at a p95 of 5\,s but reached 1.4--2.0$\times$ less capacity than simulated. On
+1,499 held-out questions from the datasets' training splits, which ColPali and possibly the generator saw in
+training, CAVR-CE kept a 35\% saving over both contexts but was 0.005 ANLS above the page
+image alone (not significant). Our earlier keyword-rule labels agree with measured outcomes no better than chance.
 \end{abstract}

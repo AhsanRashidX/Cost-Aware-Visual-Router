@@ -18,6 +18,7 @@ Cited but unverified (must be resolved before submission): none
 | `colpali` | International Conference on Learning Representations (ICLR) | 2025 | arXiv comment |
 | `diskann` | Advances in Neural Information Processing Systems (NeurIPS) | 2019 | OpenAlex primary location |
 | `distserve` | USENIX Symposium on Operating Systems Design and Implementation (OSDI) | 2024 | arXiv comment |
+| `doccvqa` | Document Analysis and Recognition – ICDAR 2021 | 2021 | Crossref record by DOI (doi:10.1007/978-3-030-86331-9_50) |
 | `doctr` | https://github.com/mindee/doctr | 2021 | GitHub repository (checked) |
 | `docvqa` | 2021 IEEE Winter Conference on Applications of Computer Vision (WACV) | 2021 | Crossref record by DOI (doi:10.1109/wacv48630.2021.00225) |
 | `dse` | Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing | 2024 | Crossref record by DOI (doi:10.18653/v1/2024.emnlp-main.373) |
@@ -43,5 +44,9 @@ Cited but unverified (must be resolved before submission): none
 | `sglang` | Advances in Neural Information Processing Systems 37 | 2024 | Crossref record by DOI (doi:10.52202/079017-2000) |
 | `splitwise` | 2024 ACM/IEEE 51st Annual International Symposium on Computer Architecture (ISCA) | 2024 | Crossref record by DOI (doi:10.1109/isca59077.2024.00019) |
 | `tokenpooling` | arXiv:2409.14683 | 2024 | arXiv record |
+| `unifiedrouting` | arXiv:2410.10347 | 2024 | arXiv record (no venue stated in the record) |
+| `universalrag` | Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) | 2026 | Crossref record by DOI (doi:10.18653/v1/2026.acl-long.177) |
+| `vdocrag` | IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) | 2025 | arXiv comment: Accepted by CVPR 2025; project page: https://vdocrag.github.io |
+| `visdom` | Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) | 2025 | Crossref record by DOI (doi:10.18653/v1/2025.naacl-long.310) |
 | `visrag` | International Conference on Learning Representations (ICLR) | 2025 | OpenReview ICLR.cc/2025/Conference (zG459X3Xge) |
 | `vllm` | Proceedings of the 29th Symposium on Operating Systems Principles | 2023 | Crossref record by DOI (doi:10.1145/3600006.3613165) |

@@ -1,7 +1,8 @@
 \begin{table}[t]
 \centering
-\caption{Escalation to hybrid when the calibrated probability of a good answer is $<\tau = 0.5$ (mean over 5 seeds). Probabilities are calibrated on the validation split by logistic regression; ECE is measured on test (10 bins). Costs include router overhead; serial and speculative latencies are computed from measured per-stage times (speculative assumes two concurrent workers).}
+\caption{Escalation to hybrid when the calibrated probability of a good answer is $<\tau = 0.5$ (mean over 5 seeds). Probabilities are calibrated on the validation split by logistic regression; Expected calibration error (ECE) is measured on test (10 bins). Costs include router overhead; serial and speculative latencies are computed from measured per-stage times (speculative assumes two concurrent workers).}
 \label{tab:escalation}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lllrrrrr}
 \toprule
 \textbf{Base router} & \textbf{Signal} & \textbf{Mode} & \textbf{ANLS} & \textbf{GPU-s} & \textbf{p95 (s)} & \textbf{Escalated \%} & \textbf{ECE} \\
@@ -37,4 +38,5 @@ CAVR-CE & all & serial & 0.564 & 1.001 & 1.98 & 29.6 & 0.029 \\
 CAVR-CE & all & speculative & 0.564 & 1.460 & 1.42 & 29.6 & 0.029 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}

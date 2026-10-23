@@ -26,7 +26,7 @@ The real cost differences are between one context and two (hybrid costs 1.6$\tim
 2.3$\times$ the text path) and the size of the visual index at scale (Section~\ref{sec:res-scale}).
 In 35\% of queries every path fails. For 76\% of these, no path had the gold page in its
 context (page recall@1 is 0.44 for BM25 and 0.57 for ColPali; Table~\ref{tab:retrieval}). No router
-can recover these queries; they bound every policy.
+can recover these queries from the retrieved contexts; they bound every policy that uses this retrieval.
 
 Two controls on 1,500 of these questions (750 per dataset; Table~\ref{tab:controls}) show where the
 differences between paths come from. First, the visual advantage is a matter of modality, not of how many pages
@@ -62,7 +62,9 @@ quality.
 
 Table~\ref{tab:main_results} compares fixed policies, a keyword rule, simple learned baselines,
 CAVR, the content-aware CAVR-CE and the per-query oracle. All router costs include the router's own measured
-overhead and, where the router reads ColPali scores, ColPali retrieval for every query.
+overhead and, where the router reads ColPali scores, ColPali retrieval for every query. Always-visual is the
+strongest fixed policy per GPU-second, and always-hybrid the one that matches CAVR-CE's answer quality; we compare
+the routers with both.
 
 CAVR on question embeddings alone (ANLS 0.542 $\pm$ 0.014) shows no significant difference from always-visual:
 on every seed the 95\% bootstrap interval of the ANLS difference includes zero and lies within
@@ -82,16 +84,26 @@ discordant pairs per seed it is underpowered, so this does not show that the two
 Against always-visual, CAVR-CE gains $+0.012$ to $+0.018$ ANLS (bootstrap interval above zero on
 5 of 5 seeds; McNemar on exact match $p \le 0.029$ on 5 of 5 seeds)
 for 15\% more GPU.
+Pooled over the five splits (a $t$ interval over splits, which is optimistic because the test sets overlap), the
+ANLS difference to always-hybrid is -0.008 [-0.017, +0.000] and the saving 29\% [24, 35]; against
+always-visual, CAVR-CE gains 0.016 [+0.013, +0.018] ANLS for 15\% [6, 25] more GPU compute.
 Part of the saving over always-hybrid comes from using the hybrid path less often, whichever queries are chosen.
 A quality-blind random mix of always-visual and always-hybrid at CAVR-CE's GPU cost reaches ANLS 0.547
 (in expectation, computed per seed), and at CAVR-CE's ANLS it costs 0.896 GPU-s. The saving attributable
-to choosing queries is therefore 20\% (13--26\% across seeds), or $+0.010$
-ANLS at equal cost.
+to choosing queries on these splits is therefore 20\% (13--26\% across seeds;
+pooled interval [13, 27]\%), or $+0.010$ ANLS at equal cost. This saving was not confirmed on the held-out
+set (Section~\ref{sec:res-confirm}), where always-visual dominates the mix.
 
 The per-query oracle reaches ANLS 0.630 $\pm$ 0.016 at only 0.486 GPU-s, so substantial headroom
 remains. It is limited by prediction: CAVR-CE predicts per-path success with a mean AUC of 0.842
 (0.839 for gradient boosting on the same tabular features), and a learning curve over 25--100\% of the
-training pages (2 seeds) rises only from 0.826 to 0.841.
+training pages (2 seeds) rises only from 0.826 to 0.841. Run through the same decision rule,
+gradient boosting on all of CAVR-CE's tabular features, including the ColPali token statistics, reaches ANLS 0.558 at 0.778 GPU-s: the same ANLS as CAVR-CE
+(difference +0.000 [-0.006, +0.007]) but a 23\% rather than 29\% saving over always-hybrid
+(no $\lambda$ reached the validation target on 5 of 5 splits, where the $\lambda$ with the highest
+validation ANLS was used). Most of the gain therefore comes from the content features both predictors share; the
+cross-encoder adds the remaining 2--10 points of saving across splits, measured at a
+fallback operating point for gradient boosting.
 
 \input{tables/main_results}
 \input{tables/router_ce_tests}
@@ -117,21 +129,40 @@ so always-visual is the best fixed policy: CAVR-CE exceeds it by only 0.005 ANLS
 hybrid paths is then dominated by always-visual, so the query-selection saving of Section~\ref{sec:res-policies} is
 not confirmed on this set. GPU-seconds here are measured on the NVIDIA A10, about 2.0$\times$ slower per
 query than the workstation, so they are comparable within the set but not with Table~\ref{tab:main_results}.
+Averaged over the five frozen routers, with one page-cluster bootstrap over the 1,097 pages, CAVR-CE is
++0.014 [+0.005, +0.024] ANLS above always-hybrid at 35\% [34, 36] less GPU compute, and
++0.005 [-0.004, +0.014] above always-visual at 19\% [18, 21] more.
+
+These questions come from the datasets' training splits. ColPali's training data include the DocVQA and
+InfographicVQA training sets~\cite{colpali}; we could not establish from public documentation whether the generator
+saw them. Two diagnostics point to such exposure. On DocVQA, when the gold page was not in the context, training-split questions
+still scored higher than validation questions on every path (visual 0.26 against
+0.11, hybrid 0.20 against 0.09, text 0.10 against
+0.06, reweighted to the validation mix of question types). Memorised answers would produce this, and
+so would answers repeated on a retrieved sibling page of the same document. On InfographicVQA, with the gold page in
+context, the visual path scored 0.93 on training-split questions against 0.75 on
+validation questions (its training split carries no question types to reweight by). The confirmation set therefore
+tests the frozen routers on new questions, but not on unseen data: the higher accuracy of the visual path there, and
+with it the reversal of the visual and hybrid paths, may partly reflect exposure. We take from it only the
+qualitative findings: the saving over always-hybrid persists, although its size may also be affected, and a gain
+over always-visual is not established.
 
 \input{tables/confirmation}
 
 \subsection{Runtime budget control}
 \label{sec:res-lambda}
 
-The decision rule $\arg\max_p \hat{q}_p - \lambda c_p$ takes the cost weight $\lambda$ at serving time, so one
-trained router covers a range of budgets without retraining. Sweeping $\lambda$ from 1 to 0 moves CAVR-CE from
+The decision rule $\arg\max_p \hat{q}_p - \lambda c_p$ takes the cost weight $\lambda$ as an input, so one trained
+router covers a range of budgets without retraining; $\lambda$ is a per-deployment setting, chosen from the
+operating points below for a target quality or capacity. Its cost estimates are specific to the hardware and serving
+stack, so a new deployment should re-measure the per-path costs before choosing $\lambda$. Sweeping $\lambda$ from 1 to 0 moves CAVR-CE from
 ANLS 0.502 at 0.56 GPU-s to 0.564 at 0.84 GPU-s (mean over seeds;
 Figure~\ref{fig:pareto} shows seed 1). Table~\ref{tab:load_test_ops} gives the serving capacity of each operating
 point on seed 1.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{figures/pareto.png}
+  \includegraphics[width=\columnwidth]{figures/pareto.pdf}
   \caption{Cost--quality frontier of each router as $\lambda$ is swept (seed 1), with fixed policies and the
   per-query oracle. Costs are measured GPU-seconds per query including router overhead.}
   \label{fig:pareto}
@@ -158,7 +189,7 @@ concurrent workers).
 \input{tables/escalation}
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{figures/escalation.png}
+  \includegraphics[width=\columnwidth]{figures/escalation.pdf}
   \caption{Escalation on CAVR-CE: answer quality against measured GPU cost as $\tau$ is swept (seed 1).}
   \label{fig:escalation}
 \end{figure}
@@ -214,14 +245,16 @@ hybrid path, while answers average at most 6 tokens) runs alongside the requests
 and slows them down, whereas the simulator treats a batch as uninterrupted once it starts. Adding a second GPU raised
 the measured capacity at 5\,s by 2.7--2.8$\times$, more than the
 2.1--2.4$\times$ predicted, which is consistent with the larger pooling gain of a shared
-dispatcher when service times vary more than the model assumes. The GPU counts of Table~\ref{tab:load_test} are
-therefore probably underestimates for live serving, by up to about a factor of two on this hardware, whereas the
-comparison between policies held and was, if anything, conservative.
+dispatcher when service times vary more than the model assumes. The simulated GPU counts of Table~\ref{tab:load_test} are therefore reported as simulated: on one and two A10
+GPUs the simulator overestimated capacity at p95 $\le$ 5\,s by 1.4--2.0$\times$, the
+error was smaller with two GPUs than with one, and how it changes with pool size beyond two GPUs is not known. At
+2\,s the error was larger: on one A10, CAVR-CE and always-hybrid missed the target even at the lowest tested rate. The order of the policies
+and CAVR-CE's advantage over always-hybrid held in the live test.
 
 \input{tables/live_serving}
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.75\textwidth]{figures/live_serving.png}
+  \includegraphics[width=0.75\textwidth]{figures/live_serving.pdf}
   \caption{Live serving with vLLM on one and two A10 GPUs: measured p95 latency against Poisson arrival rate (solid)
   and the simulator's prediction for the same arrivals from the A10's service times and batching curve (dashed).
   Dotted lines mark the 2\,s and 5\,s targets.}
@@ -349,13 +382,13 @@ batch. CAVR-CE takes 24.8\,ms and 1.74\,J per query at batch 1, and its cross-en
 \input{tables/router_throughput}
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{figures/gpus_vs_quality.png}
+  \includegraphics[width=\columnwidth]{figures/gpus_vs_quality.pdf}
   \caption{GPUs needed to serve 100 queries/s at p95 $\le$ 2\,s against answer quality (seed 1).}
   \label{fig:gpus}
 \end{figure}
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{figures/index_scaling.png}
+  \includegraphics[width=\columnwidth]{figures/index_scaling.pdf}
   \caption{ColPali MaxSim query latency against index size for a GPU-resident, host-streamed and pooled index.}
   \label{fig:index}
 \end{figure}
@@ -385,13 +418,22 @@ All measurements except index sharding and the host-memory index use one consume
 below the point where the driver spills to system RAM. The cached run generates with HF Transformers. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 
 The workstation load test is a simulation driven by measured service times. Checked against live vLLM serving on one
-and two A10 GPUs, it overestimated capacity by up to 2.0$\times$, so its GPU counts are best read as lower
-bounds; the live test confirmed the comparison between policies, which is the main result. That test serves
+and two A10 GPUs, it overestimated capacity at p95 $\le$ 5\,s by 1.4--2.0$\times$, and
+by more at 2\,s, so its GPU counts are simulated estimates whose error beyond two GPUs is unknown; the live test kept
+the order of the policies at 5\,s. Each live rate is a single arrival trace, so the live capacities carry no
+interval. That test serves
 generation only, with retrieval and routing run beforehand, on at most two GPUs under WSL, with one model and
 greedy decoding. Escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. The simulator assumes an ideal
 global queue and unlimited CPU, charges a batch the mean generation time of its members (the longest-member bound is reported), and keeps the
-1,786-page evaluation index on every GPU, so the retrieval tier for a large corpus is projected rather than simulated. Costs
+1,786-page evaluation index on every GPU, so the retrieval tier for a large corpus is projected rather than simulated. Retrieval
+searches each dataset's whole page pool with questions written for a single page, so page recall@1 is only
+0.57 for ColPali (Section~\ref{sec:res-paths}); how many misses come from questions that do not identify their
+page was not annotated. The visual-token cap that keeps memory
+within the GPU may lower the visual path on InfographicVQA's large images; a higher budget was not tested, so the
+comparison of the visual and hybrid paths on InfographicVQA holds for this cap. The
+confirmation set comes from training splits the generator and ColPali may have seen (Section~\ref{sec:res-confirm}).
+Costs
 are measured without prefix or encoder caching, which would favour paths whose page image repeats across
 questions. Indexes of 10k--1M pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that

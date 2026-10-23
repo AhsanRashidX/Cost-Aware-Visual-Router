@@ -2,6 +2,7 @@
 \centering
 \caption{Serving capacity from a Poisson load test with dynamic batching, simulated from measured per-query service times and measured batching curves on one RTX 4090 (mean $\pm$ std over 5 seeds): highest arrival rate one GPU sustains at p95 $\leq$ 2\,s, and GPUs needed to hold p95 $\leq$ 2\,s at a given load (queries/s).}
 \label{tab:load_test}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrr}
 \toprule
 \textbf{Policy} & \textbf{1-GPU capacity (q/s)} & \textbf{GPUs@10} & \textbf{GPUs@25} & \textbf{GPUs@50} & \textbf{GPUs@100} \\
@@ -15,4 +16,5 @@ CAVR-CE, val-chosen $\lambda$ & 0.45 $\pm$ 0.11 & 8.8 $\pm$ 0.4 & 20.0 $\pm$ 1.2
 Per-query oracle & 1.40 $\pm$ 0.14 & 5.0 $\pm$ 0.0 & 11.0 $\pm$ 0.0 & 21.6 $\pm$ 0.5 & 41.6 $\pm$ 0.9 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}

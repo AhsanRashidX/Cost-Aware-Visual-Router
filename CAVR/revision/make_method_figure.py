@@ -238,7 +238,7 @@ def main():
     hbox(ax, 38.4, y0, 17.2, h, CE, "Route")
     rbox(ax, 39.3, 14.3, 15.4, 2.9, FORMULA[0], FORMULA[1], lw=0.7, z=4)
     txt(ax, 47.0, 15.75, "$p^\\ast = \\arg\\max_p\\, \\hat{q}_p - \\lambda\\,\\bar{c}_p$", size=5.8, color=INK, z=5)
-    txt(ax, 47.0, 12.9, "λ set at serving time", size=5.5)
+    txt(ax, 47.0, 12.9, "λ set per deployment", size=5.5)
     txt(ax, 47.0, 10.8, f"router: CE {V['ce_ms']:.1f} ms · CAVR {V['cavr_ms']:.1f} ms", size=4.9)
     hbox(ax, 57.4, y0, 18.6, h, HYBRID, "Escalate (optional)")
     rbox(ax, 58.3, 15.0, 16.8, 2.5, FORMULA[0], FORMULA[1], lw=0.7, z=4)
@@ -267,7 +267,7 @@ def main():
     txt(ax, 38.8, 3.8, "index: GPU-resident → sharded, host-streamed or pooled", size=5.4)
     line(ax, [29.3, 29.3], [8.8, 6.3], color=NEUTRAL[1], dashed=True)
     rbox(ax, 57.4, 1.3, 41.3, 5.0, "#f4f3f0", NEUTRAL[1], dashed=True)
-    txt(ax, 78.05, 3.8, "design option, not evaluated: raise λ when queues grow (load shedding)", size=5.3,
+    txt(ax, 78.05, 3.8, "design option, simulated only: raise λ when queues grow (load shedding)", size=5.3,
         style="italic")
     line(ax, [88.25, 88.25], [8.8, 6.3], color=NEUTRAL[1], dashed=True)
 

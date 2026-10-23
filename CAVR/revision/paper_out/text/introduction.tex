@@ -12,20 +12,24 @@ CPU in about a millisecond for our page pools of up to 1,286 pages, but needs OC
 pages/s). A system that
 answers every question through the visual path, or through both, pays for the most expensive option on every query.
 
-\subsection{Why routing in multimodal RAG is a supercomputing problem}
+\subsection{Why serving multimodal RAG is a high-performance computing problem}
 \label{sec:intro-hpc}
 
 Three properties make serving multimodal RAG a high-performance computing problem rather than a modelling
 detail; routing acts on the first and the third, index placement on the second.
 
 \emph{Compute grows with the request rate.} Generation dominates the cost of every path. In a load test simulated
-from our measured service times with dynamic batching, one GPU serving only the hybrid path cannot sustain
+from our measured service times with dynamic batching (whose error against live serving is quantified in
+Section~\ref{sec:res-scale}), one GPU serving only the hybrid path cannot sustain
 0.25\,queries/s at a p95 latency of 2\,s on 3 of 5 splits, and 100 queries/s needs 106 GPUs, 1.5$\times$
 as many as content-aware routing.
 
 \emph{Memory grows with the corpus.} ColPali stores 1,031 vectors per page; at 100k pages the index needs
 24.6\,GiB in bf16, more than our 24\,GiB GPU, and a million pages (about 246\,GiB) exceed the
-memory of most current accelerators. With exhaustive MaxSim, as measured here, such an index must be sharded, streamed from host memory or compressed;
+memory of most current accelerators. These figures are for uncompressed bf16 vectors searched exhaustively; ColBERTv2-style
+residual compression~\cite{colbertv2} would need about 35\,GiB at 2 bits and 19\,GiB at 1 bit per dimension,
+and binarisation about 15\,GiB (analytic sizes; their retrieval quality on this corpus is not measured here).
+With exhaustive MaxSim, as measured here, such an index must be sharded, streamed from host memory or compressed;
 hierarchical token pooling~\cite{tokenpooling}, evaluated here, shrinks it about fourfold with little loss of recall, and engines
 such as PLAID~\cite{plaid} avoid exhaustive scoring (not evaluated here).
 Measured on three older GPUs (Tesla P40) and two data-centre NVIDIA A10 GPUs, sharding keeps
@@ -34,18 +38,46 @@ exhaustive search at constant latency when the number of GPUs grows with the cor
 a million pages in batches of 64 at 0.44\,GPU-s per query, close to GPU-resident search
 (94\% of its throughput where both were measured), which would need 16 A10s; at
 6.4\,s per single query, this placement suits batch rather than interactive search. Routing
-does not shrink the index, since our best router reads ColPali scores for every query; index placement is a separate
-decision that the scaling study quantifies.
+does not shrink the index, since our best router reads ColPali scores for every query. The index-placement
+measurements are therefore a companion characterisation of the visual tier that holds for any policy using ColPali,
+not a result of routing; Table~\ref{tab:claims} lists which systems claims are measured, simulated or projected,
+and at what scale.
+
+\begin{table}[t]
+\centering
+\caption{Evidence behind each systems claim: how it was obtained and at what scale.}
+\label{tab:claims}
+\begin{tabular}{p{0.42\linewidth}lp{0.3\linewidth}}
+\toprule
+\textbf{Claim} & \textbf{Evidence} & \textbf{Scale} \\
+\midrule
+Per-query cost and quality of each path & measured & 1 GPU (RTX 4090), 8,150 questions \\
+Router overhead and throughput & measured & 1 GPU, batch 1--1,024 \\
+GPUs needed at a p95 target & simulated & up to 256 simulated GPUs \\
+Simulator against live serving & measured (vLLM) & 1--2 A10 GPUs, generation only \\
+Index sharding & measured & up to three GPUs per node, 150k pages \\
+Index in host memory & measured & 2 A10 GPUs, 1M pages \\
+GPU-resident index at 1M pages & projected & 16 A10 GPUs \\
+Retrieval tier for a large corpus & projected & linear in pages, full utilisation \\
+Compressed index sizes & analytic & 1M pages \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \emph{Latency targets constrain the design.} Interactive systems are judged on tail latency, so routing and
 escalation should add as little serial work as possible. Our content-aware router adds 24.8\,ms of inference
 before generation; we measure this overhead and charge it to every query.
 
 Per-query routing is therefore a scheduling decision over GPU capacity: each query should get the cheapest context
-that still answers it, and an operator should be able to trade quality for capacity at run time.
+that still answers it, and an operator should be able to set the trade-off between quality and capacity for a
+deployment without retraining the router.
 
-Cost-aware routing and cascades have been studied for large language models~\cite{frugalgpt,routellm} and for
-adaptive retrieval~\cite{adaptiverag}; serving systems batch and schedule model inference under latency
+Cost-aware routing and cascades have been studied for large language models~\cite{frugalgpt,routellm}, also as one
+unified framework~\cite{unifiedrouting}, and for adaptive retrieval~\cite{adaptiverag}. UniversalRAG~\cite{universalrag}
+routes each query to the corpus of the right modality and granularity, and VisDoM~\cite{visdom} and
+VDocRAG~\cite{vdocrag} answer questions over collections of visually rich documents, a setting introduced as
+document collection visual question answering (VQA)~\cite{doccvqa}. These systems choose sources or improve answers; none charges measured
+GPU cost to the choice of context; serving systems batch and schedule model inference under latency
 targets~\cite{clipper,orca,vllm}, and efficient engines reduce late-interaction scoring cost~\cite{plaid}
 (Section~\ref{sec:related}). We bring these threads together for multimodal document RAG, where the choice is
 between context modalities that share one generator, and evaluate routing end to end on answer quality and
@@ -61,7 +93,7 @@ measured on two further nodes, with three older GPUs (Tesla P40) and with two NV
   with real retrieval and the same generator?
   \item[RQ2] Can a router predict, before generation, which path answers a query well enough, and how close does
   it come to a per-query oracle?
-  \item[RQ3] Can the cost--quality trade-off be controlled at run time, and can uncertain queries be escalated
+  \item[RQ3] Can the cost--quality trade-off be set per deployment without retraining, and can uncertain queries be escalated
   without adding serial latency?
   \item[RQ4] How does routing change the GPUs needed to meet a latency target, and how does the visual index scale
   with corpus size and the number of GPUs?
@@ -74,27 +106,30 @@ measured on two further nodes, with three older GPUs (Tesla P40) and with two NV
   InfographicVQA~\cite{infovqa} with real BM25 and ColPali retrieval and a local generator, and measures answer
   quality as average normalised Levenshtein similarity (ANLS), GPU-seconds, energy and latency per query. All tables and figures are generated from cached outputs by
   released code.
-  \item Outcome-based route labels, and the finding that keyword-derived labels agree with them no better than chance
-  (Cohen's $\kappa = 0.01$).
+  \item Outcome-based route labels, and the finding that the keyword rule behind our earlier labels agrees with them
+  no better than chance (Cohen's $\kappa = 0.01$); stronger heuristic labellers are not tested.
   \item The Cost-Aware Visual Router (CAVR), a multi-task router that applies the standard cost-penalised decision rule
-  $\arg\max_p \hat{q}_p - \lambda \bar{c}_p$ with $\lambda$ set at serving time, with its relation to
-  budget-constrained routing made explicit; and CAVR-CE, a content-aware quality predictor built on a cross-encoder (CE) that uses 29\% less
-  GPU compute than always-hybrid at a mean ANLS cost of 0.008, and 20\% less than a quality-blind mix
-  of the visual and hybrid paths at equal ANLS; on a held-out confirmation set the saving over always-hybrid holds,
-  but always-visual comes within 0.005 ANLS of the router at lower cost.
+  $\arg\max_p \hat{q}_p - \lambda \bar{c}_p$ with $\lambda$ set per deployment without retraining, with its relation to
+  budget-constrained routing made explicit; and CAVR-CE, a content-aware quality predictor built on a cross-encoder (CE).
+  Against the best fixed policy, always-visual, CAVR-CE gains 0.016 ANLS for 15\% more GPU compute; against
+  always-hybrid it uses 29\% less at a mean ANLS cost of 0.008. On a held-out set drawn from the
+  datasets' training splits, which the generator may have seen, the saving over always-hybrid holds but the gain over
+  always-visual is not significant.
   \item An analysis of confidence-based escalation that separates pre-generation re-routing from serial and
   speculative cascades, with their latency and GPU cost computed from measured per-stage times.
   \item A serving study: capacity per GPU and GPUs needed at a p95 target under Poisson load (simulated from measured
-  service times and checked against live vLLM serving on two A10 GPUs, where the policy comparison held but absolute
-  capacity was up to 2.0$	imes$ lower than simulated), router throughput (measured), and visual-index latency up to 100k pages with GPU-resident,
+  service times; live vLLM serving on one and two A10 GPUs kept the order of the policies at p95 $\le$ 5\,s but
+  reached 1.4--2.0$\times$ less capacity than simulated at that target), router throughput (measured), and visual-index latency up to 100k pages with GPU-resident,
   host-streamed and pooled placement (measured; larger indexes built from replicated page embeddings).
-  \item Index placement beyond one GPU, measured: multi-GPU sharding on two nodes (up to three Tesla P40 and two NVIDIA A10 GPUs), with near-linear strong and weak scaling up to
+  \item Index placement beyond one GPU, measured independently of routing: multi-GPU sharding on two nodes (up to three Tesla P40 and two NVIDIA A10 GPUs), with near-linear strong and weak scaling up to
   150k pages, and an index of a million pages held in host memory and streamed to two GPUs, with
   its latency and throughput compared with GPU-resident search.
 \end{itemize}
 
 We also report what does not work. With a shared generator the text path is not cheap; routing on the question text
-alone is no better than always choosing the visual path; escalation on confidence signals reaches the same
+alone is no better than always choosing the visual path; gradient boosting on the same features as CAVR-CE
+matches its ANLS at a smaller saving (23\% against 29\% over always-hybrid), so the cross-encoder
+adds part of the saving rather than all of it; escalation on confidence signals reaches the same
 operating point as lowering $\lambda$; and a per-query oracle reaches ANLS 0.630 at
 0.486 GPU-s, far beyond any router we trained, because predicting per-query success remains hard.
 A queue-driven controller for $\lambda$, evaluated in simulation under bursty load, gives only a small gain.

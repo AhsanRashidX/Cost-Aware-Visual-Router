@@ -20,8 +20,9 @@ document: 129 of the 178 multi-page DocVQA documents have pages in more than one
 1234). Training data are used to fit the routers; validation data are used for early stopping, hyperparameter
 selection, the choice of $\lambda$ and the calibration of escalation probabilities. No parameter of the final pipeline
 is fitted or selected on test data. However, the router design itself (Section~\ref{sec:method-routers}) was developed
-on the same five splits, and the feasibility analyses that motivated it inspected their test portions; no separate
-confirmation set was held back (Section~\ref{sec:res-limits}).
+on the same five splits, and the feasibility analyses that motivated it inspected their test portions. The frozen
+routers were therefore also applied to a separate confirmation set drawn from the datasets' training splits
+(Section~\ref{sec:setup-confirm}).
 
 \input{tables/data}
 
@@ -108,8 +109,9 @@ GPU-seconds and joules per query, and latency as p50 and p95 wall-clock time.
   \item \emph{CAVR}, its class head used alone (``CAVR (class head only)''), and two ablations that add BM25 scores, or
   BM25 and ColPali scores, to its input.
   \item \emph{CAVR-CE}, the content-aware router (Section~\ref{sec:method-routers}), and a gradient-boosting baseline on
-  the same tabular features without the cross-encoder or the ColPali token statistics (histogram gradient boosting,
-  300 iterations, learning rate 0.05, 31 leaves).
+  the same tabular features without the cross-encoder (histogram gradient boosting, 300 iterations, learning rate
+  0.05, 31 leaves), fitted with and without the ColPali token statistics: its AUC is reported without them, and its
+  routing policy, under CAVR-CE's decision rule, with them.
   \item \emph{Per-query oracle:} the path that maximises measured ANLS minus $\lambda$ times measured per-query cost.
 \end{itemize}
 Unless stated otherwise, routers use $\lambda = 0.1$, and $\lambda$ sweeps use \{0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5, 1\}. For the operating

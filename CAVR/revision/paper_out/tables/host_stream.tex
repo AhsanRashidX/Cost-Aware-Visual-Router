@@ -2,6 +2,7 @@
 \centering
 \caption{ColPali index held in host memory and streamed to the GPUs of the A10 node (Table~\ref{tab:hardware_multigpu}): index stored in fp16, page-locked with \texttt{cudaHostRegister}, split into one contiguous shard per GPU and streamed in chunks of 4,068 pages with copying and scoring overlapped; exhaustive MaxSim in fp16, per-GPU top-10 merged on the host. p50 over 5 single queries; PCIe rate per GPU at batch 1; throughput at batch 16 and 64; GPU-seconds and node energy per query at batch 64 (2 repetitions per batch). Energy is the NVML sum over both GPUs, so one-GPU runs include the unused GPU; host CPU and memory energy is not measured. Copying alone reached 24.2\,GB/s on one GPU and 41.0\,GB/s on two. Streamed top-1 results matched GPU-resident search for all 100 check queries on 100k pages.}
 \label{tab:host_stream}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrrrrr}
 \toprule
 \textbf{Pages} & \textbf{Index GiB} & \textbf{GPUs} & \textbf{p50 (s)} & \textbf{GB/s/GPU} & \textbf{Q/s, b16} & \textbf{Q/s, b64} & \textbf{GPU-s/query} & \textbf{GPU J/query} \\
@@ -16,4 +17,5 @@
 1M & 245.8 & 2 & 6.44 & 20.5 & 2.47 & 4.50 & 0.445 & 66.3 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}

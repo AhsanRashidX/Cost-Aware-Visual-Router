@@ -14,7 +14,7 @@ trained on the cached outcomes, and the trained router dispatches queries on a G
   on the retrieved passages and retrieval features. (3) At serving time the router picks the path that maximises
   predicted quality minus $\lambda$ times its mean cost, optionally escalates to the hybrid path, and dispatches the
   query to per-path batching queues on the GPU pool. Dashed boxes are deployment options; load-adaptive $\lambda$ is
-  not evaluated.}
+  evaluated in simulation only.}
   \label{fig:method}
 \end{figure*}
 
@@ -112,7 +112,7 @@ target for 5 epochs (AdamW; learning rates 2e-05 for the encoder and 0.001 for t
 decay 0.01; batch 16; linear warm-up and decay), keeping the epoch with the best validation area under the curve (AUC) of the receiver operating characteristic
 (ROC).
 
-\paragraph{Choosing $\lambda$.} $\lambda$ is a run-time parameter. To report a single operating point without
+\paragraph{Choosing $\lambda$.} $\lambda$ is set per deployment, without retraining the router. To report a single operating point without
 tuning on test data, we choose on each split's validation set the cheapest $\lambda$ whose validation ANLS is within
 0.005 of always-hybrid.
 
@@ -127,13 +127,13 @@ be router latency, $L^{\text{ret}}$ the latency of a set of retrievals, and $L^{
 $c^{\text{gen}}_p$ the generation latency and GPU cost of path $p$. Each retrieval runs at most once per query and its
 cost $c^{\text{ret}}$ is charged once. Per query:
 \begin{align}
-  \text{pre-generation re-route:}\quad & L = L_r + L^{\text{ret}}(R_0 \cup R_{p'}) + L^{\text{gen}}_{p'},
-     \qquad p' = \text{hybrid if } e(x) \text{ else } p,\\
-  \text{serial cascade:}\quad & L = L_r + L^{\text{ret}}(R_0 \cup R_p) + L^{\text{gen}}_p
-     + e(x)\,\big[L^{\text{ret}}(R_{\text{hybrid}} \setminus R_0 \setminus R_p) + L^{\text{gen}}_{\text{hybrid}}\big],\\
-  \text{speculative } (p \ne \text{hybrid}):\quad & L = L_r + L^{\text{ret}}(R_0 \cup R_{\text{hybrid}})
-     + \max\big(L^{\text{gen}}_p, L^{\text{gen}}_{\text{hybrid}}\big),
-     \quad c = c^{\text{gen}}_p + c^{\text{gen}}_{\text{hybrid}} + c^{\text{ret}},
+  \text{re-route:}\quad & L = L_r + L^{\text{ret}}(R_0 \cup R_{p'}) + L^{\text{gen}}_{p'}, \nonumber\\
+  & \quad p' = \text{hybrid if } e(x) \text{ else } p,\\
+  \text{serial cascade:}\quad & L = L_r + L^{\text{ret}}(R_0 \cup R_p) + L^{\text{gen}}_p \nonumber\\
+  & \quad + e(x)\,\big[L^{\text{ret}}(R_{\text{hybrid}} \setminus R_0 \setminus R_p) + L^{\text{gen}}_{\text{hybrid}}\big],\\
+  \text{speculative:}\quad & L = L_r + L^{\text{ret}}(R_0 \cup R_{\text{hybrid}})
+     + \max\big(L^{\text{gen}}_p, L^{\text{gen}}_{\text{hybrid}}\big), \nonumber\\
+  & \quad c = c^{\text{gen}}_p + c^{\text{gen}}_{\text{hybrid}} + c^{\text{ret}} \quad (p \ne \text{hybrid}),
 \end{align}
 where $R_0$ is the set of retrievals the signal itself needs and $R_p$ those path $p$ needs. Speculative execution
 assumes two workers that do not interfere. We report p50 and p95 over the per-query values. Only pre-generation
@@ -148,6 +148,6 @@ band 3). BM25 retrieval, OCR text lookup and, optionally, the CAVR MLP run on CP
 ColPali query encoding and scoring, CAVR-CE and generation run on GPUs, with one dynamic-batching queue per path. Our
 load test models the GPU pool and its per-path queues; the dispatcher logic itself is not simulated. The visual index
 is placed according to corpus size: GPU-resident while it fits, then sharded across GPUs (each GPU scores its shard and
-the dispatcher merges the per-shard top-$k$), streamed from host memory for batch workloads, or pooled. Because $\lambda$ is a run-time input, the dispatcher could raise it when queues grow, shifting load
+the dispatcher merges the per-shard top-$k$), streamed from host memory for batch workloads, or pooled. Because $\lambda$ is an input to the decision rule, the dispatcher could raise it when queues grow, shifting load
 from the hybrid path to single-context paths instead of violating the latency target; we evaluate a simple controller of this
 kind in simulation (Section~\ref{sec:res-scale}).

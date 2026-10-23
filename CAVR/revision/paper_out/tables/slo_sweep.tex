@@ -2,6 +2,7 @@
 \centering
 \caption{GPUs needed to serve 100 queries/s against the p95 latency target (simulated from measured service times; mean $\pm$ standard deviation over the 5 splits) and the saving of CAVR-CE over always-hybrid. Charging each batch its longest member instead of the mean member gives a saving of 30\% at 2\,s and 15\% at 5\,s.}
 \label{tab:slo_sweep}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrr}
 \toprule
 \textbf{p95 target (s)} & \textbf{Always visual} & \textbf{CAVR-CE} & \textbf{Always hybrid} & \textbf{Saving vs hybrid (\%)} \\
@@ -14,4 +15,5 @@
 10 & 38.0 $\pm$ 0.0 & 44.0 $\pm$ 2.5 & 58.2 $\pm$ 0.4 & 24 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}

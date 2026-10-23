@@ -2,6 +2,7 @@
 \centering
 \caption{Measured multi-GPU sharding of the ColPali index on two nodes (Table~\ref{tab:hardware_multigpu}): index stored in fp16 and scored in fp32 (P40) and fp16 (A10); one contiguous shard per GPU, all shards queried in parallel and their top-10 merged on the host. p50 and p95 over 50 single queries; speedup and parallel efficiency of p50 latency relative to the fewest GPUs that hold the corpus; throughput and energy at batch 64. Energy is read for the whole node, so runs on fewer GPUs include the unused GPUs, which hold a CUDA context and draw about 51\,W (P40) and 57\,W (A10) each. Sharded top-1 results matched one GPU for all 500 check queries on every node (99.8\% (P40) and 99.8\% (A10) exactly, the rest exact score ties). Shards above 70\% of GPU memory (15.7\,GiB (P40) and 15.6\,GiB (A10)) were not run.}
 \label{tab:multi_gpu}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrrrrr}
 \toprule
 \textbf{Pages} & \textbf{GPUs} & \textbf{GiB/GPU} & \textbf{p50 (ms)} & \textbf{p95 (ms)} & \textbf{Speedup} & \textbf{Eff. (\%)} & \textbf{Queries/s} & \textbf{J/query} \\
@@ -32,4 +33,5 @@
 120k & 2 & 14.7 & 49.5 & 56.5 & 1.00 & 100 & 38.6 & 7.79 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}

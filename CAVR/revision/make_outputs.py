@@ -55,10 +55,11 @@ def load(name):
 def table(name, caption, label, header, rows, align=None):
     align = align or "l" + "r" * (len(header) - 1)
     lines = [r"\begin{table}[t]", r"\centering", rf"\caption{{{caption}}}", rf"\label{{{label}}}",
+             r"\begin{adjustbox}{max width=\linewidth}",
              rf"\begin{{tabular}}{{{align}}}", r"\toprule", " & ".join(rf"\textbf{{{h}}}" for h in header) + r" \\",
              r"\midrule"]
     lines += [" & ".join(str(c) for c in r) + r" \\" for r in rows]
-    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}", ""]
+    lines += [r"\bottomrule", r"\end{tabular}", r"\end{adjustbox}", r"\end{table}", ""]
     (TAB / f"{name}.tex").write_text("\n".join(lines), encoding="utf-8")
     print(f"  table {name}.tex")
 
@@ -99,10 +100,11 @@ def t_hardware():
         rows.insert(-1, ["rank-bm25 / qwen-vl-utils / datasets",
                          f"{sp.get('rank-bm25', '?')} / {sp.get('qwen-vl-utils', '?')} / {sp.get('datasets', '?')}"])
         for m, r in si["model_revisions"].items():
-            rows.insert(-1, [f"\\texttt{{{m.split('/')[-1]}}} revision", f"\\texttt{{{(r or '?')[:7]}}}"])
+            rows.insert(-1, [f"\\texttt{{{m.split('/')[-1]}}} revision".replace("-", "-\\allowbreak{}"),
+                             f"\\texttt{{{(r or '?')[:7]}}}"])
     table("hardware", "Workstation used for every measurement except multi-GPU index sharding "
           "(Table~\\ref{tab:hardware_multigpu}): hardware, software and model revisions.", "tab:hardware",
-          ["Component", "Value"], rows, "ll")
+          ["Component", "Value"], rows, "p{0.3\\linewidth}p{0.62\\linewidth}")
 
 
 def t_data():
@@ -124,7 +126,8 @@ def t_retrieval():
     rows = [["BM25 (docTR text)"] + [f"{t['recall'][f'@{k}']:.3f}" for k in (1, 3, 5, 10)] + [f"{t['mrr']:.3f}"],
             ["ColPali v1.3"] + [f"{v['recall'][f'@{k}']:.3f}" for k in (1, 3, 5, 10)] + [f"{v['mrr']:.3f}"]]
     q = v["query"]
-    cap = (f"Page retrieval over each dataset's page pool. ColPali per query: encode {1000*q['encode_p50_s']:.0f}\\,ms + "
+    cap = (f"Page retrieval over each dataset's page pool: recall at rank $k$ (R@$k$) and mean reciprocal rank "
+           f"(MRR). ColPali per query: encode {1000*q['encode_p50_s']:.0f}\\,ms + "
            f"score {1000*q['score_p50_s']:.1f}\\,ms (p50); index build {v['index']['wall_s']:.0f}\\,s for "
            f"{v['index']['pages']} pages, {v['index']['index_bytes_bf16']/2**20:.0f}\\,MB.")
     table("retrieval", cap, "tab:retrieval", ["Retriever", "R@1", "R@3", "R@5", "R@10", "MRR"], rows)
@@ -143,6 +146,13 @@ def t_main(ev):
         p = s0.get(n, {}).get("mcnemar_em", {}).get("p_value")
         rows.append([LABEL[n], pm(a[n], "anls"), pm(a[n], "em"), pm(a[n], "gpu_s"), pm(a[n], "energy_j", "{:.0f}"),
                      pm(a[n], "latency_p95_s", "{:.2f}"), "--" if p is None else f"{p:.2g}"])
+        rr = load("review_round2.json") if n == "cavr_ce_valsel" else None
+        if rr:   # gradient boosting on CAVR-CE's tabular features, same decision rule (review_round2.py)
+            g = [s["gbm_tab_tok"] for s in rr["gbm_router"]["per_split"]]
+            agg = {k: {"mean": mean(x[k] for x in g), "std": stdev(x[k] for x in g)}
+                   for k in ("anls", "em", "gpu_s", "energy_j", "latency_p95_s")}
+            rows.append(["Gradient boosting, val-chosen $\\lambda$", pm(agg, "anls"), pm(agg, "em"), pm(agg, "gpu_s"),
+                         pm(agg, "energy_j", "{:.0f}"), pm(agg, "latency_p95_s", "{:.2f}"), "--"])
     cap = (f"Routing policies on held-out test pages (mean $\\pm$ std over {ev['n_seeds']} seeds, $\\lambda$ = "
            f"{ev['lambda_default']}). Cost is measured per query on one RTX 4090"
            f"{' including router overhead' if ev['router_overhead_included'] else ''}. p: McNemar (EM) vs CAVR, seed 1.")
@@ -193,6 +203,7 @@ def f_pareto(ev):
     ax.set_title("Cost-quality frontier (λ sweep, seed 1)", fontsize=9, color=INK, loc="left")
     fig.tight_layout()
     fig.savefig(FIG / "pareto.png")
+    fig.savefig(FIG / "pareto.pdf")
     plt.close(fig)
     print("  figure pareto.png")
 
@@ -238,7 +249,7 @@ def t_escalation():
                              f"{ece:.3f}" if ece is not None else "--"])
     table("escalation", "Escalation to hybrid when the calibrated probability of a good answer is $<\\tau = 0.5$ "
           f"(mean over {len(S)} seeds). Probabilities are calibrated on the validation split by logistic regression; "
-          "ECE is measured on test (10 bins). Costs include router overhead; serial and speculative latencies are "
+          "Expected calibration error (ECE) is measured on test (10 bins). Costs include router overhead; serial and speculative latencies are "
           "computed from measured per-stage times (speculative assumes two concurrent workers).", "tab:escalation",
           ["Base router", "Signal", "Mode", "ANLS", "GPU-s", "p95 (s)", "Escalated \\%", "ECE"], rows, "lllrrrrr")
     r = s0.get("results_ce", s0["results"])
@@ -263,6 +274,7 @@ def t_escalation():
     ax.set_title(f"Escalation on {base_name}, τ swept 0.3–0.9 (seed 1)", fontsize=9, color=INK, loc="left")
     fig.tight_layout()
     fig.savefig(FIG / "escalation.png")
+    fig.savefig(FIG / "escalation.pdf")
     plt.close(fig)
     print("  figure escalation.png")
 
@@ -356,6 +368,7 @@ def index_scaling():
     ax.set_title("ColPali MaxSim latency vs index size", fontsize=9, color=INK, loc="left")
     fig.tight_layout()
     fig.savefig(FIG / "index_scaling.png")
+    fig.savefig(FIG / "index_scaling.pdf")
     plt.close(fig)
     print("  figure index_scaling.png")
 
@@ -379,7 +392,7 @@ def multi_gpu():
                 "Memory / power limit": f"{g0['memory_gb']:.1f}\\,GiB / {g0['power_limit_w']:.0f}\\,W each",
                 "Compute capability": g0["capability"],
                 "Driver / mode": f"{node['driver']} / {node['driver_model']} (compute mode)",
-                "fp32 matrix multiply (measured)": f"{min(tf):.1f}--{max(tf):.1f} TFLOPS per GPU",
+                "fp32 matrix multiply (measured)": f"{min(tf):.1f}--{max(tf):.1f} tera floating-point operations per second (TFLOPS) per GPU",
                 "Index scoring precision": mg["source"]["compute_dtype"].replace("float", "fp"),
                 "PCIe link width": f"$\\times${g0['pcie_width']} per GPU"
                                    + ("" if node["topology_recorded"] else " (topology not recorded)"),
@@ -393,7 +406,8 @@ def multi_gpu():
     table("hardware_multigpu", "Multi-GPU nodes used for the index-sharding and host-memory measurements "
           "(Tables~\\ref{tab:multi_gpu} and~\\ref{tab:host_stream}). No model runs on these nodes: page and query embeddings are exported from "
           "the workstation of Table~\\ref{tab:hardware}.", "tab:hardware_multigpu",
-          ["Component"] + [f"{short} node" for _, short in mgs], rows, "l" * (len(mgs) + 1))
+          ["Component"] + [f"{short} node" for _, short in mgs], rows,
+          "p{0.22\\linewidth}" + f"p{{{0.72 / len(mgs):.2f}\\linewidth}}" * len(mgs))
 
     def num(x):
         return f"{x:,.0f}" if x >= 100 else f"{x:.1f}" if x >= 10 else f"{x:.2f}"
@@ -578,6 +592,7 @@ def load_test():
     ax.set_title("p95 latency under load, 1 GPU", fontsize=9, color=INK, loc="left")
     fig.tight_layout()
     fig.savefig(FIG / "load_test.png")
+    fig.savefig(FIG / "load_test.pdf")
     plt.close(fig)
     print("  figure load_test.png")
     if not ops:
@@ -604,13 +619,14 @@ def load_test():
     ax.set_title("Serving cost vs answer quality (seed 1)", fontsize=9, color=INK, loc="left")
     fig.tight_layout()
     fig.savefig(FIG / "gpus_vs_quality.png")
+    fig.savefig(FIG / "gpus_vs_quality.pdf")
     plt.close(fig)
     print("  figure gpus_vs_quality.png")
     rows = [[n.replace("_rf", " + ret. scores").replace("_ce", "-CE").replace("cavr", "CAVR").replace("@", r", $\lambda$="),
              f"{v['anls_test']:.3f}", f"{v['max_rate_1gpu']['2.0']:g}"]
             + [str(v["gpus_needed"]["2.0"][str(l)] or ">256") for l in (10, 25, 50, 100)] for n, v in ops.items()]
-    table("load_test_operating_points", "CAVR operating points ($\lambda$ is set at run time): test ANLS, capacity of "
-          "one GPU and GPUs needed at p95 $\leq$ 2\,s (seed 1).", "tab:load_test_ops",
+    table("load_test_operating_points", "CAVR operating points ($\lambda$ is set per deployment): test ANLS, capacity "
+          "of one GPU in queries per second (QPS) and GPUs needed at p95 $\leq$ 2\,s (seed 1).", "tab:load_test_ops",
           ["Policy", "ANLS", "QPS/GPU", "GPUs@10", "GPUs@25", "GPUs@50", "GPUs@100"], rows)
 
 
@@ -625,8 +641,10 @@ def live_serving():
         r = runs[f"{p}_r{n}"]
         c, lb = r["capacity_rps_at_p95_target"], r["measured_capacity_is_lower_bound"]
         cells = []
+        lo = min(v["offered_rps"] for v in r["rates"].values())
         for t in ("2.0", "5.0"):
-            cells += [("$\\geq$" if lb[t] else "") + f"{c[t]['measured']:.2f}", f"{c[t]['predicted_a10']:.2f}"]
+            live = f"$<${lo:.2f}" if c[t]["measured"] == 0 else ("$\\geq$" if lb[t] else "") + f"{c[t]['measured']:.2f}"
+            cells += [live, f"{c[t]['predicted_a10']:.2f}"]
         ok = [v for v in r["rates"].values() if not v["aborted"] and v["n_errors"] == 0]
         anls = mean(v["anls"] for v in ok)
         ref = mean(v["anls_4090_same_requests"] for v in ok)
@@ -634,7 +652,8 @@ def live_serving():
     table("live_serving", "Live serving with vLLM on one and two A10 GPUs (one replica per GPU, open-loop Poisson "
           "arrivals): highest arrival rate (queries/s) at which the measured p95 latency stays within the target, "
           "interpolated between tested rates, against the simulator's prediction from the A10's own service times "
-          "and batching curve. ANLS is the mean over the tested rates; in brackets, the 4090 reference run on the "
+          "and batching curve; $<x$ means the target was missed already at the lowest tested rate $x$. Each rate is "
+          "a single arrival trace. ANLS is the mean over the tested rates; in brackets, the 4090 reference run on the "
           "same requests.", "tab:live_serving",
           ["Policy", "GPUs", "p95$\\leq$2\\,s live", "sim.", "p95$\\leq$5\\,s live", "sim.", "ANLS (4090)"], rows)
     reps = sorted({n for _, n in order})

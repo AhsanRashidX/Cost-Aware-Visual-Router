@@ -12,11 +12,16 @@ from common import ROOT
 OUT = ROOT / "paper_out"
 CROSSREF_TYPES = {"proceedings-article": "inproceedings", "journal-article": "article", "book": "book",
                   "monograph": "book", "posted-content": "misc"}
+ACCENTS = {"é": r"{\'e}", "è": r"{\`e}", "É": r"{\'E}", "Í": r"{\'I}", "í": r"{\'i}", "ñ": r"{\~n}",
+           "á": r"{\'a}", "ó": r"{\'o}", "ú": r"{\'u}", "ü": r"{\"u}", "ö": r"{\"o}", "ä": r"{\"a}", "ç": r"{\c c}"}
 
 
 def esc(s):
     s = str(s).replace("&amp;", "&").replace("®", "")  # drop the registered sign in journal names
+    s = s.replace("—", "---").replace("–", "--")   # Unicode dashes from Crossref -> LaTeX dashes
     for a, b in (("&", r"\&"), ("%", r"\%"), ("#", r"\#"), ("_", r"\_")):
+        s = s.replace(a, b)
+    for a, b in ACCENTS.items():   # BibTeX abbreviates first names by byte: write accents as LaTeX commands
         s = s.replace(a, b)
     return s
 

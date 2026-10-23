@@ -2,6 +2,7 @@
 \centering
 \caption{Routing policies on held-out test pages (mean $\pm$ std over 5 seeds, $\lambda$ = 0.1). Cost is measured per query on one RTX 4090 including router overhead. p: McNemar (EM) vs CAVR, seed 1.}
 \label{tab:main_results}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrrr}
 \toprule
 \textbf{Policy} & \textbf{ANLS} & \textbf{EM} & \textbf{GPU-s} & \textbf{Energy (J)} & \textbf{p95 lat. (s)} & \textbf{p} \\
@@ -20,7 +21,9 @@ CAVR + BM25 scores & 0.545 $\pm$ 0.015 & 0.500 $\pm$ 0.016 & 0.651 $\pm$ 0.024 &
 CAVR + BM25 + ColPali scores & 0.549 $\pm$ 0.011 & 0.503 $\pm$ 0.012 & 0.679 $\pm$ 0.024 & 194 $\pm$ 10 & 1.19 $\pm$ 0.04 & 1 \\
 CAVR-CE (content-aware) & 0.557 $\pm$ 0.014 & 0.512 $\pm$ 0.014 & 0.694 $\pm$ 0.022 & 196 $\pm$ 8 & 1.22 $\pm$ 0.04 & 0.018 \\
 CAVR-CE, val-chosen $\lambda$ & 0.557 $\pm$ 0.015 & 0.512 $\pm$ 0.015 & 0.716 $\pm$ 0.043 & 205 $\pm$ 17 & 1.24 $\pm$ 0.07 & 0.0049 \\
+Gradient boosting, val-chosen $\lambda$ & 0.558 $\pm$ 0.019 & 0.510 $\pm$ 0.019 & 0.778 $\pm$ 0.023 & 238 $\pm$ 9 & 1.29 $\pm$ 0.01 & -- \\
 Per-query oracle & 0.630 $\pm$ 0.016 & 0.581 $\pm$ 0.018 & 0.486 $\pm$ 0.004 & 150 $\pm$ 1 & 0.87 $\pm$ 0.01 & 4.6e-41 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}
