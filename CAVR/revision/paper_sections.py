@@ -80,7 +80,8 @@ as many as content-aware routing.
 \emph{Memory grows with the corpus.} ColPali stores 1,031 vectors per page; at 100k pages the index needs
 <<ix100_gb>>\,GiB in bf16, more than our <<gpu_mem>>\,GiB GPU, and a million pages (about <<ix1m_gb>>\,GiB) exceed the
 memory of most current accelerators. With exhaustive MaxSim, as measured here, such an index must be sharded, streamed from host memory or compressed;
-approximate late-interaction engines~\cite{plaid} reduce the scoring cost but are not evaluated here.
+hierarchical token pooling, evaluated here, shrinks it about fourfold with little loss of recall, and engines
+such as PLAID~\cite{plaid} avoid exhaustive scoring (not evaluated here).
 Measured on <<mg_n_word>> older GPUs (<<mg_gpu>>) and <<a10_n_word>> data-centre <<a10_gpu>> GPUs, sharding keeps
 exhaustive search at constant latency when the number of GPUs grows with the corpus (<<mg50k_ms1>>\,ms for
 <<mg_weak_k>> pages on one <<mg_gpu>>, <<mg_weak_ms>>\,ms for <<mg_weak_pages>> pages on <<mg_n_word>>). Holding the index in host memory instead, two A10s searched
@@ -490,7 +491,10 @@ highest share within 2\,s).
 \paragraph{Index scaling.} Corpora of 1k, 10k, 50k and 100k pages are built by repeating the real page embeddings. We time
 exhaustive MaxSim with the index resident on the GPU (when it fits within <<gpu_budget>>\,GiB), streamed in chunks from
 pinned host memory, pooled 2$\times$2 over the patch grid (1,024 patch vectors to 256, re-normalised, plus the 7 prompt
-tokens: 263 vectors), and split into shards that each fit one GPU. On this workstation sharding is emulated by timing
+tokens: 263 vectors), and split into shards that each fit one GPU. Hierarchical token pooling clusters each page's
+1,024 patch vectors by Ward linkage into 1,024/$f$ clusters ($f = 2, 3, 4$), averages and re-normalises each cluster
+and keeps the prompt-token vectors; recall@1 and recall@5 of the gold page are measured for all questions over each
+dataset's page pool with the same batched query embeddings for every variant. On this workstation sharding is emulated by timing
 the shards one after another and reporting the slowest shard, without the cost of merging results; it is measured on
 real GPUs below. Latency is the median
 over <<n_lat>> single queries (all from DocVQA); throughput uses query batches of <<qbatches>> (streamed index: 1, 4

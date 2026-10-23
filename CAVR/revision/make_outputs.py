@@ -264,6 +264,23 @@ def t_escalation():
     print("  figure escalation.png")
 
 
+def token_pooling():
+    tp = load("token_pooling.json")
+    if not tp:
+        return
+    names = {"full": "Full index", "pooled2x2": "2$\\times$2 spatial pooling"}
+    rows = []
+    for k, v in tp["methods"].items():
+        label = names.get(k, f"Hierarchical pooling, $f = {k[4:]}$")
+        rows.append([label, v["vectors_per_page"], f"{v['recall@1']:.3f}", f"{v['recall@5']:.3f}",
+                     f"{v['index_gib_1m_pages']:.0f}", f"{v['relative_scoring_cost']:.2f}"])
+    cap = ("Compressed ColPali indexes on the real corpus: recall of the gold page over each dataset's page pool for all "
+           "questions (batched query encoding), index size at a million pages and scoring cost relative to the full index. "
+           "Hierarchical pooling clusters each page's patch vectors by Ward linkage and keeps the prompt-token vectors.")
+    table("token_pooling", cap, "tab:token_pooling",
+          ["Index", "Vectors/page", "Recall@1", "Recall@5", "GiB at 1M pages", "Rel. scoring cost"], rows)
+
+
 def index_scaling():
     ix = load("index_scaling.json")
     if not ix:
@@ -590,6 +607,7 @@ def main():
         f_pareto(ev)
     t_escalation()
     index_scaling()
+    token_pooling()
     multi_gpu()
     host_stream()
     load_test()

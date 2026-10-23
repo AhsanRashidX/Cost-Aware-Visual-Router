@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{Compressed ColPali indexes on the real corpus: recall of the gold page over each dataset's page pool for all questions (batched query encoding), index size at a million pages and scoring cost relative to the full index. Hierarchical pooling clusters each page's patch vectors by Ward linkage and keeps the prompt-token vectors.}
+\label{tab:token_pooling}
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Index} & \textbf{Vectors/page} & \textbf{Recall@1} & \textbf{Recall@5} & \textbf{GiB at 1M pages} & \textbf{Rel. scoring cost} \\
+\midrule
+Full index & 1031 & 0.578 & 0.751 & 246 & 1.00 \\
+2$\times$2 spatial pooling & 263 & 0.525 & 0.712 & 63 & 0.26 \\
+Hierarchical pooling, $f = 2$ & 519 & 0.576 & 0.750 & 124 & 0.50 \\
+Hierarchical pooling, $f = 3$ & 349 & 0.572 & 0.746 & 83 & 0.34 \\
+Hierarchical pooling, $f = 4$ & 263 & 0.574 & 0.747 & 63 & 0.26 \\
+\bottomrule
+\end{tabular}
+\end{table}

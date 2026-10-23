@@ -81,6 +81,17 @@ def values():
         "cap_hyb_max": f"{ra['capacity_1gpu']['always_hybrid_max']:g}",
         "cap_hyb_zero": ra["capacity_1gpu"]["seeds_below_first_step"],
     })
+    tp = J("token_pooling.json")["methods"]
+    best_f = max((k for k in tp if k.startswith("hier")), key=lambda k: int(k[4:]))
+    a10_budget_gib = J("a10/a10_shard_scaling.json")["budget_gib_per_gpu"]
+    V.update({
+        "tp_f": best_f[4:], "tp_vec": tp[best_f]["vectors_per_page"], "tp_r1": f"{tp[best_f]['recall@1']:.3f}",
+        "tp_r5": f"{tp[best_f]['recall@5']:.3f}", "tp_full_r1": f"{tp['full']['recall@1']:.3f}",
+        "tp_full_r5": f"{tp['full']['recall@5']:.3f}", "tp_2x2_r1": f"{tp['pooled2x2']['recall@1']:.3f}",
+        "tp_2x2_r5": f"{tp['pooled2x2']['recall@5']:.3f}", "tp_gib_1m": f"{tp[best_f]['index_gib_1m_pages']:.0f}",
+        "tp_a10": int(-(-tp[best_f]["index_gib_1m_pages"] // a10_budget_gib)),
+        "tp_x": f"{tp['full']['vectors_per_page'] / tp[best_f]['vectors_per_page']:.1f}",
+    })
     se = J("sim_experiments.json")
     sw, sav = se["slo_sweep"], se["slo_sweep_saving_vs_hybrid"]
     vis_more = {T: sw["cavr_ce_valsel"][T]["mean"] / sw["always_visual"][T]["mean"] - 1 for T in sav}
@@ -482,7 +493,12 @@ million pages (about <<ix1m_gb>>\,GiB) would exceed the memory of most current a
 (Table~\ref{tab:index_scaling}, Figure~\ref{fig:index}). Streaming it from pinned host memory costs
 <<ix100_stream_ms>>\,ms per query; 2$\times$2 pooling shrinks it to <<ix100_pool_gb>>\,GiB and <<ix100_pool_ms>>\,ms
 but lowers recall@1 on the real corpus from <<pool_r1_full>> to <<pool_r1>> (both measured with the same batched
-query encoding); emulated sharding over <<ix100_shards>> GPUs (shards timed one after another on this GPU) gives
+query encoding). Hierarchical token pooling, which clusters each page's patch vectors and keeps one mean vector per
+cluster, does much better at the same size: with <<tp_vec>> vectors per page it keeps recall@1 at <<tp_r1>> and recall@5 at
+<<tp_r5>>, against <<tp_full_r1>> and <<tp_full_r5>> for the full index and <<tp_2x2_r1>> and <<tp_2x2_r5>> for 2$\times$2
+pooling (Table~\ref{tab:token_pooling}). A <<tp_x>>$\times$ smaller index makes a million pages <<tp_gib_1m>>\,GiB,
+which <<tp_a10>> A10s could hold, and scoring cost falls in proportion to the vectors per page. Emulated sharding over
+<<ix100_shards>> GPUs (shards timed one after another on this GPU) gives
 <<ix100_shard_ms>>\,ms. A GPU-resident index answers in <<ix1k_ms>>\,ms at 1k pages and <<ix50k_ms>>\,ms at
 50k pages.
 
@@ -567,6 +583,7 @@ batch. CAVR-CE takes <<ce_ms>>\,ms and <<ce_j>>\,J per query at batch 1, and its
 \input{tables/load_test_operating_points}
 \input{tables/slo_sweep}
 \input{tables/index_scaling}
+\input{tables/token_pooling}
 \input{tables/multi_gpu_scaling}
 \input{tables/host_stream}
 \input{tables/router_throughput}
@@ -616,7 +633,7 @@ global queue and unlimited CPU, charges a batch the mean generation time of its 
 are measured without prefix or encoder caching, which would favour paths whose page image repeats across
 questions. Indexes of 10k--<<hs_max_k>> pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that
-scale. Multi-GPU sharding was measured for retrieval only, on two server nodes with at most <<mg_n_word>> GPUs
+scale; the recall of pooled indexes is measured on the <<n_pages>> real pages only. Multi-GPU sharding was measured for retrieval only, on two server nodes with at most <<mg_n_word>> GPUs
 each (<<mg_gpu>>, <<a10_gpu>>), whose absolute times do not transfer to the workstation, and the load test does not include sharded retrieval. The host-memory index was measured in one process on one node, with <<hs_nlat>> latency queries and <<hs_reps>>
 repetitions per batch (latency varied by at most <<hs_cv>>\% within the run) and with host memory placed across CPU
 sockets without control, and GPU-resident search at <<hs_max_words>> pages is

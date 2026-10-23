@@ -1,0 +1,86 @@
+{
+  "vectors_per_page_full": 1031,
+  "clustering_s_total": 10.987336699996376,
+  "methods": {
+    "full": {
+      "vectors_per_page": 1031,
+      "recall@1": 0.5775460122699386,
+      "recall@5": 0.7505521472392638,
+      "index_gib_1m_pages": 245.80955505371094,
+      "relative_scoring_cost": 1.0,
+      "eval_s": 30.43839840000146
+    },
+    "pooled2x2": {
+      "vectors_per_page": 263,
+      "recall@1": 0.5245398773006135,
+      "recall@5": 0.7120245398773006,
+      "index_gib_1m_pages": 62.70408630371094,
+      "relative_scoring_cost": 0.2550921435499515,
+      "eval_s": 21.273280900000827
+    },
+    "hier2": {
+      "vectors_per_page": 519,
+      "recall@1": 0.5759509202453987,
+      "recall@5": 0.7498159509202454,
+      "index_gib_1m_pages": 123.73924255371094,
+      "relative_scoring_cost": 0.5033947623666344,
+      "eval_s": 23.918272200011415
+    },
+    "hier3": {
+      "vectors_per_page": 349,
+      "recall@1": 0.5715337423312884,
+      "recall@5": 0.7463803680981596,
+      "index_gib_1m_pages": 83.20808410644531,
+      "relative_scoring_cost": 0.3385063045586809,
+      "eval_s": 19.993304900010116
+    },
+    "hier4": {
+      "vectors_per_page": 263,
+      "recall@1": 0.5737423312883435,
+      "recall@5": 0.7466257668711657,
+      "index_gib_1m_pages": 62.70408630371094,
+      "relative_scoring_cost": 0.2550921435499515,
+      "eval_s": 18.67821520002326
+    }
+  },
+  "hardware": {
+    "timestamp": "2026-10-23T10:51:32",
+    "os": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.17",
+    "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
+    "cpu_threads": 112,
+    "ram_gb": 1023.5,
+    "git_commit": "18f867e86704322c3c212cb1e41ae4edc090340c",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "qwen-vl-utils": "0.0.14",
+      "accelerate": "1.15.0"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "616.92"
+  }
+}
