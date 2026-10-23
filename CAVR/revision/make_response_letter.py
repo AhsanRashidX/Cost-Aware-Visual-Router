@@ -96,8 +96,9 @@ COMMENTS = [
       "deployment on a GPU pool. We are explicit about scale: routing and generation are measured on one GPU, "
       "capacity beyond it is simulated from measured service times and checked against live serving on two A10 GPUs, sharding is measured for retrieval only, on server nodes with older and data-centre "
       "GPUs whose absolute times do not transfer to the workstation, and larger indexes are built from replicated "
-      "page embeddings. [AUTHOR ACTION: write and verify the related-work citations on inference serving "
-      "and late-interaction retrieval.]"]),
+      "page embeddings. A new Related work section covers visual-document retrieval, adaptive retrieval and model "
+      "routing, efficient late-interaction and vector search, and inference serving; every reference was checked "
+      "against its DOI, arXiv, OpenReview or publisher record."]),
     (None, "Comment E.2: Accurate reporting and limitations",
      "Report the results accurately, rewrite overstated conclusions and explain the limitations fully.",
      ["Every number now comes from one cached run of every path on every query, and tables and figures are "
@@ -124,8 +125,7 @@ COMMENTS = [
       "cost weight λ as a run-time input. One trained router therefore covers a range of budgets: sweeping λ from 1 "
       "to 0 moves CAVR-CE from ANLS <<sw_lo_anls>> at <<sw_lo_gpu>> GPU-s to <<sw_hi_anls>> at <<sw_hi_gpu>> GPU-s "
       "(mean over splits). A cost–quality frontier figure and a table of operating points with their serving "
-      "capacity were added. Adapting λ to load is described as a deployment option but not evaluated. "
-      "[AUTHOR ACTION: decide whether to add a load-adaptive λ experiment.]"]),
+      "capacity were added. " + "We also added a load-adaptive experiment. On a fixed pool of <<ad_pool>> GPUs under bursts alternating between <<ad_base>> and <<ad_burst>> queries/s, a controller that raises λ when the oldest queued request has waited too long serves <<ad_adp_slo>>% of requests within 2 s, against <<ad_fix_slo>>% at the fixed validation-chosen λ, at almost the same ANLS (<<ad_adp_anls>> vs <<ad_fix_anls>>); a fixed λ = 0.2 reaches <<ad_02_slo>>% at ANLS <<ad_02_anls>>. The gain is small because in our simulator overload appears mainly as larger batches rather than long queues, so a better overload signal is left as future work, and the paper says so."]),
     (None, "Comment 3: Queries containing images",
      "The query encoder is text-only, so queries that contain an image are not supported.",
      ["We narrowed the scope to text queries over visual documents and state this in the title, the abstract and "
@@ -168,8 +168,8 @@ COMMENTS = [
      "text (\"volto brio\"); \"production-ready\" is too strong.",
      ["Table 5 is removed, and targets are no longer reported. The sentence with \"79\" was removed with the withdrawn "
       "results. Router overhead is now reported as measured, <<cavr_router_ms>> ms for CAVR and <<ce_ms>> ms for "
-      "CAVR-CE per query. \"Production-ready\" is now \"deployable system design\". [AUTHOR ACTION: remove \"two "
-      "orders of magnitude\" wherever it remains, complete a full copy-edit pass, and address any further comments "
+      "CAVR-CE per query. \"Production-ready\" is now \"deployable system design\". The phrase \"two orders of magnitude\" no longer appears in the manuscript. [AUTHOR ACTION: "
+      "complete a full copy-edit pass, and address any further comments "
       "in Reviewer 2's attachment.]"]),
 
     ("Reviewer 3", "Comment 1: Answer correctness and escalation switched off",
@@ -208,9 +208,7 @@ COMMENTS = [
       "built. [AUTHOR ACTION: tag the release and archive it with a DOI.]"]),
     (None, "Comment 6: References",
      "The arXiv identifiers of [9] and [29] are wrong, and several references are incorrect or duplicated.",
-     ["[AUTHOR ACTION: audit every reference against its DOI or arXiv page; fix references 9 and 29, remove duplicates, "
-      "correct authors and venues, and remove any entry that cannot be found. Rebuild Table 1 afterwards, because "
-      "RouteLLM and FrugalGPT do model cost.]"]),
+     ["We agree, and rebuilt the bibliography from scratch rather than patching the submitted list. Each of the <<n_refs>> references cited in the revised paper was checked against its Crossref record (by DOI), arXiv, OpenAlex, OpenReview or publisher page, and its authors, venue and year are taken from that record; the verification record is released with the code. No entry was copied from the submitted list, including [9], [29] and the duplicates; works cited again were re-entered from their verified records. The submitted comparison table (Table 1) is removed, and the new Related work section describes FrugalGPT, Hybrid LLM and RouteLLM as cost-aware routers whose threshold sets the cost–quality trade-off at run time."]),
 ]
 
 CLOSING = ("We hope that the revised manuscript addresses the editor's and reviewers' concerns, and we thank them "
