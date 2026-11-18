@@ -1,0 +1,16 @@
+=== 2026-11-19 00:18:46 r3 driver start: stage pilot seeds [1235 1236 1237 1238] replicas [1 2]
+index, name, driver_version, memory.used [MiB]
+0, NVIDIA A10, 616.92, 0 MiB
+1, NVIDIA A10, 616.92, 0 MiB
+6.18.58.1-microsoft-standard-WSL2
+started replica 0 (GPU 0, port 8000, mode native)
+replica 0 healthy: http://127.0.0.1:8000  (154s)
+all 1 replica(s) up. Stop with: bash stop.sh
+always_hybrid on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.204, 0.408]
+rate   0.204/s n= 184 p50=  1.219s p95=  2.718s p99=  3.503s thr=0.200/s err=0 aborted=False replicas=[184]
+rate   0.408/s n= 368 p50=  1.327s p95=  3.878s p99=  5.037s thr=0.396/s err=0 aborted=False replicas=[368]
+wrote results/load_r3_pilot/always_hybrid_r1_pilot  (all rates done)
+stopped replica 0 (pid 574; log logs/replica_0_20261119_005246.log)
+0, 0 MiB
+1, 0 MiB
+=== 2026-11-19 00:52:51 r3 driver done: pilot

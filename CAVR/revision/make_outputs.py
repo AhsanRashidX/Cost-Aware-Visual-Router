@@ -102,8 +102,9 @@ def t_hardware():
         for m, r in si["model_revisions"].items():
             rows.insert(-1, [f"\\texttt{{{m.split('/')[-1]}}} revision".replace("-", "-\\allowbreak{}"),
                              f"\\texttt{{{(r or '?')[:7]}}}"])
-    table("hardware", "Workstation used for every measurement except multi-GPU index sharding "
-          "(Table~\\ref{tab:hardware_multigpu}): hardware, software and model revisions.", "tab:hardware",
+    table("hardware", "Workstation used for the cached run of every path, router training and evaluation, the "
+          "load-test inputs, index scaling and the router benchmarks (the other experiments ran on the nodes of "
+          "Table~\\ref{tab:hardware_multigpu}): hardware, software and model revisions.", "tab:hardware",
           ["Component", "Value"], rows, "p{0.3\\linewidth}p{0.62\\linewidth}")
 
 
@@ -403,9 +404,10 @@ def multi_gpu():
                 "Energy": f"NVML energy counters, summed over all {G} GPUs"}
     cols = [hw(mg) for mg, _ in mgs]
     rows = [[k] + [c[k] for c in cols] for k in cols[0]]
-    table("hardware_multigpu", "Multi-GPU nodes used for the index-sharding and host-memory measurements "
-          "(Tables~\\ref{tab:multi_gpu} and~\\ref{tab:host_stream}). No model runs on these nodes: page and query embeddings are exported from "
-          "the workstation of Table~\\ref{tab:hardware}.", "tab:hardware_multigpu",
+    table("hardware_multigpu", "Multi-GPU nodes. Both ran index sharding (Table~\\ref{tab:multi_gpu}) with page and "
+          "query embeddings exported from the workstation of Table~\\ref{tab:hardware}; the A10 node also ran the "
+          "host-memory index (Table~\\ref{tab:host_stream}), the retrieval-depth controls, the confirmation set, the "
+          "image-token sweep and live serving (vLLM under WSL, GPUs in MCDM mode).", "tab:hardware_multigpu",
           ["Component"] + [f"{short} node" for _, short in mgs], rows,
           "p{0.22\\linewidth}" + f"p{{{0.72 / len(mgs):.2f}\\linewidth}}" * len(mgs))
 
@@ -704,6 +706,25 @@ def router_cost():
     table("router_throughput", cap, "tab:router_throughput", ["Batch", "Latency (ms)", "Queries/s"], rows)
 
 
+def confusion():
+    r3 = load("review_round3.json")
+    if not r3:
+        return
+    ro = r3["router_vs_oracle"]
+    cnt, nrm = ro["counts"]["pooled"], ro["row_normalised"]["pooled"]
+    names = ["Text", "Visual", "Hybrid"]
+    rows = [[f"CAVR-CE: {names[i]}"] + [f"{cnt[i][j]:,} ({100 * nrm[i][j]:.0f}\\%)" for j in range(3)]
+            + [f"{sum(cnt[i]):,}"] for i in range(3)]
+    rows.append(["Oracle total"] + [f"{sum(cnt[i][j] for i in range(3)):,}" for j in range(3)]
+                + [f"{sum(map(sum, cnt)):,}"])
+    cap = (f"Path chosen by CAVR-CE (rows, validation-chosen $\\lambda$) against the per-query oracle at the same "
+           f"$\\lambda$ (columns), test queries of all 5 splits pooled; row percentages in brackets. On "
+           f"{100 * ro['oracle_tie_share']['mean']:.0f}\\% of queries several paths reach the best ANLS (on "
+           f"{100 * ro['all_paths_fail_share']['mean']:.0f}\\% all fail) and the oracle takes the cheapest; the router's "
+           f"path reaches the best ANLS on {100 * ro['router_path_reaches_best_anls']['mean']:.0f}\\% of queries.")
+    table("confusion", cap, "tab:confusion", ["", "Oracle: text", "Oracle: visual", "Oracle: hybrid", "Total"], rows)
+
+
 def main():
     TAB.mkdir(parents=True, exist_ok=True)
     FIG.mkdir(parents=True, exist_ok=True)
@@ -727,6 +748,7 @@ def main():
     slo_sweep()
     live_serving()
     router_cost()
+    confusion()
 
 
 if __name__ == "__main__":

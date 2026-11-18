@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\caption{Path chosen by CAVR-CE (rows, validation-chosen $\lambda$) against the per-query oracle at the same $\lambda$ (columns), test queries of all 5 splits pooled; row percentages in brackets. On 89\% of queries several paths reach the best ANLS (on 35\% all fail) and the oracle takes the cheapest; the router's path reaches the best ANLS on 91\% of queries.}
+\label{tab:confusion}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{} & \textbf{Oracle: text} & \textbf{Oracle: visual} & \textbf{Oracle: hybrid} & \textbf{Total} \\
+\midrule
+CAVR-CE: Text & 827 (80\%) & 194 (19\%) & 18 (2\%) & 1,039 \\
+CAVR-CE: Visual & 3,149 (60\%) & 1,928 (37\%) & 145 (3\%) & 5,222 \\
+CAVR-CE: Hybrid & 1,141 (64\%) & 592 (33\%) & 61 (3\%) & 1,794 \\
+Oracle total & 5,117 & 2,714 & 224 & 8,055 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}

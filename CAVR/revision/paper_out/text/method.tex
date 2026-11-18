@@ -41,8 +41,14 @@ with $\lambda \ge 0$, and for a fixed $\lambda$ it is maximised query by query b
 Problem (\ref{eq:constrained}) is a linear program in the routing probabilities, so strong duality holds whenever it is
 feasible: there is a $\lambda^\ast$ such that $\pi_{\lambda^\ast}$ is optimal once ties at $\lambda^\ast$ are
 randomised with the probability that makes the budget bind. With one coupling constraint, a basic optimal solution
-routes at most one query fractionally, so the best deterministic policy is within $1/N$ of the randomised optimum. A
-sweep over $\lambda$ reaches the vertices of the upper convex hull of achievable cost--quality points; this sweep is
+has at most $N+1$ non-zero routing probabilities, so it routes at most one query fractionally, between two paths;
+sending that query to the cheaper of the two keeps the budget and lowers mean quality by at most $1/N$, so the best
+deterministic policy is within $1/N$ of the randomised optimum. This bound rests on the following assumptions: a
+finite set of $N$ queries; quality in $[0,1]$; costs that add over queries, with a budget on their mean and no other
+constraint; and a policy that may treat every query differently. It holds for the true $Q$ and $c$, or for whatever
+values the rule is given, but says nothing about how far a router that uses estimates $\hat{q}_p$ and mean costs
+(below) is from the optimum of the true values; and if a policy may only depend on features $z$ that several queries
+share, it no longer applies query by query. A sweep over $\lambda$ reaches the vertices of the upper convex hull of achievable cost--quality points; this sweep is
 how we report the trade-off. The same Lagrangian form underlies cost-aware routers and cascades for language
 models~\cite{frugalgpt,routellm}; here it is applied to context modalities that share one generator.
 
@@ -74,8 +80,11 @@ given to the generator at no more than 1280 visual tokens.
 \subsection{Cost model}
 \label{sec:method-cost}
 
-Every path is run once on every query on a single GPU at batch size 1, and the outputs are cached. Per query and path
-we record GPU-seconds (generation plus, for paths that use it, ColPali query encoding and scoring), GPU energy from
+Every path is run once on every query on a single GPU at batch size 1, and the outputs are cached. The cost of a
+query on a path is its \emph{GPU-seconds}: the duration of the generator's generation call, bracketed by CUDA
+synchronisation, plus, for the visual and hybrid paths, ColPali query encoding and MaxSim scoring. CPU work is not
+counted in GPU-seconds: tokenisation and image resizing by the model's processor, BM25 retrieval and decoding of the
+answer are reported in wall-clock latency instead. Per query and path we also record GPU energy from
 NVIDIA Management Library (NVML) counters, peak GPU memory, and wall-clock latency including preprocessing and BM25 retrieval on the CPU. Router
 overhead is measured separately and added to every routed query. When a router reads ColPali scores, ColPali
 retrieval is charged to every query, including those routed to the text path, and never twice for the same query.
@@ -102,15 +111,20 @@ with early stopping on validation utility at $\lambda = 0.1$ (patience 10 epochs
 \paragraph{CAVR-CE.} A content-aware quality predictor that reads what retrieval returned before any generation.
 OCR text of each page is split into windows of 50 words with a stride of 25, and the windows most similar
 to the question under the mpnet bi-encoder are selected: two from the BM25 top page, two from the ColPali top page and
-one from each of BM25 pages 2--3, interleaved by importance. An mpnet cross-encoder reads the question paired with these
-passages, truncated to 512 tokens (47\% of inputs are truncated, which mostly drops the lower-ranked
-windows). Its pooled output is concatenated with standardised tabular features: BM25 and ColPali top scores and margins,
+one from each of BM25 pages 2--3, interleaved by importance. These passages are read by a cross-encoder: the
+all-mpnet-base-v2 checkpoint, used as an encoder of the pair (question, concatenated passages) in one sequence rather
+than as a bi-encoder, and fine-tuned end to end. The pair is truncated to 512 tokens by cutting the passages
+only, never the question; 47\% of inputs are truncated, which mostly drops the lower-ranked windows (a
+limit of 384 tokens truncated 91\% in a pilot, so 512 was used). The encoder output is mean-pooled over the tokens
+and concatenated with standardised tabular features: BM25 and ColPali top scores and margins,
 agreement and cross-ranks between the two retrievers, lexical and semantic overlap between the question and the
 retrieved pages, OCR length, and ColPali per-token match statistics (for each question token, its best match on the top
-pages). A two-layer head predicts $\hat{q}_p$ for every path, trained with binary cross-entropy against ANLS as a soft
+pages). A two-layer head (256 hidden units, dropout 0.1) predicts $\hat{q}_p$ for every path, trained with binary cross-entropy against ANLS as a soft
 target for 5 epochs (AdamW; learning rates 2e-05 for the encoder and 0.001 for the head; weight
-decay 0.01; batch 16; linear warm-up and decay), keeping the epoch with the best validation area under the curve (AUC) of the receiver operating characteristic
-(ROC).
+decay 0.01; batch 16; linear warm-up over the first 10\% of steps and linear decay). These settings
+were fixed before training and were not searched; the only choice made on
+validation data is the epoch, the one with the best validation area under the curve (AUC) of the receiver operating characteristic
+(ROC) for the event ANLS $\ge$ 0.5.
 
 \paragraph{Choosing $\lambda$.} $\lambda$ is set per deployment, without retraining the router. To report a single operating point without
 tuning on test data, we choose on each split's validation set the cheapest $\lambda$ whose validation ANLS is within

@@ -1,0 +1,3 @@
+﻿index, name, driver_version, driver_model.current
+0, NVIDIA A10, 616.92, MCDM
+1, NVIDIA A10, 616.92, MCDM

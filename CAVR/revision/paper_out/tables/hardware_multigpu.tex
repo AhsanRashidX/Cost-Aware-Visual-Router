@@ -1,6 +1,6 @@
 \begin{table}[t]
 \centering
-\caption{Multi-GPU nodes used for the index-sharding and host-memory measurements (Tables~\ref{tab:multi_gpu} and~\ref{tab:host_stream}). No model runs on these nodes: page and query embeddings are exported from the workstation of Table~\ref{tab:hardware}.}
+\caption{Multi-GPU nodes. Both ran index sharding (Table~\ref{tab:multi_gpu}) with page and query embeddings exported from the workstation of Table~\ref{tab:hardware}; the A10 node also ran the host-memory index (Table~\ref{tab:host_stream}), the retrieval-depth controls, the confirmation set, the image-token sweep and live serving (vLLM under WSL, GPUs in MCDM mode).}
 \label{tab:hardware_multigpu}
 \begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{p{0.22\linewidth}p{0.36\linewidth}p{0.36\linewidth}}

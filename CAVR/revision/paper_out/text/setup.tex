@@ -17,11 +17,13 @@ Routers are trained and evaluated on 5 splits (seeds 1234--1238). Each split ass
 pages to training, validation and test (60/20/20 within each dataset), so all questions about a page (4.6 on
 average) fall in the same split; test splits hold 1,548--1,653 questions. Splits group by page, not by
 document: 129 of the 178 multi-page DocVQA documents have pages in more than one split (seed
-1234). Training data are used to fit the routers; validation data are used for early stopping, hyperparameter
-selection, the choice of $\lambda$ and the calibration of escalation probabilities. No parameter of the final pipeline
+1234). Training data are used to fit the routers. Validation data are used for early stopping (CAVR) and
+the choice of epoch (CAVR-CE), the regularisation of the logistic-regression and kNN baselines, the choice of
+$\lambda$ and the calibration of escalation probabilities; the hyperparameters of CAVR, CAVR-CE and the
+gradient-boosting baseline were fixed before training and not searched. No parameter of the final pipeline
 is fitted or selected on test data. However, the router design itself (Section~\ref{sec:method-routers}) was developed
-on the same five splits, and the feasibility analyses that motivated it inspected their test portions. The frozen
-routers were therefore also applied to a separate confirmation set drawn from the datasets' training splits
+on the same five splits, and the feasibility analyses that motivated it inspected their test portions. The routers
+were therefore also tested on a separate confirmation set drawn from the datasets' training splits
 (Section~\ref{sec:setup-confirm}).
 
 \input{tables/data}
@@ -68,8 +70,9 @@ are warmed up before timing; timed regions are bracketed by CUDA synchronisation
 each generation, outside the timed region; this means the generation timing includes re-allocating that memory, which
 a long-running server would avoid. Retrieval was timed in separate passes: BM25 on the CPU, and ColPali query encoding
 and scoring on the GPU (one value per query, shared by the visual and hybrid paths). Per query and path we record:
-wall-clock time of preprocessing, retrieval and generation; GPU-seconds, i.e.\ the wall-clock time of the GPU stages
-(generation, plus ColPali for paths that use it), including host overhead such as tokenisation; energy as the
+wall-clock time of preprocessing, retrieval and generation; GPU-seconds as defined in
+Section~\ref{sec:method-cost} (the generation call and, where used, ColPali encoding and scoring, each bracketed by
+CUDA synchronisation; tokenisation, image resizing, BM25 and answer decoding run on the CPU and are excluded); energy as the
 difference of the NVML total-energy counter (millijoule resolution; values for single short queries are approximate,
 totals are accurate); peak allocated and reserved GPU memory; and the generated answer with the mean and minimum
 log-probability of its tokens under the raw logits. Offline costs (OCR and ColPali indexing) are measured separately
@@ -109,9 +112,12 @@ GPU-seconds and joules per query, and latency as p50 and p95 wall-clock time.
   \item \emph{CAVR}, its class head used alone (``CAVR (class head only)''), and two ablations that add BM25 scores, or
   BM25 and ColPali scores, to its input.
   \item \emph{CAVR-CE}, the content-aware router (Section~\ref{sec:method-routers}), and a gradient-boosting baseline on
-  the same tabular features without the cross-encoder (histogram gradient boosting, 300 iterations, learning rate
-  0.05, 31 leaves), fitted with and without the ColPali token statistics: its AUC is reported without them, and its
-  routing policy, under CAVR-CE's decision rule, with them.
+  the same tabular features without the cross-encoder (histogram gradient boosting, one regressor per path, 300
+  iterations, learning rate 0.05, 31 leaves, L2 regularisation 1, fixed in advance), fitted with and without the
+  ColPali token statistics: its AUC is reported without them, and its routing policy with them. That policy uses
+  CAVR-CE's decision rule and $\lambda$-selection rule unchanged (cheapest $\lambda$ within 0.005 of
+  always-hybrid on validation, else the $\lambda$ with the highest validation ANLS), with ColPali charged to every
+  query and no router overhead (its inference takes well under a millisecond on the CPU).
   \item \emph{Per-query oracle:} the path that maximises measured ANLS minus $\lambda$ times measured per-query cost.
 \end{itemize}
 Unless stated otherwise, routers use $\lambda = 0.1$, and $\lambda$ sweeps use \{0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5, 1\}. For the operating
@@ -155,9 +161,14 @@ After the design was fixed, a confirmation set was drawn from the training split
 files, whose 1,662 DocVQA pages and 791 infographics form the retrieval pools. No page is shared
 with the validation data. OCR, BM25 and ColPali retrieval, generation on all three paths and the CAVR-CE features were
 run with the unchanged pipeline on the NVIDIA A10 node. One question was excluded because its hybrid input
-(5,184 tokens) did not fit in that GPU's memory. CAVR-CE was re-trained for each seed on that seed's original
-training split, the confirmation features were standardised with the same split's statistics, and the decision rule,
-$\lambda$ and cost estimates were not changed. Comparisons use the paired page-cluster bootstrap and McNemar tests
+(5,184 tokens) did not fit in that GPU's memory. The weights of the CAVR-CE models of the main run were not
+stored, so CAVR-CE was re-trained for each seed with the same code, training split, hyperparameters and seed, on the
+NVIDIA A10 node; no data from the confirmation set entered training. Re-training on the GPU is not bit-exact: the
+re-trained routers make the same choice as the original ones on 80--93\% of the original
+test queries (Section~\ref{sec:res-confirm}). The confirmation features were standardised with the training split's
+statistics, and the decision rule, each seed's validation-chosen $\lambda$ and the per-path cost estimates (training-split
+means measured on the workstation) were carried over unchanged; nothing was tuned on the confirmation set. We call
+these routers \emph{re-trained}, not frozen. Comparisons use the paired page-cluster bootstrap and McNemar tests
 described next.
 
 \subsection{Statistical analysis}
@@ -263,13 +274,17 @@ without scoring. Energy is the sum of the NVML counters of both GPUs.
 \subsection{Hardware, software and reproducibility}
 \label{sec:setup-hardware}
 
-All experiments except multi-GPU sharding and the host-memory index ran on the workstation of
-Table~\ref{tab:hardware}, which also lists the library versions and model revisions; these two ran on the nodes of
-Table~\ref{tab:hardware_multigpu}. Seeds are fixed (1234 for data sampling and the first split). The CAVR MLP is trained on the
+The cached run of every path, router training and evaluation, the load-test inputs, index scaling and router
+benchmarks ran on the workstation of Table~\ref{tab:hardware}, which also lists the library versions and model
+revisions. The retrieval-depth controls, the confirmation set, live serving, multi-GPU sharding and the host-memory
+index ran on the nodes of Table~\ref{tab:hardware_multigpu}. Seeds are fixed (1234 for data sampling and the first split). The CAVR MLP is trained on the
 CPU and is deterministic; generation, ColPali and CAVR-CE fine-tuning run on the GPU in bf16 and are reproducible up to
 small numerical differences (re-training CAVR-CE changed validation AUC by at most 0.003). Every query's
-outputs are cached, every table and figure in this paper is generated from the cached results by the released code
-[AUTHOR ACTION: cite the release and its DOI], and the hash of the generation script is stored with its outputs.
+outputs are cached, every table and figure in this paper is generated from the cached results by the released code,
+and the hash of the generation script is stored with its outputs. Code, cached per-query outputs and result files are
+available at \url{https://github.com/AhsanRashidX/Cost-Aware-Visual-Router} and archived under
+[AUTHOR ACTION: DOI of the archived release]; a manifest in the archive maps every table and figure to the script that
+generates it and the result file it reads.
 
 \input{tables/hardware}
 \input{tables/hardware_multigpu}

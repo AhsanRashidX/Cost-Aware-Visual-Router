@@ -2,37 +2,40 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-Serving multimodal RAG at scale is a GPU provisioning problem with two levers: routing reduces generation compute
-per query relative to always combining both contexts, and index placement handles visual-index memory as the corpus grows. Measured end to
-end with real retrieval and generation on one GPU, the strongest fixed policy is the page image alone. The
-content-aware router CAVR-CE gains 0.016 ANLS over it for 15\% more GPU compute, and uses 29\%
-less GPU compute than always combining text and image contexts at a mean ANLS cost of 0.008. On 1,499
-held-out questions from the training splits, which the generator may have seen, the frozen router kept a
-35\% saving over always-hybrid, but its gain over the page image alone ($+0.005$ ANLS, interval
-[-0.004, +0.014]) was not significant: whether routing beats the best single path depends on whether the OCR text
-helps on a given question distribution, and on our held-out set the comparison may also reflect training exposure. In a load test simulated from measured service times, 100 queries/s at
-p95 $\le$ 2\,s needs 72 GPUs with CAVR-CE, 106 with always-hybrid and
-64 with always-visual. Served live with vLLM on one and two A10 GPUs, the policies kept this
-order and CAVR-CE sustained 1.82$\times$ the arrival rate of always-hybrid at p95 $\le$ 5\,s,
-but absolute capacity at that target was 1.4--2.0$\times$ lower than simulated, and at
-2\,s one A10 missed the target with CAVR-CE and always-hybrid even at the lowest tested rate, so the simulated GPU
-counts are estimates whose error at larger pools is unknown. Its cost weight is a per-deployment setting; confidence-based
-escalation reached the same operating point as lowering it.
+We measured the cost and answer quality of text, image and combined contexts for multimodal document RAG end to end,
+and asked whether a router can use the difference. The answers to the four research questions are as follows.
 
-On two multi-GPU nodes (three Tesla P40 and two NVIDIA A10 GPUs), sharding the visual index
-holds exhaustive search at constant latency as the corpus grows with the number of GPUs, with parallel efficiency
-of at least 99.6\% and 97.6\% from 50k pages up. With the index in host memory,
-two GPUs searched a million pages in large batches at close to the throughput per GPU of GPU-resident search,
-which would need 16 GPUs; the price is single-query latency (6.4\,s), which limits this
-placement to batch search.
+\emph{RQ1: what the paths cost and how well they answer.} With one shared generator, the page image alone is the
+strongest fixed policy, the OCR text path is neither cheap nor accurate, and adding the text to the image costs
+1.6$\times$ the GPU time for a small gain. Retrieval misses, not the choice of context, cause most errors:
+given the gold page, every path gains far more than any routing policy does.
 
-The evaluation also shows what does not hold. The gain over the best fixed path did not carry over to new
-questions, the keyword rule behind our earlier labels does not reflect which path answers correctly, and with a
-shared generator the text path is not a cheap path. A per-query oracle (ANLS 0.630 at 0.486 GPU-s) shows how much remains: the
-bottleneck is predicting, before generation, whether a path will succeed.
+\emph{RQ2: whether a router can predict the right path before generation.} From the question alone, no: CAVR on
+question embeddings is no better than always-visual. Reading what retrieval returned helps. The robust result is a
+saving relative to always combining both contexts: CAVR-CE uses 29\% less GPU compute than always-hybrid at
+0.008 lower ANLS, and 35\% less on questions from the datasets' training splits, where its ANLS was
+no lower. A benefit of query-dependent routing over the best single path is not established: CAVR-CE gained
+0.016 ANLS over always-visual for 15\% more compute on the design splits, but only $+0.005$
+(interval [-0.004, +0.014]) on the training-split questions, which ColPali and possibly the generator saw in training.
+Where the gain appears, it comes from questions whose answer the OCR text helps to read, such as tables and lists on
+DocVQA; whether routing beats the best single path depends on how often that happens in a question distribution. A
+per-query oracle (ANLS 0.630 at 0.486 GPU-s) shows how much room remains: the bottleneck is predicting
+whether a path will succeed.
 
-The routing results come from one GPU, the serving results from a simulation checked live on two GPUs for generation
-only, and sharding and the host-memory index were measured on
-separate server nodes for retrieval only. Future work should serve retrieval, routing and generation together on a larger cluster, model the interference
-of prefills with running requests in the capacity simulator, find an overload signal that lets $\lambda$ follow load, improve per-query success
-prediction, and extend routing to queries that contain images.
+\emph{RQ3: setting the trade-off and escalating.} The cost weight $\lambda$ is an input of the decision rule, so one
+trained router covers a range of budgets; it is a per-deployment setting whose cost estimates must be re-measured on
+new hardware. Confidence-based escalation adds nothing beyond it: every escalation operating point lies within
+0.010 ANLS of the operating points that lowering $\lambda$ reaches at the same cost.
+
+\emph{RQ4: capacity and index scaling.} Served live with vLLM on one and two A10 GPUs, CAVR-CE sustained
+1.82$\times$ the arrival rate of always-hybrid at p95 $\le$ 5\,s on two GPUs, and always-visual
+remained ahead of both. A simulator driven by measured service times kept this order but overestimated absolute
+capacity by 1.4--2.0$\times$, so the GPU counts it gives for larger pools are projections. Within
+a node, sharding exhaustive MaxSim scaled almost linearly, as expected for an embarrassingly parallel search, and an
+index of a million pages held in host memory served large batches at close to the throughput per GPU of
+GPU-resident search, at 6.4\,s per single query.
+
+All experiments ran within one node, routing and generation on one GPU, and no multi-node experiment was run. Future
+work should evaluate routing on document collections with documented non-exposure, serve retrieval, routing and
+generation together on a multi-node cluster, widen the path set to the depths and image budgets that lie on the
+cost--quality frontier, and improve per-query success prediction.

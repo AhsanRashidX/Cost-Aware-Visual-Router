@@ -1,0 +1,58 @@
+{
+  "lambda": 0.075,
+  "cost": [
+    0.43502996351016887,
+    0.6186874815901888,
+    1.0132223769072448
+  ],
+  "val_auc_by_epoch": [
+    0.8472041934824833,
+    0.8462699884624284,
+    0.8448826332221279,
+    0.8358843689694666,
+    0.8344372787264368
+  ],
+  "test_choice_agreement_with_original": 0.8100871731008717,
+  "test_anls_new": 0.5681100341791586,
+  "test_anls_original": 0.5662397549390585,
+  "hardware": {
+    "timestamp": "2026-11-19T01:03:38",
+    "os": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.17",
+    "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
+    "cpu_threads": 112,
+    "ram_gb": 1023.5,
+    "git_commit": "b55e9c5301b0620c0f28730c70f1886350bd5abe",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "qwen-vl-utils": "0.0.14",
+      "accelerate": "1.15.0"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "616.92"
+  }
+}

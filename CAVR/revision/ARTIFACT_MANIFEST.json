@@ -1,0 +1,470 @@
+{
+ "git_commit": "b55e9c5301b0620c0f28730c70f1886350bd5abe",
+ "regenerate": "python make_outputs.py; python make_method_figure.py; python make_training_figure.py; python make_paper_text.py; python make_bib.py",
+ "artifacts": [
+  {
+   "kind": "figure",
+   "name": "escalation",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:t_escalation",
+   "reads": [
+    "escalation.json",
+    "eval_main.json"
+   ],
+   "produced_by": {
+    "escalation.json": [
+     "escalate.py"
+    ],
+    "eval_main.json": [
+     "evaluate.py"
+    ]
+   }
+  },
+  {
+   "kind": "figure",
+   "name": "gpus_vs_quality",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:load_test",
+   "reads": [
+    "load_test.json"
+   ],
+   "produced_by": {
+    "load_test.json": [
+     "simulate.py"
+    ]
+   }
+  },
+  {
+   "kind": "figure",
+   "name": "host_stream",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:host_stream",
+   "reads": [
+    "a10/a10_host_stream.json",
+    "a10/a10_shard_scaling.json",
+    "a10/host_stream_scaling.json"
+   ],
+   "produced_by": {
+    "a10/a10_host_stream.json": [],
+    "a10/a10_shard_scaling.json": [],
+    "a10/host_stream_scaling.json": [
+     "host_stream_scaling.py"
+    ]
+   }
+  },
+  {
+   "kind": "figure",
+   "name": "index_scaling",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:index_scaling",
+   "reads": [
+    "index_scaling.json"
+   ],
+   "produced_by": {
+    "index_scaling.json": [
+     "bench_index.py"
+    ]
+   }
+  },
+  {
+   "kind": "figure",
+   "name": "live_serving",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:live_serving",
+   "reads": [
+    "vllm_a10.json"
+   ],
+   "produced_by": {
+    "vllm_a10.json": [
+     "vllm_analysis.py"
+    ]
+   }
+  },
+  {
+   "kind": "figure",
+   "name": "method",
+   "in_paper": "method",
+   "generator": "make_method_figure.py:main",
+   "reads": [],
+   "produced_by": {}
+  },
+  {
+   "kind": "figure",
+   "name": "multi_gpu_scaling",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:multi_gpu",
+   "reads": [
+    "a10/multi_gpu_scaling.json",
+    "multi_gpu_scaling.json"
+   ],
+   "produced_by": {
+    "a10/multi_gpu_scaling.json": [
+     "multi_gpu_scaling.py"
+    ],
+    "multi_gpu_scaling.json": [
+     "multi_gpu_scaling.py"
+    ]
+   }
+  },
+  {
+   "kind": "figure",
+   "name": "pareto",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:f_pareto",
+   "reads": [
+    "eval_main.json"
+   ],
+   "produced_by": {
+    "eval_main.json": [
+     "evaluate.py"
+    ]
+   }
+  },
+  {
+   "kind": "figure",
+   "name": "training_curves",
+   "in_paper": "setup",
+   "generator": "make_training_figure.py:main",
+   "reads": [
+    "training_curves.json"
+   ],
+   "produced_by": {
+    "training_curves.json": [
+     "training_curves.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "confirmation",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:confirmation",
+   "reads": [
+    "confirmation.json"
+   ],
+   "produced_by": {
+    "confirmation.json": [
+     "confirm_eval.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "confusion",
+   "in_paper": "appendix",
+   "generator": "make_outputs.py:confusion",
+   "reads": [
+    "review_round3.json"
+   ],
+   "produced_by": {
+    "review_round3.json": [
+     "review_round3.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "controls",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:controls",
+   "reads": [
+    "controls_analysis.json"
+   ],
+   "produced_by": {
+    "controls_analysis.json": [
+     "controls_analysis.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "data",
+   "in_paper": "setup",
+   "generator": "make_outputs.py:t_data",
+   "reads": [
+    "manifest.json",
+    "ocr_cost.json"
+   ],
+   "produced_by": {
+    "manifest.json": [
+     "prepare_data.py"
+    ],
+    "ocr_cost.json": [
+     "ocr_pages.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "escalation",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:t_escalation",
+   "reads": [
+    "escalation.json",
+    "eval_main.json"
+   ],
+   "produced_by": {
+    "escalation.json": [
+     "escalate.py"
+    ],
+    "eval_main.json": [
+     "evaluate.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "hardware",
+   "in_paper": "setup",
+   "generator": "make_outputs.py:t_hardware",
+   "reads": [
+    "path_outputs_meta.json",
+    "system_info.json"
+   ],
+   "produced_by": {
+    "path_outputs_meta.json": [],
+    "system_info.json": [
+     "record_system_info.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "hardware_multigpu",
+   "in_paper": "setup",
+   "generator": "make_outputs.py:multi_gpu",
+   "reads": [
+    "a10/multi_gpu_scaling.json",
+    "multi_gpu_scaling.json"
+   ],
+   "produced_by": {
+    "a10/multi_gpu_scaling.json": [
+     "multi_gpu_scaling.py"
+    ],
+    "multi_gpu_scaling.json": [
+     "multi_gpu_scaling.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "host_stream",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:host_stream",
+   "reads": [
+    "a10/a10_host_stream.json",
+    "a10/a10_shard_scaling.json",
+    "a10/host_stream_scaling.json"
+   ],
+   "produced_by": {
+    "a10/a10_host_stream.json": [],
+    "a10/a10_shard_scaling.json": [],
+    "a10/host_stream_scaling.json": [
+     "host_stream_scaling.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "index_scaling",
+   "in_paper": "appendix",
+   "generator": "make_outputs.py:index_scaling",
+   "reads": [
+    "index_scaling.json"
+   ],
+   "produced_by": {
+    "index_scaling.json": [
+     "bench_index.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "labels",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:t_labels",
+   "reads": [
+    "labels.json"
+   ],
+   "produced_by": {
+    "labels.json": [
+     "labels.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "live_serving",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:live_serving",
+   "reads": [
+    "vllm_a10.json"
+   ],
+   "produced_by": {
+    "vllm_a10.json": [
+     "vllm_analysis.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "load_test",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:load_test",
+   "reads": [
+    "load_test.json"
+   ],
+   "produced_by": {
+    "load_test.json": [
+     "simulate.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "load_test_operating_points",
+   "in_paper": "appendix",
+   "generator": "make_outputs.py:load_test",
+   "reads": [
+    "load_test.json"
+   ],
+   "produced_by": {
+    "load_test.json": [
+     "simulate.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "main_results",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:t_main",
+   "reads": [
+    "eval_main.json",
+    "review_round2.json"
+   ],
+   "produced_by": {
+    "eval_main.json": [
+     "evaluate.py"
+    ],
+    "review_round2.json": [
+     "review_round2.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "multi_gpu_scaling",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:multi_gpu",
+   "reads": [
+    "a10/multi_gpu_scaling.json",
+    "multi_gpu_scaling.json"
+   ],
+   "produced_by": {
+    "a10/multi_gpu_scaling.json": [
+     "multi_gpu_scaling.py"
+    ],
+    "multi_gpu_scaling.json": [
+     "multi_gpu_scaling.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "retrieval",
+   "in_paper": "setup",
+   "generator": "make_outputs.py:t_retrieval",
+   "reads": [
+    "index_cost_text.json",
+    "index_cost_visual.json"
+   ],
+   "produced_by": {
+    "index_cost_text.json": [
+     "retrieve_text.py"
+    ],
+    "index_cost_visual.json": [
+     "retrieve_visual.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "router_ce_tests",
+   "in_paper": "results_section",
+   "generator": "make_outputs.py:t_main",
+   "reads": [
+    "eval_main.json",
+    "review_round2.json"
+   ],
+   "produced_by": {
+    "eval_main.json": [
+     "evaluate.py"
+    ],
+    "review_round2.json": [
+     "review_round2.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "router_throughput",
+   "in_paper": "appendix",
+   "generator": "make_outputs.py:router_cost",
+   "reads": [
+    "router_ce_cost.json",
+    "router_cost.json"
+   ],
+   "produced_by": {
+    "router_ce_cost.json": [
+     "bench_router_ce.py"
+    ],
+    "router_cost.json": [
+     "bench_router.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "slo_sweep",
+   "in_paper": "appendix",
+   "generator": "make_outputs.py:slo_sweep",
+   "reads": [
+    "sim_experiments.json"
+   ],
+   "produced_by": {
+    "sim_experiments.json": [
+     "sim_experiments.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "token_pooling",
+   "in_paper": "appendix",
+   "generator": "make_outputs.py:token_pooling",
+   "reads": [
+    "token_pooling.json"
+   ],
+   "produced_by": {
+    "token_pooling.json": [
+     "token_pooling.py"
+    ]
+   }
+  },
+  {
+   "kind": "figure",
+   "name": "load_test",
+   "in_paper": null,
+   "generator": "make_outputs.py:load_test",
+   "reads": [
+    "load_test.json"
+   ],
+   "produced_by": {
+    "load_test.json": [
+     "simulate.py"
+    ]
+   }
+  }
+ ]
+}
