@@ -79,6 +79,19 @@ five contexts reaches ANLS 0.691 on these questions, against 0.634 over the thre
 results hold for the three paths as defined; a router over a wider path set could do better, and the size of the
 saving over always-hybrid depends on which expensive path it is measured against.
 
+The image budget is itself a parameter of the visual and hybrid paths, so we re-ran both with the page image capped at
+256, 512, 768 and 1,280 visual tokens (1,280 is the cap used everywhere else) on the same 1,500 control questions
+on the NVIDIA A10 (Table~\ref{tab:token_sweep} in the Appendix). The visual path rises from ANLS 0.416
+at 256 tokens to 0.544 at 1,280, and its generation time from 0.61 to 1.20\,s.
+Even at 256 visual tokens (305 input tokens in all, 0.61\,s) it beats the three-page text
+path (1,556 tokens, 0.95\,s) by +0.053 [+0.025, +0.079], so the image keeps its advantage
+at a fifth of the text path's input. The text adds most when the image is small: the hybrid path beats the visual
+path by +0.061 [+0.042, +0.081] at 256 tokens and by +0.011 [-0.005, +0.027] at 1,280
+(+0.021 on DocVQA, +0.001 on InfographicVQA). DocVQA levels off near 768 tokens
+(-0.005 [-0.015, +0.006] against 1,280) but InfographicVQA does not (-0.034
+[-0.056, -0.014]), so a cap above 1,280 may still raise the visual path on infographics. It was not run: at
+1,280 tokens the hybrid path already reserves up to 22.8\,GB of the A10's 24\,GB.
+
 \input{tables/controls}
 
 \subsection{Outcome-based route labels}
@@ -511,9 +524,9 @@ global queue and unlimited CPU, charges a batch the mean generation time of its 
 1,786-page evaluation index on every GPU, so the retrieval tier for a large corpus is projected rather than simulated. Retrieval
 searches each dataset's whole page pool with questions written for a single page, so page recall@1 is only
 0.57 for ColPali (Section~\ref{sec:res-paths}); how many misses come from questions that do not identify their
-page was not annotated. The visual-token cap that keeps memory
-within the GPU may lower the visual path on InfographicVQA's large images; a higher budget was not tested, so the
-comparison of the visual and hybrid paths on InfographicVQA holds for this cap. The
+page was not annotated. The image-token sweep stops at the cap of 1,280 visual tokens used throughout, where
+InfographicVQA had not levelled off (Section~\ref{sec:res-paths}); a higher budget may raise the visual and hybrid
+paths on infographics, so the comparison of the paths on InfographicVQA holds for this cap. The
 confirmation set comes from training splits the generator and ColPali may have seen (Section~\ref{sec:res-confirm}).
 Costs
 are measured without prefix or encoder caching, which would favour paths whose page image repeats across

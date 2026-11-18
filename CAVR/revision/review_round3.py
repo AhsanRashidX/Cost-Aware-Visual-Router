@@ -330,6 +330,14 @@ def token_sweep():
         dd = X[eq][:, 0] - X["text"][:, 0]
         r["equal_budget"] = {"visual_condition": eq, "visual_tokens_in": r["conditions"][eq]["input_tokens"],
                              "text_tokens_in": tt, "visual_minus_text": {"mean": float(dd.mean()), "ci95": ci(boot(dd))}}
+        # every image budget against the text path, and hybrid against visual at the same image budget
+        for c in conds:
+            if c.startswith("visual@"):
+                dd = X[c][:, 0] - X["text"][:, 0]
+                r["conditions"][c]["minus_text"] = {"mean": float(dd.mean()), "ci95": ci(boot(dd))}
+            if c.startswith("hybrid@"):
+                dd = X[c][:, 0] - X["visual@" + c.split("@")[1]][:, 0]
+                r["conditions"][c]["minus_visual"] = {"mean": float(dd.mean()), "ci95": ci(boot(dd))}
         out[ds] = r
     return out
 

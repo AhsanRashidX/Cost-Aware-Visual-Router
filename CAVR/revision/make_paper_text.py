@@ -516,6 +516,21 @@ def values():
     eg = r3["escalation_vs_lambda"]
     V.update({"eg_max": f"{eg['max_gap']['mean']:.3f}", "eg_max_hi": f"{max(p['max_gap'] for p in eg['per_split']):.3f}",
               "eg_mean": f"{eg['mean_gap']['mean']:+.3f}", "eg_above": pc3(eg["share_above_frontier"]["mean"])})
+    ts = r3.get("token_sweep")
+    if ts:
+        V["ts_n"] = f"{ts['n_questions']:,}"
+        for d in ("all", "docvqa", "infovqa"):
+            for c, v in ts[d]["conditions"].items():
+                k = f"ts_{d[:1]}_" + ("t" if c == "text" else c.split("@")[0][0] + c.split("@")[1])
+                V.update({f"{k}_anls": f"{v['anls']:.3f}", f"{k}_s": f"{v['gen_s']:.2f}",
+                          f"{k}_tok": f"{v['input_tokens']:,.0f}"})
+                for key, short in (("minus_text", "mt"), ("minus_visual", "mv"), ("minus_1280", "m1280")):
+                    if key in v:
+                        V[f"{k}_{short}"] = f"{v[key]['mean']:+.3f}"
+                        V[f"{k}_{short}_ci"] = ci(v[key]["ci95"])
+        mem = ts["all"]["conditions"]
+        V["ts_mem_vis"] = f"{max(v['peak_reserved_gb'] for c, v in mem.items() if c.startswith('visual')):.1f}"
+        V["ts_mem_hyb"] = f"{max(v['peak_reserved_gb'] for c, v in mem.items() if c.startswith('hybrid')):.1f}"
     # verified references written by make_bib.py (every key cited in the paper)
     V["n_refs"] =sum(line.startswith("@") for line in open(ROOT / "paper_out" / "references.bib", encoding="utf-8"))
     return V
@@ -607,6 +622,19 @@ not come from a larger budget. The evaluated path set is therefore not the effic
 five contexts reaches ANLS <<ps_a_orf_00>> on these questions, against <<ps_a_ort_00>> over the three paths. Our routing
 results hold for the three paths as defined; a router over a wider path set could do better, and the size of the
 saving over always-hybrid depends on which expensive path it is measured against.
+
+The image budget is itself a parameter of the visual and hybrid paths, so we re-ran both with the page image capped at
+256, 512, 768 and 1,280 visual tokens (1,280 is the cap used everywhere else) on the same <<ts_n>> control questions
+on the <<a10_gpu>> (Table~\ref{tab:token_sweep} in the Appendix). The visual path rises from ANLS <<ts_a_v256_anls>>
+at 256 tokens to <<ts_a_v1280_anls>> at 1,280, and its generation time from <<ts_a_v256_s>> to <<ts_a_v1280_s>>\,s.
+Even at 256 visual tokens (<<ts_a_v256_tok>> input tokens in all, <<ts_a_v256_s>>\,s) it beats the three-page text
+path (<<ts_a_t_tok>> tokens, <<ts_a_t_s>>\,s) by <<ts_a_v256_mt>> <<ts_a_v256_mt_ci>>, so the image keeps its advantage
+at a fifth of the text path's input. The text adds most when the image is small: the hybrid path beats the visual
+path by <<ts_a_h256_mv>> <<ts_a_h256_mv_ci>> at 256 tokens and by <<ts_a_h1280_mv>> <<ts_a_h1280_mv_ci>> at 1,280
+(<<ts_d_h1280_mv>> on DocVQA, <<ts_i_h1280_mv>> on InfographicVQA). DocVQA levels off near 768 tokens
+(<<ts_d_v768_m1280>> <<ts_d_v768_m1280_ci>> against 1,280) but InfographicVQA does not (<<ts_i_v768_m1280>>
+<<ts_i_v768_m1280_ci>>), so a cap above 1,280 may still raise the visual path on infographics. It was not run: at
+1,280 tokens the hybrid path already reserves up to <<ts_mem_hyb>>\,GB of the A10's 24\,GB.
 
 \input{tables/controls}
 
@@ -1040,9 +1068,9 @@ global queue and unlimited CPU, charges a batch the mean generation time of its 
 <<n_pages>>-page evaluation index on every GPU, so the retrieval tier for a large corpus is projected rather than simulated. Retrieval
 searches each dataset's whole page pool with questions written for a single page, so page recall@1 is only
 <<r1_col>> for ColPali (Section~\ref{sec:res-paths}); how many misses come from questions that do not identify their
-page was not annotated. The visual-token cap that keeps memory
-within the GPU may lower the visual path on InfographicVQA's large images; a higher budget was not tested, so the
-comparison of the visual and hybrid paths on InfographicVQA holds for this cap. The
+page was not annotated. The image-token sweep stops at the cap of 1,280 visual tokens used throughout, where
+InfographicVQA had not levelled off (Section~\ref{sec:res-paths}); a higher budget may raise the visual and hybrid
+paths on infographics, so the comparison of the paths on InfographicVQA holds for this cap. The
 confirmation set comes from training splits the generator and ColPali may have seen (Section~\ref{sec:res-confirm}).
 Costs
 are measured without prefix or encoder caching, which would favour paths whose page image repeats across
@@ -1083,7 +1111,8 @@ Section~\ref{sec:results}: the serving capacity of each $\lambda$ operating poin
 summarised by Figure~\ref{fig:pareto}), the GPUs needed at each p95 target (Table~\ref{tab:slo_sweep}, cf.
 Figure~\ref{fig:gpus}), index latency against size (Table~\ref{tab:index_scaling}, Figure~\ref{fig:index}), compressed
 indexes (Table~\ref{tab:token_pooling}), router throughput (Table~\ref{tab:router_throughput}) and the confusion
-matrix of CAVR-CE against the per-query oracle (Table~\ref{tab:confusion}).
+matrix of CAVR-CE against the per-query oracle (Table~\ref{tab:confusion}), and the image-token sweep of
+Section~\ref{sec:res-paths} (Table~\ref{tab:token_sweep}).
 
 \input{tables/load_test_operating_points}
 \input{tables/slo_sweep}
@@ -1091,6 +1120,7 @@ matrix of CAVR-CE against the per-query oracle (Table~\ref{tab:confusion}).
 \input{tables/token_pooling}
 \input{tables/router_throughput}
 \input{tables/confusion}
+\input{tables/token_sweep}
 """
 
 

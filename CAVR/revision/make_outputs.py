@@ -725,6 +725,29 @@ def confusion():
     table("confusion", cap, "tab:confusion", ["", "Oracle: text", "Oracle: visual", "Oracle: hybrid", "Total"], rows)
 
 
+
+def token_sweep_table():
+    r3 = load("review_round3.json")
+    ts = (r3 or {}).get("token_sweep")
+    if not ts:
+        return
+    rows = []
+    for c in ["text"] + [f"{p}@{b}" for p in ("visual", "hybrid") for b in (256, 512, 768, 1280)]:
+        name = "Text (3 pages)" if c == "text" else f"{c.split('@')[0].capitalize()}, {int(c.split('@')[1]):,}"
+        row = [name]
+        for ds in ("all", "docvqa", "infovqa"):
+            row.append(f"{ts[ds]['conditions'][c]['anls']:.3f}")
+        a = ts["all"]["conditions"][c]
+        row += [f"{a['input_tokens']:,.0f}", f"{a['gen_s']:.2f}", f"{a['peak_reserved_gb']:.1f}"]
+        rows.append(row)
+    cap = (f"Image-token sweep on the {ts['n_questions']:,} control questions (A10, Qwen2.5-VL-7B, greedy): the visual and "
+           "hybrid paths with the page image capped at 256--1,280 visual tokens (1,280 is the cap used in all other "
+           "experiments), and the text path for reference. ANLS per dataset; input tokens, generation time and peak "
+           "reserved GPU memory (GB) are means or maxima over all questions.")
+    table("token_sweep", cap, "tab:token_sweep",
+          ["Path, visual tokens", "ANLS all", "DocVQA", "InfoVQA", "Input tokens", "Gen. s", "Peak GB"], rows)
+
+
 def main():
     TAB.mkdir(parents=True, exist_ok=True)
     FIG.mkdir(parents=True, exist_ok=True)
@@ -749,6 +772,7 @@ def main():
     live_serving()
     router_cost()
     confusion()
+    token_sweep_table()
 
 
 if __name__ == "__main__":

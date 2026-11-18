@@ -1,0 +1,22 @@
+\begin{table}[t]
+\centering
+\caption{Image-token sweep on the 1,500 control questions (A10, Qwen2.5-VL-7B, greedy): the visual and hybrid paths with the page image capped at 256--1,280 visual tokens (1,280 is the cap used in all other experiments), and the text path for reference. ANLS per dataset; input tokens, generation time and peak reserved GPU memory (GB) are means or maxima over all questions.}
+\label{tab:token_sweep}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Path, visual tokens} & \textbf{ANLS all} & \textbf{DocVQA} & \textbf{InfoVQA} & \textbf{Input tokens} & \textbf{Gen. s} & \textbf{Peak GB} \\
+\midrule
+Text (3 pages) & 0.363 & 0.365 & 0.361 & 1,556 & 0.95 & 19.6 \\
+Visual, 256 & 0.416 & 0.414 & 0.418 & 305 & 0.61 & 15.6 \\
+Visual, 512 & 0.499 & 0.494 & 0.503 & 548 & 0.73 & 15.7 \\
+Visual, 768 & 0.524 & 0.507 & 0.542 & 789 & 0.88 & 15.9 \\
+Visual, 1,280 & 0.544 & 0.512 & 0.576 & 1,251 & 1.20 & 16.2 \\
+Hybrid, 256 & 0.477 & 0.483 & 0.471 & 1,800 & 1.24 & 20.1 \\
+Hybrid, 512 & 0.529 & 0.521 & 0.536 & 2,043 & 1.46 & 20.8 \\
+Hybrid, 768 & 0.544 & 0.528 & 0.560 & 2,284 & 1.68 & 21.5 \\
+Hybrid, 1,280 & 0.555 & 0.533 & 0.577 & 2,746 & 2.20 & 22.8 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
