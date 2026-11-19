@@ -327,6 +327,25 @@ error was smaller with two GPUs than with one, and how it changes with pool size
 2\,s the error was larger: on one A10, CAVR-CE and always-hybrid missed the target even at the lowest tested rate. The order of the policies
 and CAVR-CE's advantage over always-hybrid held in the live test.
 
+\paragraph{Retrieval and routing in the loop.} The runs above serve generation only. To measure the whole pipeline
+once, a front end on the second A10 ran, for each request at its arrival time, BM25 over the OCR text, ColPali query
+encoding with exhaustive MaxSim over the dataset's pages and, for CAVR-CE, the router's features and cross-encoder; it
+then sent the prompt built from this live retrieval to one vLLM replica on the first A10. Arrivals and requests replay
+the one-GPU trace above (360 recorded requests per rate). The front end took 131\,ms per request for
+CAVR-CE and 81\,ms for always-visual, with at most 242\,ms of queueing at p95, so a single
+front-end worker could serve about 8 requests/s, well above the rates tested. End-to-end p95 latency was
+1.01--1.21$\times$ the generation-only p95 for CAVR-CE and
+0.98--1.10$\times$ for always-visual, and capacity at p95 $\le$ 5\,s fell from 1.10
+to 0.99 requests/s for CAVR-CE (10\%) and from 1.27 to 1.22 for
+always-visual (3\%). Part of CAVR-CE's larger drop comes from its path mix rather than from the front
+end: the router weights of the main run had not been stored, so the router was re-trained with the same code, data
+and seed; it agreed with its own offline choices on 99\% of requests but with the original router on
+80\%, and sent 62\% of requests to the visual path and 11\% to the text path,
+against 58\% and 15\% in the generation-only run. With retrieval in the loop, always-visual
+sustained 1.24$\times$ CAVR-CE's rate at 5\,s, and neither policy met p95 $\le$ 2\,s at the lowest tested
+rate. ANLS with live retrieval was 0.567 for CAVR-CE and 0.551 for always-visual on the same
+requests.
+
 \input{tables/live_serving}
 \begin{figure*}[t]
   \centering
@@ -518,7 +537,8 @@ by more at 2\,s, so its GPU counts are simulated estimates whose error beyond tw
 the order of the policies at 5\,s. Each live rate is a single arrival trace, so the live capacities carry no
 interval. That test serves
 generation only, with retrieval and routing run beforehand, on at most two GPUs under WSL, with one model and
-greedy decoding. Escalation latencies are
+greedy decoding; retrieval and routing were in the loop for one trace per policy on one GPU, with a re-trained
+router whose path mix differs slightly from the original. Escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. The simulator assumes an ideal
 global queue and unlimited CPU, charges a batch the mean generation time of its members (the longest-member bound is reported), and keeps the
 1,786-page evaluation index on every GPU, so the retrieval tier for a large corpus is projected rather than simulated. Retrieval

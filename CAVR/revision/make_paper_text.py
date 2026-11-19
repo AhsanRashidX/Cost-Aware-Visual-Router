@@ -531,6 +531,32 @@ def values():
         mem = ts["all"]["conditions"]
         V["ts_mem_vis"] = f"{max(v['peak_reserved_gb'] for c, v in mem.items() if c.startswith('visual')):.1f}"
         V["ts_mem_hyb"] = f"{max(v['peak_reserved_gb'] for c, v in mem.items() if c.startswith('hybrid')):.1f}"
+    # live pipeline: retrieval and routing in the loop (vllm_repeats_r3.py, live_pipeline_r3.py)
+    lp = J("vllm_repeats_r3.json").get("live_pipeline", {})
+    if "cavr_ce_r1_s1234" in lp and "always_visual_r1_s1234" in lp:
+        for key, short in (("cavr_ce_r1_s1234", "ce"), ("always_visual_r1_s1234", "vis")):
+            d = lp[key]
+            rr = [v for k, v in d.items() if k[0].isdigit()]
+            ratio = [v["pipeline_p95"] / v["generation_only_p95"] for v in rr]
+            c5, g5 = d["capacity"]["5.0"], d["capacity_generation_only"]["5.0"]
+            V.update({f"lp_{short}_fe": f"{1000 * np.median([v['frontend_p50'] for v in rr]):.0f}",
+                      f"lp_{short}_wait": f"{1000 * max(v['frontend_wait_p95'] for v in rr):.0f}",
+                      f"lp_{short}_r_min": f"{min(ratio):.2f}", f"lp_{short}_r_max": f"{max(ratio):.2f}",
+                      f"lp_{short}_cap5": f"{c5:.2f}", f"lp_{short}_gen5": f"{g5:.2f}",
+                      f"lp_{short}_drop": f"{100 * (1 - c5 / g5):.0f}",
+                      f"lp_{short}_anls": f"{np.mean([v['anls'] for v in rr]):.3f}",
+                      f"lp_{short}_cap2": f"{d['capacity']['2.0']:.2f}"})
+        ce = lp["cavr_ce_r1_s1234"]
+        last = [v for k, v in ce.items() if k[0].isdigit()][-1]
+        V.update({"lp_n": f"{last['n_recorded']}",
+                  "lp_fe_qps": f"{1 / (float(V['lp_ce_fe']) / 1000):.0f}",
+                  "lp_ce_agree_off": f"{100 * last['agree_offline_retrained']:.0f}",
+                  "lp_ce_agree_cached": f"{100 * last['agree_cached_router']:.0f}",
+                  "lp_ce_vis": f"{100 * last['path_share']['visual']:.0f}",
+                  "lp_ce_txt": f"{100 * last['path_share']['text']:.0f}",
+                  "lp_ce0_vis": f"{100 * ce['generation_only_path_share']['visual']:.0f}",
+                  "lp_ce0_txt": f"{100 * ce['generation_only_path_share']['text']:.0f}",
+                  "lp_vis_over_ce": f"{lp['always_visual_r1_s1234']['capacity']['5.0'] / ce['capacity']['5.0']:.2f}"})
     # verified references written by make_bib.py (every key cited in the paper)
     V["n_refs"] =sum(line.startswith("@") for line in open(ROOT / "paper_out" / "references.bib", encoding="utf-8"))
     return V
@@ -871,6 +897,25 @@ error was smaller with two GPUs than with one, and how it changes with pool size
 2\,s the error was larger: on one A10, CAVR-CE and always-hybrid missed the target even at the lowest tested rate. The order of the policies
 and CAVR-CE's advantage over always-hybrid held in the live test.
 
+\paragraph{Retrieval and routing in the loop.} The runs above serve generation only. To measure the whole pipeline
+once, a front end on the second A10 ran, for each request at its arrival time, BM25 over the OCR text, ColPali query
+encoding with exhaustive MaxSim over the dataset's pages and, for CAVR-CE, the router's features and cross-encoder; it
+then sent the prompt built from this live retrieval to one vLLM replica on the first A10. Arrivals and requests replay
+the one-GPU trace above (<<lp_n>> recorded requests per rate). The front end took <<lp_ce_fe>>\,ms per request for
+CAVR-CE and <<lp_vis_fe>>\,ms for always-visual, with at most <<lp_ce_wait>>\,ms of queueing at p95, so a single
+front-end worker could serve about <<lp_fe_qps>> requests/s, well above the rates tested. End-to-end p95 latency was
+<<lp_ce_r_min>>--<<lp_ce_r_max>>$\times$ the generation-only p95 for CAVR-CE and
+<<lp_vis_r_min>>--<<lp_vis_r_max>>$\times$ for always-visual, and capacity at p95 $\le$ 5\,s fell from <<lp_ce_gen5>>
+to <<lp_ce_cap5>> requests/s for CAVR-CE (<<lp_ce_drop>>\%) and from <<lp_vis_gen5>> to <<lp_vis_cap5>> for
+always-visual (<<lp_vis_drop>>\%). Part of CAVR-CE's larger drop comes from its path mix rather than from the front
+end: the router weights of the main run had not been stored, so the router was re-trained with the same code, data
+and seed; it agreed with its own offline choices on <<lp_ce_agree_off>>\% of requests but with the original router on
+<<lp_ce_agree_cached>>\%, and sent <<lp_ce_vis>>\% of requests to the visual path and <<lp_ce_txt>>\% to the text path,
+against <<lp_ce0_vis>>\% and <<lp_ce0_txt>>\% in the generation-only run. With retrieval in the loop, always-visual
+sustained <<lp_vis_over_ce>>$\times$ CAVR-CE's rate at 5\,s, and neither policy met p95 $\le$ 2\,s at the lowest tested
+rate. ANLS with live retrieval was <<lp_ce_anls>> for CAVR-CE and <<lp_vis_anls>> for always-visual on the same
+requests.
+
 \input{tables/live_serving}
 \begin{figure*}[t]
   \centering
@@ -1062,7 +1107,8 @@ by more at 2\,s, so its GPU counts are simulated estimates whose error beyond tw
 the order of the policies at 5\,s. Each live rate is a single arrival trace, so the live capacities carry no
 interval. That test serves
 generation only, with retrieval and routing run beforehand, on at most two GPUs under WSL, with one model and
-greedy decoding. Escalation latencies are
+greedy decoding; retrieval and routing were in the loop for one trace per policy on one GPU, with a re-trained
+router whose path mix differs slightly from the original. Escalation latencies are
 computed from measured per-stage times rather than measured on concurrent workers. The simulator assumes an ideal
 global queue and unlimited CPU, charges a batch the mean generation time of its members (the longest-member bound is reported), and keeps the
 <<n_pages>>-page evaluation index on every GPU, so the retrieval tier for a large corpus is projected rather than simulated. Retrieval

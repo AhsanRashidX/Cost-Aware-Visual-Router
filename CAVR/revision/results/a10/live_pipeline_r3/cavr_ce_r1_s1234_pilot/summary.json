@@ -1,0 +1,188 @@
+{
+  "policy": "cavr_ce",
+  "url": "http://127.0.0.1:8000",
+  "seed": 1234,
+  "rates_planned": [
+    0.303,
+    0.605
+  ],
+  "hardware_frontend": {
+    "timestamp": "2026-11-19T03:48:07",
+    "os": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.17",
+    "cpu": "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz",
+    "cpu_threads": 112,
+    "ram_gb": 1023.5,
+    "git_commit": "cb08220beb2ba8d1a60ef1310527984fc7d765a1",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.18.0",
+      "sentence-transformers": "6.1.0",
+      "colpali-engine": "0.3.18",
+      "python-doctr": "1.1.0",
+      "datasets": "5.0.1",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.4.6",
+      "rank-bm25": "0.2.2",
+      "nvidia-ml-py": "13.615.71",
+      "qwen-vl-utils": "0.0.14",
+      "accelerate": "1.15.0"
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA A10",
+        "memory_gb": 22.5,
+        "power_limit_w": 150.0
+      }
+    ],
+    "cuda_runtime": "12.8",
+    "cudnn": 91900,
+    "driver": "616.92"
+  },
+  "rates": {
+    "0.303": {
+      "n": 20,
+      "n_recorded": 10,
+      "errors": 0,
+      "latency_s": {
+        "n": 10,
+        "mean": 1.171509356459137,
+        "p50": 1.0750189730897546,
+        "p90": 1.5403227470931595,
+        "p95": 1.9098171424178862,
+        "p99": 2.2054126586776692,
+        "max": 2.2793115377426147
+      },
+      "frontend_s": {
+        "n": 10,
+        "mean": 0.13526144999777898,
+        "p50": 0.13467364996904507,
+        "p90": 0.1379602600238286,
+        "p95": 0.13895908003323712,
+        "p99": 0.13975813604076393,
+        "max": 0.13995790004264563
+      },
+      "frontend_wait_s": {
+        "n": 10,
+        "mean": 0.0028991064871661367,
+        "p50": 0.002775581320747733,
+        "p90": 0.011547038436401636,
+        "p95": 0.01165324128814973,
+        "p99": 0.011738203569548205,
+        "max": 0.011759444139897823
+      },
+      "gen_latency_s": {
+        "n": 10,
+        "mean": 1.0329589399741963,
+        "p50": 0.9392714499263093,
+        "p90": 1.3941583999549036,
+        "p95": 1.7635080499749156,
+        "p99": 2.0589877699909267,
+        "max": 2.132857699994929
+      },
+      "anls": 0.7,
+      "path_share": {
+        "text": 0.0,
+        "visual": 0.8,
+        "hybrid": 0.2
+      },
+      "agree_cached_router": 0.8,
+      "agree_offline_retrained": 1.0
+    },
+    "0.605": {
+      "n": 20,
+      "n_recorded": 10,
+      "errors": 0,
+      "latency_s": {
+        "n": 10,
+        "mean": 1.2349369914038106,
+        "p50": 1.1101940790540539,
+        "p90": 1.7877596706734038,
+        "p95": 2.0043737052648787,
+        "p99": 2.1776649329380597,
+        "max": 2.220987739856355
+      },
+      "frontend_s": {
+        "n": 10,
+        "mean": 0.13515450999839232,
+        "p50": 0.13534510001773015,
+        "p90": 0.13758959996048362,
+        "p95": 0.138537749950774,
+        "p99": 0.13929626994300634,
+        "max": 0.13948589994106442
+      },
+      "frontend_wait_s": {
+        "n": 10,
+        "mean": 0.012827221397310495,
+        "p50": 0.014977047976572067,
+        "p90": 0.023887906107120205,
+        "p95": 0.03598099487135184,
+        "p99": 0.045655465882737195,
+        "max": 0.04807408363558352
+      },
+      "gen_latency_s": {
+        "n": 10,
+        "mean": 1.0864747600164264,
+        "p50": 0.9583666000398807,
+        "p90": 1.6602906799642367,
+        "p95": 1.8731941399513738,
+        "p99": 2.0435169079410844,
+        "max": 2.086097599938512
+      },
+      "anls": 0.7,
+      "path_share": {
+        "text": 0.0,
+        "visual": 0.8,
+        "hybrid": 0.2
+      },
+      "agree_cached_router": 0.8,
+      "agree_offline_retrained": 1.0
+    }
+  },
+  "stop_reason": "all rates done",
+  "server": [
+    {
+      "url": "http://127.0.0.1:8000",
+      "version": {
+        "version": "0.31.0"
+      },
+      "models": {
+        "object": "list",
+        "data": [
+          {
+            "id": "qwen2.5-vl-7b",
+            "object": "model",
+            "created": 1795042087,
+            "owned_by": "vllm",
+            "root": "Qwen/Qwen2.5-VL-7B-Instruct",
+            "parent": null,
+            "max_model_len": 8192,
+            "permission": [
+              {
+                "id": "modelperm-8c0ca227e555a8c5",
+                "object": "model_permission",
+                "created": 1795042087,
+                "allow_create_engine": false,
+                "allow_sampling": true,
+                "allow_logprobs": true,
+                "allow_search_indices": false,
+                "allow_view": true,
+                "allow_fine_tuning": false,
+                "organization": "*",
+                "group": null,
+                "is_blocking": false
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

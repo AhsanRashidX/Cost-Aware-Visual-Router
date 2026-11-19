@@ -104,11 +104,15 @@ def main():
                           "frontend_p50": v["frontend_s"]["p50"], "frontend_p95": v["frontend_s"]["p95"],
                           "frontend_wait_p95": v["frontend_wait_s"]["p95"], "anls": v["anls"],
                           "path_share": v["path_share"], "agree_cached_router": v["agree_cached_router"],
-                          "agree_offline_retrained": v["agree_offline_retrained"]}
+                          "agree_offline_retrained": v["agree_offline_retrained"], "n_recorded": v["n_recorded"]}
                       for k, v in s["rates"].items()}
         pl[d.name]["capacity"] = {str(t): capacity([float(k) for k in s["rates"]],
                                                    [v["latency_s"]["p95"] for v in s["rates"].values()], t)
                                   for t in TARGETS}
+        gk = [k for k in s["rates"] if (g["rates"].get(k) or {}).get("latency_s")]
+        pl[d.name]["capacity_generation_only"] = {
+            str(t): capacity([float(k) for k in gk], [g["rates"][k]["latency_s"]["p95"] for k in gk], t) for t in TARGETS}
+        pl[d.name]["generation_only_path_share"] = g.get("path_share")
     out["live_pipeline"] = pl
     write_json(RESULTS / "vllm_repeats_r3.json", out)
     for key, agg in out["aggregate"].items():
