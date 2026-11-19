@@ -85,7 +85,11 @@ on the NVIDIA A10 (Table~\ref{tab:token_sweep} in the Appendix). The visual path
 at 256 tokens to 0.544 at 1,280, and its generation time from 0.61 to 1.20\,s.
 Even at 256 visual tokens (305 input tokens in all, 0.61\,s) it beats the three-page text
 path (1,556 tokens, 0.95\,s) by +0.053 [+0.025, +0.079], so the image keeps its advantage
-at a fifth of the text path's input. The text adds most when the image is small: the hybrid path beats the visual
+at a fifth of the text path's input. At an equal input, a page image at 512 visual tokens (548
+input tokens) beats one page of OCR text (559 tokens) by +0.176 [+0.150, +0.203], although it takes
+0.73 against 0.39\,s to generate, so equal input tokens do not mean equal cost. (Generation times in
+this sweep are measured on the A10; the path-set comparison above scales the workstation's times instead, which gives
+0.84\,s for the three-page text path against 0.95\,s measured here.) The text adds most when the image is small: the hybrid path beats the visual
 path by +0.061 [+0.042, +0.081] at 256 tokens and by +0.011 [-0.005, +0.027] at 1,280
 (+0.021 on DocVQA, +0.001 on InfographicVQA). DocVQA levels off near 768 tokens
 (-0.005 [-0.015, +0.006] against 1,280) but InfographicVQA does not (-0.034
@@ -193,7 +197,7 @@ its design, each seed's CAVR-CE was re-trained with the same code, training spli
 NVIDIA A10 node (the main run's weights were not stored), kept its validation-chosen $\lambda$ and training-split
 cost estimates, and was applied without any tuning to 1,499 new questions from the
 DocVQA and InfographicVQA training splits (1,097 pages, none shared with the validation data;
-Section~\ref{sec:setup-confirm}). The re-trained routers make the same choice as the saved ones on
+Section~\ref{sec:setup-confirm}). The re-trained routers make the same choice as the main run's routers, whose choices were saved, on
 80--93\% of their original test queries, with test ANLS within $\pm$0.007.
 
 On the confirmation set (Table~\ref{tab:confirmation}), the saving over always-hybrid holds. CAVR-CE reaches ANLS
@@ -234,7 +238,7 @@ validation test questions), which leaves routing less to gain.
 \label{sec:res-lambda}
 
 \textbf{Takeaway: one trained router covers a range of budgets by changing $\lambda$ alone.}
-The decision rule $\arg\max_p \hat{q}_p - \lambda c_p$ takes the cost weight $\lambda$ as an input, so one trained
+The decision rule $\arg\max_p \hat{q}_p - \lambda \bar{c}_p$ takes the cost weight $\lambda$ as an input, so one trained
 router covers a range of budgets without retraining; $\lambda$ is a per-deployment setting, chosen from the
 operating points below for a target quality or capacity. Its cost estimates are specific to the hardware and serving
 stack, so a new deployment should re-measure the per-path costs before choosing $\lambda$. Sweeping $\lambda$ from 1 to 0 moves CAVR-CE from
@@ -534,6 +538,8 @@ batch. CAVR-CE takes 24.8\,ms and 1.74\,J per query at batch 1, and its cross-en
 \subsection{Limitations}
 \label{sec:res-limits}
 
+\textbf{Takeaway: the results hold for one node, one shared generator, three context paths and two public datasets that
+the models may have seen in training.}
 All experiments ran within a single node: the cached run of every path, router training and evaluation on one
 consumer GPU (GeForce RTX 4090) under Windows, and the controls, confirmation set, live serving, index sharding and host-memory
 index on the server nodes of Table~\ref{tab:hardware_multigpu}, with at most three GPUs per node. No
@@ -555,9 +561,12 @@ searches each dataset's whole page pool with questions written for a single page
 0.57 for ColPali (Section~\ref{sec:res-paths}); how many misses come from questions that do not identify their
 page was not annotated. The image-token sweep stops at the cap of 1,280 visual tokens used throughout, where
 InfographicVQA had not levelled off (Section~\ref{sec:res-paths}); a higher budget may raise the visual and hybrid
-paths on infographics, so the comparison of the paths on InfographicVQA holds for this cap. The
+paths on infographics, so the comparison of the paths on InfographicVQA holds for this cap. A higher cap was not
+run because the hybrid path at 1,280 tokens already reserves up to 22.8\,GB of the A10's 24\,GB. The
 confirmation set comes from training splits the generator and ColPali may have seen (Section~\ref{sec:res-confirm}).
-Costs
+GPU-seconds include re-allocating cached GPU memory before
+each generation, which a long-running server would avoid; this overhead was not measured separately (the live vLLM
+runs pre-allocate memory, so their capacities do not include it). Costs
 are measured without prefix or encoder caching, which would favour paths whose page image repeats across
 questions. Indexes of 10k--1M pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that

@@ -22,16 +22,17 @@ GPU provisioning problem. We measure this trade-off end to end and test whether 
 <<gpu_short>>, every path is run on <<n_q>> DocVQA and InfographicVQA questions with BM25 and ColPali retrieval and
 one shared generator, measuring average normalised Levenshtein similarity (ANLS), GPU-seconds, energy and latency.
 The page image alone is the strongest fixed policy; adding the OCR text costs <<hyb_x_vis>>$\times$ its GPU time for
-little gain. The Cost-Aware Visual Router (CAVR) chooses the path per query under a cost weight set per deployment.
+little gain. The Cost-Aware Visual Router (CAVR) chooses the path per query under a per-deployment cost weight.
 Its content-aware variant CAVR-CE, a cross-encoder (CE) over the retrieved passages, uses <<ce_save>>\% less GPU
 compute than always combining both contexts at <<ce_dh_abs>> lower ANLS, and keeps a <<rr_cf_sh>>\% saving on
 <<cf_n>> questions from the datasets' training splits. Against the page image alone, routing is not consistently
 better: CAVR-CE gains <<rr_dv>> ANLS for <<rr_xv>>\% more GPU compute on the design splits but only <<rr_cf_dv_abs>>
-(not significant) on training-split questions, which ColPali and possibly the generator saw in training. Served
+(not significant) on training-split questions, which ColPali and possibly the generator saw in training; there the
+page image alone was about as accurate at <<cf_vis_less>>\% less compute. Served
 live with vLLM on two A10 GPUs (five arrival traces), CAVR-CE sustained <<vr_ce_hyb_r2_5>>$\times$
-<<vr_ce_hyb_r2_5_ci>> always-hybrid's arrival rate at a p95 latency of 5\,s; a simulator built on measured service
-times overestimated capacity <<vr_over_lo>>--<<vr_over_hi>>-fold, so its larger-pool GPU counts are projections.
-Earlier keyword-rule labels match measured outcomes only at chance level.
+<<vr_ce_hyb_r2_5_ci>> always-hybrid's arrival rate at 5\,s p95 latency; a simulator built on measured service
+times overestimated that capacity <<vr_over_lo>>--<<vr_over_hi>>-fold, so its larger-pool GPU counts are
+projections.
 \end{abstract}
 """
 
@@ -59,8 +60,9 @@ a modelling detail; routing acts on the first and the third, index placement on 
 one A10 GPU, the hybrid path alone missed a p95 latency of 2\,s even at the lowest arrival rate we tested, on
 every one of <<vr_n>> arrival traces, and at 5\,s routing sustained <<vr_ce_hyb_r2_5>>$\times$ <<vr_ce_hyb_r2_5_ci>> its
 arrival rate on two GPUs (Section~\ref{sec:res-scale}). Projected to a larger pool with a simulator driven by measured
-service times, which overestimated capacity <<vr_over_lo>>--<<vr_over_hi>>-fold against live serving, 100 queries/s would need <<hyb_vs_ce_gpus>>$\times$
-as many GPUs for the hybrid path as for content-aware routing.
+service times, which overestimated capacity at p95 $\le$ 5\,s <<vr_over_lo>>--<<vr_over_hi>>-fold against live serving
+and by more at 2\,s, 100 queries/s at p95 $\le$ 2\,s would need <<hyb_vs_ce_gpus>>$\times$ as many GPUs for the hybrid
+path as for content-aware routing; this is a projection, not a measurement.
 
 \emph{Memory grows with the corpus.} ColPali stores 1,031 vectors per page; at 100k pages the index needs
 <<ix100_gb>>\,GiB in bf16, more than our <<gpu_mem>>\,GiB GPU, and a million pages (about <<ix1m_gb>>\,GiB) exceed the
@@ -724,8 +726,10 @@ question embeddings is no better than always-visual. Reading what retrieval retu
 saving relative to always combining both contexts: CAVR-CE uses <<ce_save>>\% less GPU compute than always-hybrid at
 <<ce_dh_abs>> lower ANLS, and <<rr_cf_sh>>\% less on questions from the datasets' training splits, where its ANLS was
 no lower. A benefit of query-dependent routing over the best single path is not established: CAVR-CE gained
-<<rr_dv>> ANLS over always-visual for <<rr_xv>>\% more compute on the design splits, but only $<<rr_cf_dv>>$
-(interval <<rr_cf_dv_ci>>) on the training-split questions, which ColPali and possibly the generator saw in training.
+<<rr_dv>> ANLS over always-visual for <<rr_xv>>\% more compute on the design splits, but only <<rr_cf_dv_abs>>, not
+significant, on the training-split questions, which ColPali and possibly the generator saw in training. On those
+questions the page image alone was about as accurate at <<cf_vis_less>>\% less compute than CAVR-CE and saved
+<<cf_vis_save>>\% against always-hybrid, so a fixed policy reaches that saving without a router.
 Where the gain appears, it comes from questions whose answer the OCR text helps to read, such as tables and lists on
 DocVQA; whether routing beats the best single path depends on how often that happens in a question distribution. A
 per-query oracle (ANLS <<oracle_anls>> at <<oracle_gpu>> GPU-s) shows how much room remains: the bottleneck is predicting
@@ -733,15 +737,15 @@ whether a path will succeed.
 
 \emph{RQ3: setting the trade-off and escalating.} The cost weight $\lambda$ is an input of the decision rule, so one
 trained router covers a range of budgets; it is a per-deployment setting whose cost estimates must be re-measured on
-new hardware. Confidence-based escalation adds nothing beyond it: every escalation operating point lies within
-<<eg_max_hi>> ANLS of the operating points that lowering $\lambda$ reaches at the same cost.
+new hardware. Confidence-based escalation adds nothing beyond it: no escalation operating point lies more than
+<<eg_max_hi>> ANLS above the operating points that $\lambda$ reaches at the same cost.
 
 \emph{RQ4: capacity and index scaling.} Served live with vLLM on one and two A10 GPUs over <<vr_n>> arrival traces,
-CAVR-CE sustained <<vr_ce_hyb_r2_5>>$\times$ <<vr_ce_hyb_r2_5_ci>> the arrival rate of always-hybrid at p95 $\le$ 5\,s
+CAVR-CE sustained <<vr_ce_hyb_r2_5>>$\times$ the arrival rate of always-hybrid at p95 $\le$ 5\,s
 on two GPUs, and always-visual remained ahead of both; with retrieval and routing in the loop, capacity fell by
 <<lp_ce_drop>>\% for CAVR-CE and <<lp_vis_drop>>\% for always-visual. A simulator driven by measured service times kept
-the order of the policies but overestimated capacity <<vr_over_lo>>--<<vr_over_hi>>-fold, so the GPU counts it gives
-for larger pools are projections. Within
+the order of the policies but overestimated capacity at 5\,s <<vr_over_lo>>--<<vr_over_hi>>-fold, and more at
+2\,s, so the GPU counts it gives for larger pools are projections. Within
 a node, sharding exhaustive MaxSim scaled almost linearly, as expected for an embarrassingly parallel search, and an
 index of <<hs_max_words>> pages held in host memory served large batches at close to the throughput per GPU of
 GPU-resident search, at <<hs_p50_2>>\,s per single query.

@@ -330,6 +330,26 @@ def token_sweep():
         dd = X[eq][:, 0] - X["text"][:, 0]
         r["equal_budget"] = {"visual_condition": eq, "visual_tokens_in": r["conditions"][eq]["input_tokens"],
                              "text_tokens_in": tt, "visual_minus_text": {"mean": float(dd.mean()), "ci95": ci(boot(dd))}}
+        # equal budget against one page of OCR text (controls run, same questions and A10): the image budget whose
+        # mean input tokens are closest to text top-1's, paired by question
+        ctl = {}
+        for f in sorted((RESULTS / "controls").glob("controls_*.jsonl")):
+            for row in jl(f):
+                if row["condition"] == "text_k1":
+                    ctl[row["qid"]] = row
+        sk = [i for i, q in enumerate(sel) if q in ctl]
+        if sk:
+            t1 = np.array([[ctl[sel[i]]["anls"], ctl[sel[i]]["generate_s"], ctl[sel[i]]["input_tokens"]] for i in sk])
+            eq1 = min((c for c in conds if c.startswith("visual@")),
+                      key=lambda c: abs(X[c][sk, 2].mean() - t1[:, 2].mean()))
+            dd = X[eq1][sk, 0] - t1[:, 0]
+            b1 = page_boot(np.array([f"{Q[sel[i]]['dataset']}/{Q[sel[i]]['page_id']}" for i in sk]))
+            r["equal_budget_text_k1"] = {
+                "n": len(sk), "visual_condition": eq1, "visual_tokens_in": float(X[eq1][sk, 2].mean()),
+                "visual_anls": float(X[eq1][sk, 0].mean()), "visual_gen_s": float(X[eq1][sk, 1].mean()),
+                "text_k1_tokens_in": float(t1[:, 2].mean()), "text_k1_anls": float(t1[:, 0].mean()),
+                "text_k1_gen_s": float(t1[:, 1].mean()),
+                "visual_minus_text_k1": {"mean": float(dd.mean()), "ci95": ci(b1(dd))}}
         # every image budget against the text path, and hybrid against visual at the same image budget
         for c in conds:
             if c.startswith("visual@"):

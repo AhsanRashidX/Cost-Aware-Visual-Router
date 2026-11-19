@@ -154,9 +154,15 @@ def t_main(ev):
                    for k in ("anls", "em", "gpu_s", "energy_j", "latency_p95_s")}
             rows.append(["Gradient boosting, val-chosen $\\lambda$", pm(agg, "anls"), pm(agg, "em"), pm(agg, "gpu_s"),
                          pm(agg, "energy_j", "{:.0f}"), pm(agg, "latency_p95_s", "{:.2f}"), "--"])
-    cap = (f"Routing policies on held-out test pages (mean $\\pm$ std over {ev['n_seeds']} seeds, $\\lambda$ = "
-           f"{ev['lambda_default']}). Cost is measured per query on one RTX 4090"
-           f"{' including router overhead' if ev['router_overhead_included'] else ''}. p: McNemar (EM) vs CAVR, seed 1.")
+    cap = (f"Routing policies on the test pages of the {ev['n_seeds']} page-grouped splits (mean $\\pm$ std over "
+           f"splits). Routers use $\\lambda$ = {ev['lambda_default']} except the two rows marked val-chosen. Selection "
+           "rules: the hyperparameters of CAVR, CAVR-CE and gradient boosting were fixed before training and not "
+           "searched; CAVR stops early and CAVR-CE picks its epoch by validation AUC; the logistic-regression and kNN "
+           "baselines tune their regularisation on validation. For the val-chosen rows, $\\lambda$ is the cheapest "
+           "value whose validation ANLS is within 0.005 of always-hybrid, else the one with the highest validation "
+           "ANLS (CAVR-CE: 1 of 5 splits; gradient boosting: 5 of 5). Cost is measured per query on one RTX 4090"
+           f"{' including router overhead' if ev['router_overhead_included'] else ''}. p: McNemar (EM) vs CAVR, "
+           "split 1.")
     table("main_results", cap, "tab:main_results",
           ["Policy", "ANLS", "EM", "GPU-s", "Energy (J)", "p95 lat. (s)", "p"], rows)
 
@@ -174,7 +180,7 @@ def t_main(ev):
                      f"{t['always_hybrid']['mcnemar_em']['p_value']:.2g}",
                      f"${bv['mean_diff']:+.3f}$", f"{t['always_visual']['mcnemar_em']['p_value']:.2g}"])
     if rows:
-        table("router_ce_tests", "CAVR-CE with $\lambda$ chosen on each seed's validation split (cheapest "
+        table("router_ce_tests", "CAVR-CE with $\lambda$ chosen on each split's validation set (cheapest "
               "$\lambda$ within " + str(ev.get("valsel_delta", 0.005)) + " ANLS of always-hybrid on val), against "
               "always-hybrid and always-visual on test. GPU-s include ColPali for every query and the router's measured "
               "overhead.", "tab:router_ce_tests",
@@ -288,11 +294,12 @@ def confirmation():
     rows = [[f"Always-{p}", f"{fx[p]['anls']:.3f}", f"{fx[p]['em']:.3f}", f"{fx[p]['gpu_s']:.2f}"]
             for p in ("text", "visual", "hybrid")]
     m = lambda k, d: f"{mean(s[k] for s in cs):.{d}f} $\\pm$ {stdev(s[k] for s in cs):.{d}f}"
-    rows.append(["CAVR-CE (frozen)", m("anls", 3), m("em", 3), m("gpu_s", 2)])
+    rows.append(["CAVR-CE (re-trained)", m("anls", 3), m("em", 3), m("gpu_s", 2)])
     rows.append(["Per-query oracle", f"{cf['oracle']['anls']:.3f}", "--", f"{cf['oracle']['gpu_s']:.2f}"])
     cap = (f"Held-out confirmation set: {cf['n_queries']:,} new questions from the DocVQA and InfographicVQA training "
-           "splits, run on the A10 node. CAVR-CE is each seed's router re-trained on its original training split and "
-           "frozen (validation-chosen $\\lambda$); mean $\\pm$ standard deviation over the five seeds. GPU-seconds per "
+           "splits, run on the A10 node. CAVR-CE is each split's router re-trained on its original training split, with "
+           "its validation-chosen $\\lambda$ and cost estimates unchanged and nothing tuned on these questions; mean "
+           "$\\pm$ standard deviation over the five splits' routers. GPU-seconds per "
            "query on the A10, including retrieval; the router's overhead is the one measured on the workstation.")
     table("confirmation", cap, "tab:confirmation", ["Policy", "ANLS", "EM", "GPU-s"], rows)
 

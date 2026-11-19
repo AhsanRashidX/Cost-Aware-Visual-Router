@@ -1,5 +1,5 @@
 {
- "git_commit": "fe3230364b29c708fcf1d52927c4e243504303e0",
+ "git_commit": "9332980057cee44fa72a58e5cf8bc9d43d12083e",
  "regenerate": "python make_outputs.py; python make_method_figure.py; python make_training_figure.py; python make_paper_text.py; python make_bib.py",
  "artifacts": [
   {

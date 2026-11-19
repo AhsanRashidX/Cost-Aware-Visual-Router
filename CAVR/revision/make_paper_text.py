@@ -141,6 +141,7 @@ def values():
         "cf_dv_incl": sum(s["anls_diff_vs_visual_ci95"][0] <= 0 <= s["anls_diff_vs_visual_ci95"][1] for s in cs),
         "cf_vs_vis": f"{100 * (cf['summary']['gpu_s']['mean'] / cfx['visual']['gpu_s'] - 1):.0f}",
         "cf_vis_less": f"{100 * (1 - cfx['visual']['gpu_s'] / cf['summary']['gpu_s']['mean']):.0f}",
+        "cf_vis_save": f"{100 * (1 - cfx['visual']['gpu_s'] / cfx['hybrid']['gpu_s']):.0f}",
         "cf_oracle": f"{cf['oracle']['anls']:.3f}",
     })
     tp = J("token_pooling.json")["methods"]
@@ -528,6 +529,13 @@ def values():
                     if key in v:
                         V[f"{k}_{short}"] = f"{v[key]['mean']:+.3f}"
                         V[f"{k}_{short}_ci"] = ci(v[key]["ci95"])
+        e1 = ts["all"].get("equal_budget_text_k1")
+        if e1:
+            V.update({"ts_eq1_vtok": f"{e1['visual_tokens_in']:,.0f}", "ts_eq1_ttok": f"{e1['text_k1_tokens_in']:,.0f}",
+                      "ts_eq1_vb": e1["visual_condition"].split("@")[1],
+                      "ts_eq1_d": f"{e1['visual_minus_text_k1']['mean']:+.3f}",
+                      "ts_eq1_d_ci": ci(e1["visual_minus_text_k1"]["ci95"]),
+                      "ts_eq1_vs": f"{e1['visual_gen_s']:.2f}", "ts_eq1_ts": f"{e1['text_k1_gen_s']:.2f}"})
         mem = ts["all"]["conditions"]
         V["ts_mem_vis"] = f"{max(v['peak_reserved_gb'] for c, v in mem.items() if c.startswith('visual')):.1f}"
         V["ts_mem_hyb"] = f"{max(v['peak_reserved_gb'] for c, v in mem.items() if c.startswith('hybrid')):.1f}"
@@ -693,7 +701,11 @@ on the <<a10_gpu>> (Table~\ref{tab:token_sweep} in the Appendix). The visual pat
 at 256 tokens to <<ts_a_v1280_anls>> at 1,280, and its generation time from <<ts_a_v256_s>> to <<ts_a_v1280_s>>\,s.
 Even at 256 visual tokens (<<ts_a_v256_tok>> input tokens in all, <<ts_a_v256_s>>\,s) it beats the three-page text
 path (<<ts_a_t_tok>> tokens, <<ts_a_t_s>>\,s) by <<ts_a_v256_mt>> <<ts_a_v256_mt_ci>>, so the image keeps its advantage
-at a fifth of the text path's input. The text adds most when the image is small: the hybrid path beats the visual
+at a fifth of the text path's input. At an equal input, a page image at <<ts_eq1_vb>> visual tokens (<<ts_eq1_vtok>>
+input tokens) beats one page of OCR text (<<ts_eq1_ttok>> tokens) by <<ts_eq1_d>> <<ts_eq1_d_ci>>, although it takes
+<<ts_eq1_vs>> against <<ts_eq1_ts>>\,s to generate, so equal input tokens do not mean equal cost. (Generation times in
+this sweep are measured on the A10; the path-set comparison above scales the workstation's times instead, which gives
+<<ps_a_text_s>>\,s for the three-page text path against <<ts_a_t_s>>\,s measured here.) The text adds most when the image is small: the hybrid path beats the visual
 path by <<ts_a_h256_mv>> <<ts_a_h256_mv_ci>> at 256 tokens and by <<ts_a_h1280_mv>> <<ts_a_h1280_mv_ci>> at 1,280
 (<<ts_d_h1280_mv>> on DocVQA, <<ts_i_h1280_mv>> on InfographicVQA). DocVQA levels off near 768 tokens
 (<<ts_d_v768_m1280>> <<ts_d_v768_m1280_ci>> against 1,280) but InfographicVQA does not (<<ts_i_v768_m1280>>
@@ -801,7 +813,7 @@ its design, each seed's CAVR-CE was re-trained with the same code, training spli
 <<a10_gpu>> node (the main run's weights were not stored), kept its validation-chosen $\lambda$ and training-split
 cost estimates, and was applied without any tuning to <<cf_n>> new questions from the
 DocVQA and InfographicVQA training splits (<<cf_pages>> pages, none shared with the validation data;
-Section~\ref{sec:setup-confirm}). The re-trained routers make the same choice as the saved ones on
+Section~\ref{sec:setup-confirm}). The re-trained routers make the same choice as the main run's routers, whose choices were saved, on
 <<cf_agree_min>>--<<cf_agree_max>>\% of their original test queries, with test ANLS within $\pm$<<cf_rep_anls>>.
 
 On the confirmation set (Table~\ref{tab:confirmation}), the saving over always-hybrid holds. CAVR-CE reaches ANLS
@@ -842,7 +854,7 @@ validation test questions), which leaves routing less to gain.
 \label{sec:res-lambda}
 
 \textbf{Takeaway: one trained router covers a range of budgets by changing $\lambda$ alone.}
-The decision rule $\arg\max_p \hat{q}_p - \lambda c_p$ takes the cost weight $\lambda$ as an input, so one trained
+The decision rule $\arg\max_p \hat{q}_p - \lambda \bar{c}_p$ takes the cost weight $\lambda$ as an input, so one trained
 router covers a range of budgets without retraining; $\lambda$ is a per-deployment setting, chosen from the
 operating points below for a target quality or capacity. Its cost estimates are specific to the hardware and serving
 stack, so a new deployment should re-measure the per-path costs before choosing $\lambda$. Sweeping $\lambda$ from 1 to 0 moves CAVR-CE from
@@ -1142,6 +1154,8 @@ batch. CAVR-CE takes <<ce_ms>>\,ms and <<ce_j>>\,J per query at batch 1, and its
 \subsection{Limitations}
 \label{sec:res-limits}
 
+\textbf{Takeaway: the results hold for one node, one shared generator, three context paths and two public datasets that
+the models may have seen in training.}
 All experiments ran within a single node: the cached run of every path, router training and evaluation on one
 consumer GPU (<<gpu>>) under Windows, and the controls, confirmation set, live serving, index sharding and host-memory
 index on the server nodes of Table~\ref{tab:hardware_multigpu}, with at most <<mg_n_word>> GPUs per node. No
@@ -1163,9 +1177,12 @@ searches each dataset's whole page pool with questions written for a single page
 <<r1_col>> for ColPali (Section~\ref{sec:res-paths}); how many misses come from questions that do not identify their
 page was not annotated. The image-token sweep stops at the cap of 1,280 visual tokens used throughout, where
 InfographicVQA had not levelled off (Section~\ref{sec:res-paths}); a higher budget may raise the visual and hybrid
-paths on infographics, so the comparison of the paths on InfographicVQA holds for this cap. The
+paths on infographics, so the comparison of the paths on InfographicVQA holds for this cap. A higher cap was not
+run because the hybrid path at 1,280 tokens already reserves up to <<ts_mem_hyb>>\,GB of the A10's 24\,GB. The
 confirmation set comes from training splits the generator and ColPali may have seen (Section~\ref{sec:res-confirm}).
-Costs
+GPU-seconds include re-allocating cached GPU memory before
+each generation, which a long-running server would avoid; this overhead was not measured separately (the live vLLM
+runs pre-allocate memory, so their capacities do not include it). Costs
 are measured without prefix or encoder caching, which would favour paths whose page image repeats across
 questions. Indexes of 10k--<<hs_max_k>> pages
 repeat the real page embeddings, which is valid for latency and memory but not for retrieval quality at that

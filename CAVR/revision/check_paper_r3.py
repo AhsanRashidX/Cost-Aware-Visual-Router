@@ -59,7 +59,7 @@ def main():
             if not re.search(pat, tex.get(s, "")):
                 bad.append(f"preserved statement missing from {s}: /{pat}/")
     for pat in RETIRED:
-        for s, t in tex.items():
+        for s, t in list(tex.items()) + [(f"table {u}", tables[u]) for u in sorted(used_tables) if u in tables]:
             for m in re.finditer(pat, t):
                 ctx = t[max(0, m.start() - 40):m.end() + 20].replace("\n", " ")
                 if "not frozen" not in ctx:

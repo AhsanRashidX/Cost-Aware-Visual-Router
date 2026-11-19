@@ -6,14 +6,15 @@ GPU provisioning problem. We measure this trade-off end to end and test whether 
 RTX 4090, every path is run on 8,150 DocVQA and InfographicVQA questions with BM25 and ColPali retrieval and
 one shared generator, measuring average normalised Levenshtein similarity (ANLS), GPU-seconds, energy and latency.
 The page image alone is the strongest fixed policy; adding the OCR text costs 1.6$\times$ its GPU time for
-little gain. The Cost-Aware Visual Router (CAVR) chooses the path per query under a cost weight set per deployment.
+little gain. The Cost-Aware Visual Router (CAVR) chooses the path per query under a per-deployment cost weight.
 Its content-aware variant CAVR-CE, a cross-encoder (CE) over the retrieved passages, uses 29\% less GPU
 compute than always combining both contexts at 0.008 lower ANLS, and keeps a 35\% saving on
 1,499 questions from the datasets' training splits. Against the page image alone, routing is not consistently
 better: CAVR-CE gains 0.016 ANLS for 15\% more GPU compute on the design splits but only 0.005
-(not significant) on training-split questions, which ColPali and possibly the generator saw in training. Served
+(not significant) on training-split questions, which ColPali and possibly the generator saw in training; there the
+page image alone was about as accurate at 16\% less compute. Served
 live with vLLM on two A10 GPUs (five arrival traces), CAVR-CE sustained 1.70$\times$
-[1.57, 1.84] always-hybrid's arrival rate at a p95 latency of 5\,s; a simulator built on measured service
-times overestimated capacity 1.3--1.9-fold, so its larger-pool GPU counts are projections.
-Earlier keyword-rule labels match measured outcomes only at chance level.
+[1.57, 1.84] always-hybrid's arrival rate at 5\,s p95 latency; a simulator built on measured service
+times overestimated that capacity 1.3--1.9-fold, so its larger-pool GPU counts are
+projections.
 \end{abstract}

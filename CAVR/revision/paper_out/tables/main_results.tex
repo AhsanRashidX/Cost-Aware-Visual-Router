@@ -1,6 +1,6 @@
 \begin{table}[t]
 \centering
-\caption{Routing policies on held-out test pages (mean $\pm$ std over 5 seeds, $\lambda$ = 0.1). Cost is measured per query on one RTX 4090 including router overhead. p: McNemar (EM) vs CAVR, seed 1.}
+\caption{Routing policies on the test pages of the 5 page-grouped splits (mean $\pm$ std over splits). Routers use $\lambda$ = 0.1 except the two rows marked val-chosen. Selection rules: the hyperparameters of CAVR, CAVR-CE and gradient boosting were fixed before training and not searched; CAVR stops early and CAVR-CE picks its epoch by validation AUC; the logistic-regression and kNN baselines tune their regularisation on validation. For the val-chosen rows, $\lambda$ is the cheapest value whose validation ANLS is within 0.005 of always-hybrid, else the one with the highest validation ANLS (CAVR-CE: 1 of 5 splits; gradient boosting: 5 of 5). Cost is measured per query on one RTX 4090 including router overhead. p: McNemar (EM) vs CAVR, split 1.}
 \label{tab:main_results}
 \begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrrr}

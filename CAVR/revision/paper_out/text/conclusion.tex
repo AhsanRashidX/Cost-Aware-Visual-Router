@@ -15,8 +15,10 @@ question embeddings is no better than always-visual. Reading what retrieval retu
 saving relative to always combining both contexts: CAVR-CE uses 29\% less GPU compute than always-hybrid at
 0.008 lower ANLS, and 35\% less on questions from the datasets' training splits, where its ANLS was
 no lower. A benefit of query-dependent routing over the best single path is not established: CAVR-CE gained
-0.016 ANLS over always-visual for 15\% more compute on the design splits, but only $+0.005$
-(interval [-0.004, +0.014]) on the training-split questions, which ColPali and possibly the generator saw in training.
+0.016 ANLS over always-visual for 15\% more compute on the design splits, but only 0.005, not
+significant, on the training-split questions, which ColPali and possibly the generator saw in training. On those
+questions the page image alone was about as accurate at 16\% less compute than CAVR-CE and saved
+45\% against always-hybrid, so a fixed policy reaches that saving without a router.
 Where the gain appears, it comes from questions whose answer the OCR text helps to read, such as tables and lists on
 DocVQA; whether routing beats the best single path depends on how often that happens in a question distribution. A
 per-query oracle (ANLS 0.630 at 0.486 GPU-s) shows how much room remains: the bottleneck is predicting
@@ -24,15 +26,15 @@ whether a path will succeed.
 
 \emph{RQ3: setting the trade-off and escalating.} The cost weight $\lambda$ is an input of the decision rule, so one
 trained router covers a range of budgets; it is a per-deployment setting whose cost estimates must be re-measured on
-new hardware. Confidence-based escalation adds nothing beyond it: every escalation operating point lies within
-0.010 ANLS of the operating points that lowering $\lambda$ reaches at the same cost.
+new hardware. Confidence-based escalation adds nothing beyond it: no escalation operating point lies more than
+0.010 ANLS above the operating points that $\lambda$ reaches at the same cost.
 
 \emph{RQ4: capacity and index scaling.} Served live with vLLM on one and two A10 GPUs over five arrival traces,
-CAVR-CE sustained 1.70$\times$ [1.57, 1.84] the arrival rate of always-hybrid at p95 $\le$ 5\,s
+CAVR-CE sustained 1.70$\times$ the arrival rate of always-hybrid at p95 $\le$ 5\,s
 on two GPUs, and always-visual remained ahead of both; with retrieval and routing in the loop, capacity fell by
 10\% for CAVR-CE and 3\% for always-visual. A simulator driven by measured service times kept
-the order of the policies but overestimated capacity 1.3--1.9-fold, so the GPU counts it gives
-for larger pools are projections. Within
+the order of the policies but overestimated capacity at 5\,s 1.3--1.9-fold, and more at
+2\,s, so the GPU counts it gives for larger pools are projections. Within
 a node, sharding exhaustive MaxSim scaled almost linearly, as expected for an embarrassingly parallel search, and an
 index of a million pages held in host memory served large batches at close to the throughput per GPU of
 GPU-resident search, at 6.4\,s per single query.
