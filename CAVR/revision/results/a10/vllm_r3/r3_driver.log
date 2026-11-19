@@ -14,3 +14,289 @@ stopped replica 0 (pid 574; log logs/replica_0_20261119_005246.log)
 0, 0 MiB
 1, 0 MiB
 === 2026-11-19 00:52:51 r3 driver done: pilot
+=== 2026-11-19 05:43:30 r3 driver start: stage repeats seeds [1235 1236 1237 1238] replicas [1 2]
+index, name, driver_version, memory.used [MiB]
+0, NVIDIA A10, 616.92, 20662 MiB
+1, NVIDIA A10, 616.92, 0 MiB
+6.18.58.1-microsoft-standard-WSL2
+=== 2026-11-19 05:43:31 starting 1 replica(s)
+started replica 0 (GPU 0, port 8000, mode native)
+replica 0 healthy: http://127.0.0.1:8000  (118s)
+all 1 replica(s) up. Stop with: bash stop.sh
+=== 2026-11-19 05:45:35 always_hybrid r1 seed 1235
+always_hybrid on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.204, 0.408, 0.681, 0.953, 1.089, 1.225, 1.361, 1.498]
+rate   0.204/s n= 184 p50=  1.177s p95=  2.096s p99=  2.764s thr=0.204/s err=0 aborted=False replicas=[184]
+rate   0.408/s n= 368 p50=  1.307s p95=  3.052s p99=  4.163s thr=0.426/s err=0 aborted=False replicas=[368]
+rate   0.681/s n= 400 p50=  1.731s p95=  4.865s p99=  6.038s thr=0.713/s err=0 aborted=False replicas=[400]
+rate   0.953/s n= 400 p50=  2.894s p95=  8.001s p99= 10.438s thr=0.996/s err=0 aborted=False replicas=[400]
+rate   1.089/s n= 400 p50=  4.268s p95=  9.978s p99= 12.442s thr=1.137/s err=0 aborted=False replicas=[400]
+rate   1.225/s n= 400 p50=  8.264s p95= 13.961s p99= 18.454s thr=1.274/s err=0 aborted=False replicas=[400]
+rate   1.361/s n= 400 p50= 15.642s p95= 28.148s p99= 32.382s thr=1.320/s err=0 aborted=False replicas=[400]
+rate   1.498/s n= 400 p50= 21.861s p95= 43.222s p99= 46.956s thr=1.357/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/always_hybrid_r1_s1235  (p95_cap at rate 1.498)
+=== 2026-11-19 06:53:08 always_visual r1 seed 1235
+always_visual on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.35, 0.7, 1.166, 1.632, 1.865, 2.099, 2.332, 2.565]
+rate   0.350/s n= 315 p50=  0.823s p95=  1.646s p99=  2.523s thr=0.366/s err=0 aborted=False replicas=[315]
+rate   0.700/s n= 400 p50=  0.906s p95=  2.069s p99=  2.678s thr=0.735/s err=0 aborted=False replicas=[400]
+rate   1.166/s n= 400 p50=  1.134s p95=  3.523s p99=  4.768s thr=1.221/s err=0 aborted=False replicas=[400]
+rate   1.632/s n= 400 p50=  2.108s p95=  6.718s p99=  8.653s thr=1.705/s err=0 aborted=False replicas=[400]
+rate   1.865/s n= 400 p50=  3.348s p95=  7.766s p99= 11.520s thr=1.946/s err=0 aborted=False replicas=[400]
+rate   2.099/s n= 400 p50=  6.061s p95= 11.417s p99= 15.767s thr=2.186/s err=0 aborted=False replicas=[400]
+rate   2.332/s n= 400 p50= 11.646s p95= 18.774s p99= 22.228s thr=2.269/s err=0 aborted=False replicas=[400]
+rate   2.565/s n= 400 p50= 15.471s p95= 26.436s p99= 30.032s thr=2.334/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/always_visual_r1_s1235  (all rates done)
+=== 2026-11-19 07:39:14 cavr_ce_valsel r1 seed 1235
+cavr_ce_valsel on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.303, 0.605, 1.009, 1.412, 1.614, 1.815, 2.017, 2.219]
+rate   0.303/s n= 273 p50=  0.854s p95=  1.675s p99=  2.072s thr=0.312/s err=0 aborted=False replicas=[273]
+rate   0.605/s n= 400 p50=  0.953s p95=  2.491s p99=  3.547s thr=0.635/s err=0 aborted=False replicas=[400]
+rate   1.009/s n= 400 p50=  1.264s p95=  3.908s p99=  5.911s thr=1.057/s err=0 aborted=False replicas=[400]
+rate   1.412/s n= 400 p50=  2.274s p95=  7.248s p99=  9.068s thr=1.475/s err=0 aborted=False replicas=[400]
+rate   1.614/s n= 400 p50=  3.404s p95=  8.728s p99= 12.236s thr=1.685/s err=0 aborted=False replicas=[400]
+rate   1.815/s n= 400 p50=  5.443s p95= 11.421s p99= 15.546s thr=1.886/s err=0 aborted=False replicas=[400]
+rate   2.017/s n= 400 p50= 10.767s p95= 17.255s p99= 22.897s thr=1.994/s err=0 aborted=False replicas=[400]
+rate   2.219/s n= 400 p50= 14.436s p95= 26.168s p99= 30.279s thr=2.055/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/cavr_ce_valsel_r1_s1235  (all rates done)
+=== 2026-11-19 08:30:20 always_hybrid r1 seed 1236
+always_hybrid on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.204, 0.408, 0.681, 0.953, 1.089, 1.225, 1.361, 1.498]
+rate   0.204/s n= 184 p50=  1.221s p95=  2.437s p99=  3.252s thr=0.237/s err=0 aborted=False replicas=[184]
+rate   0.408/s n= 368 p50=  1.433s p95=  3.560s p99=  4.744s thr=0.449/s err=0 aborted=False replicas=[368]
+rate   0.681/s n= 400 p50=  1.907s p95=  5.014s p99=  6.150s thr=0.747/s err=0 aborted=False replicas=[400]
+rate   0.953/s n= 400 p50=  3.347s p95=  7.714s p99= 10.927s thr=1.043/s err=0 aborted=False replicas=[400]
+rate   1.089/s n= 400 p50=  4.488s p95=  9.697s p99= 13.111s thr=1.190/s err=0 aborted=False replicas=[400]
+rate   1.225/s n= 400 p50= 10.803s p95= 17.211s p99= 19.236s thr=1.335/s err=0 aborted=False replicas=[400]
+rate   1.361/s n= 400 p50= 27.934s p95= 35.215s p99= 37.856s thr=1.344/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/always_hybrid_r1_s1236  (p95_cap at rate 1.361)
+=== 2026-11-19 09:28:42 always_visual r1 seed 1236
+always_visual on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.35, 0.7, 1.166, 1.632, 1.865, 2.099, 2.332, 2.565]
+rate   0.350/s n= 315 p50=  0.838s p95=  1.791s p99=  2.170s thr=0.393/s err=0 aborted=False replicas=[315]
+rate   0.700/s n= 400 p50=  0.992s p95=  2.384s p99=  3.640s thr=0.768/s err=0 aborted=False replicas=[400]
+rate   1.166/s n= 400 p50=  1.412s p95=  3.895s p99=  4.653s thr=1.278/s err=0 aborted=False replicas=[400]
+rate   1.632/s n= 400 p50=  2.494s p95=  7.059s p99=  8.255s thr=1.784/s err=0 aborted=False replicas=[400]
+rate   1.865/s n= 400 p50=  3.743s p95=  8.698s p99= 11.620s thr=2.036/s err=0 aborted=False replicas=[400]
+rate   2.099/s n= 400 p50=  8.178s p95= 14.224s p99= 17.207s thr=2.288/s err=0 aborted=False replicas=[400]
+rate   2.332/s n= 400 p50= 18.561s p95= 25.179s p99= 28.307s thr=2.299/s err=0 aborted=False replicas=[400]
+rate   2.565/s n= 400 p50= 26.624s p95= 35.321s p99= 39.352s thr=2.306/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/always_visual_r1_s1236  (p95_cap at rate 2.565)
+=== 2026-11-19 10:12:39 cavr_ce_valsel r1 seed 1236
+cavr_ce_valsel on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.303, 0.605, 1.009, 1.412, 1.614, 1.815, 2.017, 2.219]
+rate   0.303/s n= 273 p50=  0.905s p95=  2.107s p99=  2.471s thr=0.343/s err=0 aborted=False replicas=[273]
+rate   0.605/s n= 400 p50=  1.078s p95=  2.582s p99=  3.663s thr=0.664/s err=0 aborted=False replicas=[400]
+rate   1.009/s n= 400 p50=  1.470s p95=  4.433s p99=  5.328s thr=1.106/s err=0 aborted=False replicas=[400]
+rate   1.412/s n= 400 p50=  2.599s p95=  7.439s p99=  9.393s thr=1.544/s err=0 aborted=False replicas=[400]
+rate   1.614/s n= 400 p50=  4.376s p95=  9.636s p99= 12.087s thr=1.763/s err=0 aborted=False replicas=[400]
+rate   1.815/s n= 400 p50=  9.591s p95= 14.925s p99= 17.541s thr=1.964/s err=0 aborted=False replicas=[400]
+rate   2.017/s n= 400 p50= 20.714s p95= 27.113s p99= 30.794s thr=1.979/s err=0 aborted=False replicas=[400]
+rate   2.219/s n= 400 p50= 28.982s p95= 40.795s p99= 43.815s thr=1.986/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/cavr_ce_valsel_r1_s1236  (p95_cap at rate 2.219)
+=== 2026-11-19 11:01:13 always_hybrid r1 seed 1237
+always_hybrid on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.204, 0.408, 0.681, 0.953, 1.089, 1.225, 1.361, 1.498]
+rate   0.204/s n= 184 p50=  1.168s p95=  2.319s p99=  3.178s thr=0.225/s err=0 aborted=False replicas=[184]
+rate   0.408/s n= 368 p50=  1.351s p95=  3.751s p99=  4.980s thr=0.421/s err=0 aborted=False replicas=[368]
+rate   0.681/s n= 400 p50=  1.839s p95=  6.112s p99=  8.000s thr=0.699/s err=0 aborted=False replicas=[400]
+rate   0.953/s n= 400 p50=  2.709s p95=  8.195s p99= 10.622s thr=0.975/s err=0 aborted=False replicas=[400]
+rate   1.089/s n= 400 p50=  3.737s p95= 10.006s p99= 12.257s thr=1.112/s err=0 aborted=False replicas=[400]
+rate   1.225/s n= 400 p50=  5.948s p95= 12.680s p99= 15.349s thr=1.246/s err=0 aborted=False replicas=[400]
+rate   1.361/s n= 400 p50= 14.454s p95= 20.367s p99= 27.018s thr=1.353/s err=0 aborted=False replicas=[400]
+rate   1.498/s n= 400 p50= 30.226s p95= 39.772s p99= 43.370s thr=1.351/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/always_hybrid_r1_s1237  (p95_cap at rate 1.498)
+=== 2026-11-19 12:07:53 always_visual r1 seed 1237
+always_visual on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.35, 0.7, 1.166, 1.632, 1.865, 2.099, 2.332, 2.565]
+rate   0.350/s n= 315 p50=  0.802s p95=  1.749s p99=  2.793s thr=0.360/s err=0 aborted=False replicas=[315]
+rate   0.700/s n= 400 p50=  0.918s p95=  2.504s p99=  3.436s thr=0.720/s err=0 aborted=False replicas=[400]
+rate   1.166/s n= 400 p50=  1.286s p95=  4.433s p99=  6.130s thr=1.196/s err=0 aborted=False replicas=[400]
+rate   1.632/s n= 400 p50=  1.984s p95=  5.993s p99=  7.239s thr=1.669/s err=0 aborted=False replicas=[400]
+rate   1.865/s n= 400 p50=  2.949s p95=  7.709s p99= 10.130s thr=1.903/s err=0 aborted=False replicas=[400]
+rate   2.099/s n= 400 p50=  4.542s p95= 10.879s p99= 13.268s thr=2.134/s err=0 aborted=False replicas=[400]
+rate   2.332/s n= 400 p50= 10.095s p95= 15.966s p99= 20.941s thr=2.331/s err=0 aborted=False replicas=[400]
+rate   2.565/s n= 400 p50= 18.317s p95= 25.573s p99= 31.616s thr=2.334/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/always_visual_r1_s1237  (all rates done)
+=== 2026-11-19 12:54:38 cavr_ce_valsel r1 seed 1237
+cavr_ce_valsel on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.303, 0.605, 1.009, 1.412, 1.614, 1.815, 2.017, 2.219]
+rate   0.303/s n= 273 p50=  0.886s p95=  1.990s p99=  2.525s thr=0.320/s err=0 aborted=False replicas=[273]
+rate   0.605/s n= 400 p50=  1.010s p95=  3.075s p99=  4.585s thr=0.622/s err=0 aborted=False replicas=[400]
+rate   1.009/s n= 400 p50=  1.291s p95=  4.656s p99=  5.812s thr=1.035/s err=0 aborted=False replicas=[400]
+rate   1.412/s n= 400 p50=  1.871s p95=  6.090s p99=  8.035s thr=1.444/s err=0 aborted=False replicas=[400]
+rate   1.614/s n= 400 p50=  2.523s p95=  7.553s p99=  9.712s thr=1.647/s err=0 aborted=False replicas=[400]
+rate   1.815/s n= 400 p50=  3.737s p95=  9.789s p99= 11.461s thr=1.849/s err=0 aborted=False replicas=[400]
+rate   2.017/s n= 400 p50=  9.068s p95= 14.415s p99= 20.674s thr=2.038/s err=0 aborted=False replicas=[400]
+rate   2.219/s n= 400 p50= 18.938s p95= 26.144s p99= 32.468s thr=2.042/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/cavr_ce_valsel_r1_s1237  (all rates done)
+=== 2026-11-19 13:45:50 always_hybrid r1 seed 1238
+always_hybrid on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.204, 0.408, 0.681, 0.953, 1.089, 1.225, 1.361, 1.498]
+rate   0.204/s n= 184 p50=  1.177s p95=  2.311s p99=  2.612s thr=0.186/s err=0 aborted=False replicas=[184]
+rate   0.408/s n= 368 p50=  1.346s p95=  3.215s p99=  4.041s thr=0.399/s err=0 aborted=False replicas=[368]
+rate   0.681/s n= 400 p50=  1.891s p95=  4.744s p99=  5.718s thr=0.652/s err=0 aborted=False replicas=[400]
+rate   0.953/s n= 400 p50=  2.446s p95=  8.422s p99= 11.545s thr=0.911/s err=0 aborted=False replicas=[400]
+rate   1.089/s n= 400 p50=  3.446s p95= 11.388s p99= 13.993s thr=1.040/s err=0 aborted=False replicas=[400]
+rate   1.225/s n= 400 p50=  5.615s p95= 14.715s p99= 18.521s thr=1.169/s err=0 aborted=False replicas=[400]
+rate   1.361/s n= 400 p50= 11.129s p95= 20.530s p99= 24.865s thr=1.289/s err=0 aborted=False replicas=[400]
+rate   1.498/s n= 400 p50= 18.442s p95= 28.640s p99= 33.005s thr=1.345/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/always_hybrid_r1_s1238  (all rates done)
+=== 2026-11-19 14:58:42 always_visual r1 seed 1238
+always_visual on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.35, 0.7, 1.166, 1.632, 1.865, 2.099, 2.332, 2.565]
+rate   0.350/s n= 315 p50=  0.822s p95=  1.581s p99=  2.006s thr=0.346/s err=0 aborted=False replicas=[315]
+rate   0.700/s n= 400 p50=  0.947s p95=  2.214s p99=  2.964s thr=0.671/s err=0 aborted=False replicas=[400]
+rate   1.166/s n= 400 p50=  1.288s p95=  3.674s p99=  4.669s thr=1.116/s err=0 aborted=False replicas=[400]
+rate   1.632/s n= 400 p50=  1.755s p95=  6.839s p99=  9.557s thr=1.560/s err=0 aborted=False replicas=[400]
+rate   1.865/s n= 400 p50=  2.444s p95=  9.324s p99= 12.108s thr=1.781/s err=0 aborted=False replicas=[400]
+rate   2.099/s n= 400 p50=  4.357s p95= 12.014s p99= 15.182s thr=2.003/s err=0 aborted=False replicas=[400]
+rate   2.332/s n= 400 p50=  8.032s p95= 15.579s p99= 20.221s thr=2.213/s err=0 aborted=False replicas=[400]
+rate   2.565/s n= 400 p50= 13.327s p95= 20.750s p99= 25.766s thr=2.302/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/always_visual_r1_s1238  (all rates done)
+=== 2026-11-19 15:48:09 cavr_ce_valsel r1 seed 1238
+cavr_ce_valsel on 1 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.303, 0.605, 1.009, 1.412, 1.614, 1.815, 2.017, 2.219]
+rate   0.303/s n= 273 p50=  0.901s p95=  1.730s p99=  2.165s thr=0.302/s err=0 aborted=False replicas=[273]
+rate   0.605/s n= 400 p50=  1.030s p95=  2.581s p99=  3.859s thr=0.580/s err=0 aborted=False replicas=[400]
+rate   1.009/s n= 400 p50=  1.315s p95=  4.111s p99=  5.173s thr=0.967/s err=0 aborted=False replicas=[400]
+rate   1.412/s n= 400 p50=  1.885s p95=  6.091s p99=  7.992s thr=1.351/s err=0 aborted=False replicas=[400]
+rate   1.614/s n= 400 p50=  2.493s p95=  8.727s p99= 10.370s thr=1.543/s err=0 aborted=False replicas=[400]
+rate   1.815/s n= 400 p50=  3.841s p95= 11.073s p99= 13.287s thr=1.734/s err=0 aborted=False replicas=[400]
+rate   2.017/s n= 400 p50=  6.916s p95= 14.522s p99= 19.317s thr=1.925/s err=0 aborted=False replicas=[400]
+rate   2.219/s n= 400 p50= 12.088s p95= 20.676s p99= 27.068s thr=2.017/s err=0 aborted=False replicas=[400]
+wrote results/load_r3/cavr_ce_valsel_r1_s1238  (all rates done)
+stopped replica 0 (pid 2432; log logs/replica_0_20261119_164239.log)
+0, 0 MiB
+1, 0 MiB
+=== 2026-11-19 16:42:46 starting 2 replica(s)
+started replica 0 (GPU 0, port 8000, mode native)
+started replica 1 (GPU 1, port 8001, mode native)
+replica 0 healthy: http://127.0.0.1:8000  (118s)
+replica 1 healthy: http://127.0.0.1:8001  (118s)
+all 2 replica(s) up. Stop with: bash stop.sh
+=== 2026-11-19 16:44:44 always_hybrid r2 seed 1235
+always_hybrid on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.408, 0.817, 1.361, 1.906, 2.178, 2.451, 2.723, 2.995]
+rate   0.408/s n= 368 p50=  1.076s p95=  1.658s p99=  2.056s thr=0.426/s err=0 aborted=False replicas=[184, 184]
+rate   0.817/s n= 400 p50=  1.056s p95=  2.058s p99=  2.556s thr=0.857/s err=0 aborted=False replicas=[200, 200]
+rate   1.361/s n= 400 p50=  1.364s p95=  3.170s p99=  4.334s thr=1.424/s err=0 aborted=False replicas=[200, 200]
+rate   1.906/s n= 400 p50=  2.063s p95=  5.513s p99=  6.991s thr=1.988/s err=0 aborted=False replicas=[200, 200]
+rate   2.178/s n= 400 p50=  3.034s p95=  6.860s p99=  9.058s thr=2.270/s err=0 aborted=False replicas=[200, 200]
+rate   2.451/s n= 400 p50=  5.409s p95= 10.326s p99= 14.318s thr=2.530/s err=0 aborted=False replicas=[202, 198]
+rate   2.723/s n= 400 p50=  9.769s p95= 16.304s p99= 22.144s thr=2.630/s err=0 aborted=False replicas=[200, 200]
+rate   2.995/s n= 400 p50= 12.722s p95= 22.707s p99= 28.520s thr=2.718/s err=0 aborted=False replicas=[200, 200]
+wrote results/load_r3/always_hybrid_r2_s1235  (all rates done)
+=== 2026-11-19 17:26:36 always_visual r2 seed 1235
+always_visual on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.7, 1.399, 2.332, 3.265, 3.731, 4.197, 4.664, 5.13]
+rate   0.700/s n= 400 p50=  0.730s p95=  1.135s p99=  1.325s thr=0.735/s err=0 aborted=False replicas=[200, 200]
+rate   1.399/s n= 400 p50=  0.704s p95=  1.397s p99=  1.622s thr=1.466/s err=0 aborted=False replicas=[200, 200]
+rate   2.332/s n= 400 p50=  0.979s p95=  2.290s p99=  3.052s thr=2.438/s err=0 aborted=False replicas=[200, 200]
+rate   3.265/s n= 400 p50=  1.509s p95=  4.193s p99=  5.806s thr=3.407/s err=0 aborted=False replicas=[200, 200]
+rate   3.731/s n= 400 p50=  2.353s p95=  5.459s p99=  8.019s thr=3.856/s err=0 aborted=False replicas=[200, 200]
+rate   4.197/s n= 400 p50=  4.292s p95=  9.097s p99= 11.791s thr=4.335/s err=0 aborted=False replicas=[197, 203]
+rate   4.664/s n= 400 p50=  7.385s p95= 12.744s p99= 16.530s thr=4.540/s err=0 aborted=False replicas=[197, 203]
+rate   5.130/s n= 400 p50=  9.549s p95= 16.211s p99= 18.928s thr=4.593/s err=0 aborted=False replicas=[200, 200]
+wrote results/load_r3/always_visual_r2_s1235  (all rates done)
+=== 2026-11-19 17:52:08 cavr_ce_valsel r2 seed 1235
+cavr_ce_valsel on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.605, 1.21, 2.017, 2.824, 3.228, 3.631, 4.034, 4.438]
+rate   0.605/s n= 400 p50=  0.779s p95=  1.402s p99=  1.826s thr=0.635/s err=0 aborted=False replicas=[200, 200]
+rate   1.210/s n= 400 p50=  0.778s p95=  1.651s p99=  2.098s thr=1.267/s err=0 aborted=False replicas=[200, 200]
+rate   2.017/s n= 400 p50=  0.939s p95=  2.642s p99=  3.161s thr=2.102/s err=0 aborted=False replicas=[200, 200]
+rate   2.824/s n= 400 p50=  1.642s p95=  4.678s p99=  5.998s thr=2.935/s err=0 aborted=False replicas=[201, 199]
+rate   3.228/s n= 400 p50=  2.333s p95=  5.706s p99=  7.834s thr=3.338/s err=0 aborted=False replicas=[199, 201]
+rate   3.631/s n= 400 p50=  3.658s p95=  8.459s p99= 10.997s thr=3.753/s err=0 aborted=False replicas=[199, 201]
+rate   4.034/s n= 400 p50=  6.899s p95= 12.398s p99= 18.549s thr=3.887/s err=0 aborted=False replicas=[201, 199]
+rate   4.438/s n= 400 p50=  9.072s p95= 15.665s p99= 21.158s thr=4.031/s err=0 aborted=False replicas=[197, 203]
+wrote results/load_r3/cavr_ce_valsel_r2_s1235  (all rates done)
+=== 2026-11-19 18:21:36 always_hybrid r2 seed 1236
+always_hybrid on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.408, 0.817, 1.361, 1.906, 2.178, 2.451, 2.723, 2.995]
+rate   0.408/s n= 368 p50=  1.085s p95=  1.812s p99=  2.067s thr=0.450/s err=0 aborted=False replicas=[184, 184]
+rate   0.817/s n= 400 p50=  1.087s p95=  2.059s p99=  2.559s thr=0.896/s err=0 aborted=False replicas=[200, 200]
+rate   1.361/s n= 400 p50=  1.464s p95=  3.204s p99=  4.058s thr=1.489/s err=0 aborted=False replicas=[200, 200]
+rate   1.906/s n= 400 p50=  2.311s p95=  5.277s p99=  7.658s thr=2.081/s err=0 aborted=False replicas=[200, 200]
+rate   2.178/s n= 400 p50=  3.148s p95=  6.855s p99=  8.669s thr=2.373/s err=0 aborted=False replicas=[200, 200]
+rate   2.451/s n= 400 p50=  6.518s p95= 11.041s p99= 13.600s thr=2.649/s err=0 aborted=False replicas=[199, 201]
+rate   2.723/s n= 400 p50= 14.590s p95= 20.142s p99= 23.631s thr=2.690/s err=0 aborted=False replicas=[200, 200]
+rate   2.995/s n= 400 p50= 21.262s p95= 28.736s p99= 32.313s thr=2.701/s err=0 aborted=False replicas=[200, 200]
+wrote results/load_r3/always_hybrid_r2_s1236  (all rates done)
+=== 2026-11-19 19:01:43 always_visual r2 seed 1236
+always_visual on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.7, 1.399, 2.332, 3.265, 3.731, 4.197, 4.664, 5.13]
+rate   0.700/s n= 400 p50=  0.730s p95=  1.150s p99=  1.485s thr=0.768/s err=0 aborted=False replicas=[200, 200]
+rate   1.399/s n= 400 p50=  0.748s p95=  1.492s p99=  2.089s thr=1.533/s err=0 aborted=False replicas=[200, 200]
+rate   2.332/s n= 400 p50=  1.059s p95=  2.386s p99=  3.060s thr=2.551/s err=0 aborted=False replicas=[200, 200]
+rate   3.265/s n= 400 p50=  1.800s p95=  4.648s p99=  5.833s thr=3.562/s err=0 aborted=False replicas=[200, 200]
+rate   3.731/s n= 400 p50=  2.682s p95=  6.161s p99=  8.388s thr=4.064/s err=0 aborted=False replicas=[201, 199]
+rate   4.197/s n= 400 p50=  5.464s p95= 10.875s p99= 14.533s thr=4.511/s err=0 aborted=False replicas=[198, 202]
+rate   4.664/s n= 400 p50= 10.493s p95= 16.148s p99= 19.193s thr=4.583/s err=0 aborted=False replicas=[200, 200]
+rate   5.130/s n= 400 p50= 14.295s p95= 19.944s p99= 23.098s thr=4.621/s err=0 aborted=False replicas=[199, 201]
+wrote results/load_r3/always_visual_r2_s1236  (all rates done)
+=== 2026-11-19 19:26:17 cavr_ce_valsel r2 seed 1236
+cavr_ce_valsel on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.605, 1.21, 2.017, 2.824, 3.228, 3.631, 4.034, 4.438]
+rate   0.605/s n= 400 p50=  0.802s p95=  1.416s p99=  1.653s thr=0.664/s err=0 aborted=False replicas=[200, 200]
+rate   1.210/s n= 400 p50=  0.842s p95=  1.694s p99=  2.359s thr=1.327/s err=0 aborted=False replicas=[200, 200]
+rate   2.017/s n= 400 p50=  1.092s p95=  2.719s p99=  3.546s thr=2.202/s err=0 aborted=False replicas=[202, 198]
+rate   2.824/s n= 400 p50=  1.936s p95=  5.020s p99=  6.187s thr=3.074/s err=0 aborted=False replicas=[201, 199]
+rate   3.228/s n= 400 p50=  3.187s p95=  6.846s p99=  9.046s thr=3.507/s err=0 aborted=False replicas=[202, 198]
+rate   3.631/s n= 400 p50=  6.543s p95= 11.483s p99= 14.981s thr=3.913/s err=0 aborted=False replicas=[198, 202]
+rate   4.034/s n= 400 p50= 12.011s p95= 17.098s p99= 19.153s thr=3.935/s err=0 aborted=False replicas=[196, 204]
+rate   4.438/s n= 400 p50= 16.476s p95= 23.677s p99= 25.066s thr=3.866/s err=0 aborted=False replicas=[200, 200]
+wrote results/load_r3/cavr_ce_valsel_r2_s1236  (all rates done)
+=== 2026-11-19 19:54:42 always_hybrid r2 seed 1237
+always_hybrid on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.408, 0.817, 1.361, 1.906, 2.178, 2.451, 2.723, 2.995]
+rate   0.408/s n= 368 p50=  1.072s p95=  1.727s p99=  2.134s thr=0.421/s err=0 aborted=False replicas=[184, 184]
+rate   0.817/s n= 400 p50=  1.055s p95=  2.640s p99=  3.831s thr=0.839/s err=0 aborted=False replicas=[200, 200]
+rate   1.361/s n= 400 p50=  1.244s p95=  4.041s p99=  5.162s thr=1.395/s err=0 aborted=False replicas=[200, 200]
+rate   1.906/s n= 400 p50=  1.803s p95=  5.085s p99=  6.252s thr=1.947/s err=0 aborted=False replicas=[200, 200]
+rate   2.178/s n= 400 p50=  2.613s p95=  6.410s p99=  8.318s thr=2.218/s err=0 aborted=False replicas=[200, 200]
+rate   2.451/s n= 400 p50=  3.831s p95=  8.953s p99= 11.329s thr=2.485/s err=0 aborted=False replicas=[200, 200]
+rate   2.723/s n= 400 p50=  8.693s p95= 14.078s p99= 23.041s thr=2.701/s err=0 aborted=False replicas=[199, 201]
+rate   2.995/s n= 400 p50= 15.999s p95= 22.243s p99= 28.623s thr=2.692/s err=0 aborted=False replicas=[198, 202]
+wrote results/load_r3/always_hybrid_r2_s1237  (all rates done)
+=== 2026-11-19 20:37:05 always_visual r2 seed 1237
+always_visual on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.7, 1.399, 2.332, 3.265, 3.731, 4.197, 4.664, 5.13]
+rate   0.700/s n= 400 p50=  0.746s p95=  1.217s p99=  1.642s thr=0.720/s err=0 aborted=False replicas=[200, 200]
+rate   1.399/s n= 400 p50=  0.721s p95=  1.700s p99=  2.105s thr=1.436/s err=0 aborted=False replicas=[200, 200]
+rate   2.332/s n= 400 p50=  0.925s p95=  2.657s p99=  3.419s thr=2.388/s err=0 aborted=False replicas=[200, 200]
+rate   3.265/s n= 400 p50=  1.493s p95=  3.671s p99=  4.602s thr=3.323/s err=0 aborted=False replicas=[202, 198]
+rate   3.731/s n= 400 p50=  1.948s p95=  4.970s p99=  6.159s thr=3.787/s err=0 aborted=False replicas=[198, 202]
+rate   4.197/s n= 400 p50=  2.854s p95=  7.168s p99=  8.687s thr=4.243/s err=0 aborted=False replicas=[197, 203]
+rate   4.664/s n= 400 p50=  6.134s p95= 11.734s p99= 14.367s thr=4.661/s err=0 aborted=False replicas=[197, 203]
+rate   5.130/s n= 400 p50= 10.318s p95= 15.743s p99= 20.002s thr=4.659/s err=0 aborted=False replicas=[199, 201]
+wrote results/load_r3/always_visual_r2_s1237  (all rates done)
+=== 2026-11-19 21:02:59 cavr_ce_valsel r2 seed 1237
+cavr_ce_valsel on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.605, 1.21, 2.017, 2.824, 3.228, 3.631, 4.034, 4.438]
+rate   0.605/s n= 400 p50=  0.797s p95=  1.397s p99=  2.104s thr=0.622/s err=0 aborted=False replicas=[200, 200]
+rate   1.210/s n= 400 p50=  0.773s p95=  1.971s p99=  2.921s thr=1.243/s err=0 aborted=False replicas=[200, 200]
+rate   2.017/s n= 400 p50=  0.964s p95=  2.938s p99=  3.709s thr=2.065/s err=0 aborted=False replicas=[200, 200]
+rate   2.824/s n= 400 p50=  1.316s p95=  3.762s p99=  4.701s thr=2.869/s err=0 aborted=False replicas=[200, 200]
+rate   3.228/s n= 400 p50=  1.876s p95=  4.694s p99=  5.969s thr=3.265/s err=0 aborted=False replicas=[200, 200]
+rate   3.631/s n= 400 p50=  2.729s p95=  6.553s p99=  7.559s thr=3.685/s err=0 aborted=False replicas=[200, 200]
+rate   4.034/s n= 400 p50=  5.168s p95= 10.302s p99= 14.177s thr=4.060/s err=0 aborted=False replicas=[202, 198]
+rate   4.438/s n= 400 p50=  9.978s p95= 15.581s p99= 19.919s thr=4.128/s err=0 aborted=False replicas=[194, 206]
+wrote results/load_r3/cavr_ce_valsel_r2_s1237  (all rates done)
+=== 2026-11-19 21:32:50 always_hybrid r2 seed 1238
+always_hybrid on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.408, 0.817, 1.361, 1.906, 2.178, 2.451, 2.723, 2.995]
+rate   0.408/s n= 368 p50=  1.083s p95=  1.783s p99=  2.021s thr=0.399/s err=0 aborted=False replicas=[184, 184]
+rate   0.817/s n= 400 p50=  1.084s p95=  2.074s p99=  2.776s thr=0.783/s err=0 aborted=False replicas=[200, 200]
+rate   1.361/s n= 400 p50=  1.308s p95=  3.270s p99=  3.982s thr=1.300/s err=0 aborted=False replicas=[200, 200]
+rate   1.906/s n= 400 p50=  1.675s p95=  5.447s p99=  7.515s thr=1.818/s err=0 aborted=False replicas=[200, 200]
+rate   2.178/s n= 400 p50=  2.296s p95=  8.258s p99= 10.145s thr=2.074/s err=0 aborted=False replicas=[200, 200]
+rate   2.451/s n= 400 p50=  3.705s p95=  9.927s p99= 13.334s thr=2.331/s err=0 aborted=False replicas=[199, 201]
+rate   2.723/s n= 400 p50=  6.729s p95= 12.999s p99= 17.746s thr=2.575/s err=0 aborted=False replicas=[200, 200]
+rate   2.995/s n= 400 p50= 10.793s p95= 17.641s p99= 22.034s thr=2.664/s err=0 aborted=False replicas=[200, 200]
+wrote results/load_r3/always_hybrid_r2_s1238  (all rates done)
+=== 2026-11-19 22:17:50 always_visual r2 seed 1238
+always_visual on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.7, 1.399, 2.332, 3.265, 3.731, 4.197, 4.664, 5.13]
+rate   0.700/s n= 400 p50=  0.755s p95=  1.293s p99=  1.741s thr=0.672/s err=0 aborted=False replicas=[200, 200]
+rate   1.399/s n= 400 p50=  0.717s p95=  1.537s p99=  1.979s thr=1.340/s err=0 aborted=False replicas=[200, 200]
+rate   2.332/s n= 400 p50=  0.896s p95=  2.248s p99=  2.914s thr=2.229/s err=0 aborted=False replicas=[200, 200]
+rate   3.265/s n= 400 p50=  1.287s p95=  4.828s p99=  6.874s thr=3.112/s err=0 aborted=False replicas=[200, 200]
+rate   3.731/s n= 400 p50=  1.821s p95=  7.083s p99=  9.895s thr=3.551/s err=0 aborted=False replicas=[201, 199]
+rate   4.197/s n= 400 p50=  2.950s p95=  9.046s p99= 11.935s thr=3.989/s err=0 aborted=False replicas=[198, 202]
+rate   4.664/s n= 400 p50=  5.186s p95= 11.298s p99= 15.764s thr=4.404/s err=0 aborted=False replicas=[199, 201]
+rate   5.130/s n= 400 p50=  7.784s p95= 14.176s p99= 18.567s thr=4.570/s err=0 aborted=False replicas=[201, 199]
+wrote results/load_r3/always_visual_r2_s1238  (all rates done)
+=== 2026-11-19 22:45:29 cavr_ce_valsel r2 seed 1238
+cavr_ce_valsel on 2 replica(s), model qwen2.5-vl-7b, energy nvml_counter; rates [0.605, 1.21, 2.017, 2.824, 3.228, 3.631, 4.034, 4.438]
+rate   0.605/s n= 400 p50=  0.810s p95=  1.362s p99=  1.832s thr=0.581/s err=0 aborted=False replicas=[200, 200]
+rate   1.210/s n= 400 p50=  0.811s p95=  1.781s p99=  2.345s thr=1.160/s err=0 aborted=False replicas=[200, 200]
+rate   2.017/s n= 400 p50=  0.976s p95=  2.471s p99=  3.237s thr=1.930/s err=0 aborted=False replicas=[200, 200]
+rate   2.824/s n= 400 p50=  1.390s p95=  3.860s p99=  5.444s thr=2.697/s err=0 aborted=False replicas=[200, 200]
+rate   3.228/s n= 400 p50=  1.869s p95=  5.364s p99=  8.057s thr=3.080/s err=0 aborted=False replicas=[200, 200]
+rate   3.631/s n= 400 p50=  2.688s p95=  7.978s p99= 10.875s thr=3.457/s err=0 aborted=False replicas=[201, 199]
+rate   4.034/s n= 400 p50=  4.513s p95= 10.329s p99= 13.970s thr=3.820/s err=0 aborted=False replicas=[198, 202]
+rate   4.438/s n= 400 p50=  7.591s p95= 13.901s p99= 19.382s thr=4.007/s err=0 aborted=False replicas=[205, 195]
+wrote results/load_r3/cavr_ce_valsel_r2_s1238  (all rates done)
+stopped replica 0 (pid 15805; log logs/replica_0_20261119_231719.log)
+stopped replica 1 (pid 15806; log logs/replica_1_20261119_231719.log)
+0, 0 MiB
+1, 0 MiB
+=== 2026-11-19 23:17:27 r3 driver done: repeats

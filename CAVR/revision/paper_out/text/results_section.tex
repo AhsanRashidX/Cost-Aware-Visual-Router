@@ -23,7 +23,7 @@ RQ2 & \S\ref{sec:res-labels}--\ref{sec:res-confirm}; Tables~\ref{tab:main_result
 RQ3 & \S\ref{sec:res-lambda}, \S\ref{sec:res-escalation}; Table~\ref{tab:escalation} & $\lambda$ sets the trade-off
 without retraining; escalation adds nothing beyond it. \\
 RQ4 & \S\ref{sec:res-scale}; Tables~\ref{tab:live_serving}, \ref{tab:load_test} & Live, routing sustains
-1.82$\times$ the rate of always-hybrid at p95 $\le$ 5\,s; simulated GPU counts are
+1.70$\times$ the rate of always-hybrid at p95 $\le$ 5\,s; simulated GPU counts are
 projections; index sharding within a node is near-linear. \\
 \bottomrule
 \end{tabular}
@@ -298,34 +298,43 @@ most 0.003, and 96--98\% of answers were identical. With one request at a time, 
 A10 took 0.52, 0.59 and 0.88\,s per text, visual and hybrid request, against
 0.44, 0.58 and 0.96\,s of generation on the workstation.
 
-Under Poisson load the policies kept the order the simulation gives, and routing gained more than simulated. At
-p95 $\le$ 5\,s, CAVR-CE sustained 1.86$\times$ the arrival rate of always-hybrid on one GPU and
-1.82$\times$ on two, where the simulator, given the A10's own service times and batching curve,
-predicted 1.46$\times$ and 1.62$\times$. On two GPUs at p95 $\le$ 2\,s the ratio was
-2.82 (simulated 2.13). Always-visual remained ahead of CAVR-CE, which sustained
-0.87$\times$ and 0.90$\times$ its rate at 5\,s, as in the simulation. Answer
-quality did not change under load: ANLS over the tested rates was 0.567 for CAVR-CE, 0.573 for
-always-hybrid and 0.542 for always-visual on two GPUs, close to the workstation's ANLS on the same requests.
-At each policy's highest tested rate, CAVR-CE used 74\,J of GPU energy per request, against 111\,J for
-always-hybrid (33\% less) and 65\,J for always-visual.
+Under Poisson load the policies kept the order the simulation gives. Each policy was served with five arrival
+traces per rate: the original trace and four new ones with the same rates and requests, so that capacities carry 95\%
+$t$ intervals over traces and ratios between policies are paired by trace (Table~\ref{tab:live_serving}); re-running
+the original trace at its two lowest always-hybrid rates reproduced its p95 within 2.5\%. At p95 $\le$ 5\,s, one A10 sustained
+1.33 [1.28, 1.39] queries/s with always-visual, 1.12 [1.07, 1.18] with CAVR-CE and
+0.64 [0.56, 0.73] with always-hybrid; two A10s sustained 3.47 [3.25, 3.69],
+3.04 [2.82, 3.27] and 1.79 [1.69, 1.88]. CAVR-CE thus sustained
+1.76$\times$ [1.56, 1.97] the arrival rate of always-hybrid on one GPU and
+1.70$\times$ [1.57, 1.84] on two, where the simulator, given the A10's own service times and
+batching curve, predicted 1.46$\times$ and 1.62$\times$ for the original trace. At
+p95 $\le$ 2\,s, one A10 missed the target at the lowest tested rate with always-hybrid on all five traces and with
+CAVR-CE on 2 of them; on two GPUs CAVR-CE sustained 2.24$\times$ [1.80, 2.67] the rate
+of always-hybrid. Always-visual remained ahead of CAVR-CE, sustaining 1.19$\times$ [1.14, 1.23]
+and 1.14$\times$ [1.06, 1.22] its rate at 5\,s, as in the simulation. On the original trace,
+answer quality did not change under load: ANLS over the tested rates was 0.567 for CAVR-CE, 0.573
+for always-hybrid and 0.542 for always-visual on two GPUs, close to the workstation's ANLS on the same
+requests. At each policy's highest tested rate, CAVR-CE used 74\,J of GPU energy per request, against
+111\,J for always-hybrid (33\% less) and 65\,J for always-visual.
 
-Absolute capacity, by contrast, was lower than simulated. At p95 $\le$ 5\,s the simulator predicted
-1.4--2.0$\times$ the measured capacity, and on the measured arrival traces its p95 was off by a
-median of 37--57\% per run; inputs from the workstation gave similar predictions. At
-p95 $\le$ 2\,s, one A10 met the target only with always-visual, up to 0.37 queries/s, where the simulator
-predicted 1.06. The test points to two effects that the simulator leaves out. First, at the lowest rate a
+Absolute capacity, by contrast, was lower than simulated. At p95 $\le$ 5\,s the simulator's capacity was
+1.72$\times$ [1.61, 1.83] the measured one on one GPU and 1.41$\times$ [1.36, 1.46] on two
+(pooled over policies and traces; 1.24--2.07$\times$ over single runs), so a simulated
+capacity has to be divided by these factors to estimate live capacity on this hardware. On the original arrival
+traces its p95 was off by a median of 37--57\% per run; inputs from the workstation gave
+similar predictions. At p95 $\le$ 2\,s, one A10 met the target reliably only with always-visual, up to
+0.51 [0.38, 0.64] queries/s, where the simulator predicted 1.06. The test points to two
+effects that the simulator leaves out. First, at the lowest rate a
 request that reached an idle replica took 1.22--1.37$\times$ the time the same request took back to
 back with others; GPU clocks dropping between requests are a likely cause. Second, vLLM batches continuously: the
 prefill of a new request (on average 1,265 prompt tokens on the visual path and 2,675 on the
 hybrid path, while answers average at most 6 tokens) runs alongside the requests already in progress
 and slows them down, whereas the simulator treats a batch as uninterrupted once it starts. Adding a second GPU raised
-the measured capacity at 5\,s by 2.7--2.8$\times$, more than the
+the measured capacity at 5\,s by 2.6--2.8$\times$ (means over traces), more than the
 2.1--2.4$\times$ predicted, which is consistent with the larger pooling gain of a shared
-dispatcher when service times vary more than the model assumes. The simulated GPU counts of Table~\ref{tab:load_test} are therefore reported as simulated: on one and two A10
-GPUs the simulator overestimated capacity at p95 $\le$ 5\,s by 1.4--2.0$\times$, the
-error was smaller with two GPUs than with one, and how it changes with pool size beyond two GPUs is not known. At
-2\,s the error was larger: on one A10, CAVR-CE and always-hybrid missed the target even at the lowest tested rate. The order of the policies
-and CAVR-CE's advantage over always-hybrid held in the live test.
+dispatcher when service times vary more than the model assumes. The simulated GPU counts of Table~\ref{tab:load_test}
+are therefore projections: the correction factor fell from one GPU to two, and how it changes with pool size beyond
+two GPUs is not known. The order of the policies and CAVR-CE's advantage over always-hybrid held on every live trace.
 
 \paragraph{Retrieval and routing in the loop.} The runs above serve generation only. To measure the whole pipeline
 once, a front end on the second A10 ran, for each request at its arrival time, BM25 over the OCR text, ColPali query
@@ -350,8 +359,9 @@ requests.
 \begin{figure*}[t]
   \centering
   \includegraphics[width=0.75\textwidth]{figures/live_serving.pdf}
-  \caption{Live serving with vLLM on one and two A10 GPUs: measured p95 latency against Poisson arrival rate (solid)
-  and the simulator's prediction for the same arrivals from the A10's service times and batching curve (dashed).
+  \caption{Live serving with vLLM on one and two A10 GPUs: measured p95 latency against Poisson arrival rate on the
+  original trace (solid; shaded, the range over five arrival traces) and the simulator's prediction for the
+  original arrivals from the A10's service times and batching curve (dashed).
   Dotted lines mark the 2\,s and 5\,s targets.}
   \label{fig:live_serving}
 \end{figure*}
@@ -532,10 +542,9 @@ are not measured, and statements about larger clusters are projections. Caps on 
 below the point where the driver spills to system RAM. The cached run generates with HF Transformers. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 
 The workstation load test is a simulation driven by measured service times. Checked against live vLLM serving on one
-and two A10 GPUs, it overestimated capacity at p95 $\le$ 5\,s by 1.4--2.0$\times$, and
-by more at 2\,s, so its GPU counts are simulated estimates whose error beyond two GPUs is unknown; the live test kept
-the order of the policies at 5\,s. Each live rate is a single arrival trace, so the live capacities carry no
-interval. That test serves
+and two A10 GPUs over five arrival traces per rate, it overestimated capacity at p95 $\le$ 5\,s by
+1.72$\times$ on one GPU and 1.41$\times$ on two, and by more at 2\,s, so its GPU counts are
+projections whose error beyond two GPUs is unknown; the live test kept the order of the policies at 5\,s. That test serves
 generation only, with retrieval and routing run beforehand, on at most two GPUs under WSL, with one model and
 greedy decoding; retrieval and routing were in the loop for one trace per policy on one GPU, with a re-trained
 router whose path mix differs slightly from the original. Escalation latencies are

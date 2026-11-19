@@ -219,7 +219,16 @@ requests. The load test sends open-loop Poisson arrivals (fixed seed) at 15--110
 throughput for the policy's path mix, with at most 400 arrivals per rate, the first 10\% discarded, and stops once p95
 exceeds 30\,s. Each measured arrival trace is then replayed through the simulator above, once with the A10's service
 times and batching curve and once with the workstation's, so that predicted and measured p95 refer to the same
-arrivals; the capacity at a p95 target is interpolated between tested rates.
+arrivals; the capacity at a p95 target is interpolated between tested rates. Every policy and replica count was
+run with five arrival traces (Poisson seeds 1234--1238; 1234 is the original run), with the server, rates and
+requests unchanged, and the runs were made one at a time with nothing else on the GPUs. Capacities are reported as
+means with 95\% $t$ intervals over traces, and ratios between policies are paired by trace.
+
+In one further run per policy (CAVR-CE and always-visual, original trace, one replica), retrieval and routing were in
+the loop: a single front-end worker on the second A10 ran BM25, ColPali query encoding with exhaustive MaxSim over the
+dataset's pages and, for CAVR-CE, the cross-encoder router at each request's arrival, and sent the prompt built from
+this live retrieval to the replica. The router weights of the main run had not been stored, so the split-1 router was
+re-trained with the same code, data, hyperparameters and seed.
 
 \paragraph{Sensitivity and control experiments.} With the same simulator, the GPUs needed for 100 queries/s are
 found for p95 targets of 1.5, 2, 3, 5, 7.5 and 10\,s on all five splits for always-visual, always-hybrid and

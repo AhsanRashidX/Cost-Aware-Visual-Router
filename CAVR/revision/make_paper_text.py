@@ -557,6 +557,44 @@ def values():
                   "lp_ce0_vis": f"{100 * ce['generation_only_path_share']['visual']:.0f}",
                   "lp_ce0_txt": f"{100 * ce['generation_only_path_share']['text']:.0f}",
                   "lp_vis_over_ce": f"{lp['always_visual_r1_s1234']['capacity']['5.0'] / ce['capacity']['5.0']:.2f}"})
+    # live serving repeated over five arrival traces (vllm_repeats_r3.py)
+    vr = J("vllm_repeats_r3.json")
+    if vr.get("aggregate"):
+        from scipy import stats as _st
+        ag, ra, se = vr["aggregate"], vr["ratios"], vr["simulator_error"]
+        sh = {"always_visual": "vis", "always_hybrid": "hyb", "cavr_ce_valsel": "ce"}
+        rci = lambda x: f"[{x[0]:.2f}, {x[1]:.2f}]"
+        V["vr_n"] = {3: "three", 4: "four", 5: "five", 6: "six"}.get(ag["cavr_ce_valsel_r1"]["n_traces"], str(ag["cavr_ce_valsel_r1"]["n_traces"]))
+        for pol, k0 in sh.items():
+            for n in (1, 2):
+                a = ag[f"{pol}_r{n}"]
+                for t in ("2.0", "5.0"):
+                    k = f"vr_{k0}_r{n}_{t[0]}"
+                    V[k] = f"{a[f'capacity_{t}']['mean']:.2f}"
+                    if a[f"capacity_{t}"].get("ci95_t"):
+                        V[k + "_ci"] = rci(a[f"capacity_{t}"]["ci95_t"])
+                    V[k + "_zero"] = str(a[f"zero_capacity_traces_{t}"])
+        sc = [ag[f"{pol}_r2"]["capacity_5.0"]["mean"] / ag[f"{pol}_r1"]["capacity_5.0"]["mean"] for pol in sh]
+        V.update({"vr_scale_min": f"{min(sc):.1f}", "vr_scale_max": f"{max(sc):.1f}"})
+        for name, k0 in (("cavr_ce_valsel_over_always_hybrid", "ce_hyb"), ("always_visual_over_cavr_ce_valsel", "vis_ce")):
+            for n in (1, 2):
+                for t in ("2.0", "5.0"):
+                    x = ra.get(f"{name}_r{n}_{t}") or {}
+                    if x.get("mean") is not None and x.get("ci95_t"):
+                        V[f"vr_{k0}_r{n}_{t[0]}"] = f"{x['mean']:.2f}"
+                        V[f"vr_{k0}_r{n}_{t[0]}_ci"] = rci(x["ci95_t"])
+        pm = [se[f"{pol}_r{n}"]["5.0"]["mean"] for pol in sh for n in (1, 2)]
+        runs_ = [v for pol in sh for n in (1, 2) for v in se[f"{pol}_r{n}"]["5.0"]["values"]]
+        V.update({"vr_over_lo": f"{min(pm):.1f}", "vr_over_hi": f"{max(pm):.1f}",
+                  "vr_over_run_lo": f"{min(runs_):.2f}", "vr_over_run_hi": f"{max(runs_):.2f}"})
+        for n in (1, 2):
+            vals = np.array([v for pol in sh for v in se[f"{pol}_r{n}"]["5.0"]["values"]])
+            h = _st.t.ppf(0.975, len(vals) - 1) * vals.std(ddof=1) / np.sqrt(len(vals))
+            V[f"vr_corr_r{n}"] = f"{vals.mean():.2f}"
+            V[f"vr_corr_r{n}_ci"] = rci([vals.mean() - h, vals.mean() + h])
+            V[f"vr_corr_r{n}_inv"] = f"{1 / vals.mean():.2f}"
+        pr = vr.get("pilot_reproduction") or {}
+        V["vr_pilot_max"] = f"{100 * max(abs(v['rel_diff']) for v in pr.values()):.1f}" if pr else "n/a"
     # verified references written by make_bib.py (every key cited in the paper)
     V["n_refs"] =sum(line.startswith("@") for line in open(ROOT / "paper_out" / "references.bib", encoding="utf-8"))
     return V
@@ -593,7 +631,7 @@ RQ2 & \S\ref{sec:res-labels}--\ref{sec:res-confirm}; Tables~\ref{tab:main_result
 RQ3 & \S\ref{sec:res-lambda}, \S\ref{sec:res-escalation}; Table~\ref{tab:escalation} & $\lambda$ sets the trade-off
 without retraining; escalation adds nothing beyond it. \\
 RQ4 & \S\ref{sec:res-scale}; Tables~\ref{tab:live_serving}, \ref{tab:load_test} & Live, routing sustains
-<<vl_ce_hyb_r2_5_measured>>$\times$ the rate of always-hybrid at p95 $\le$ 5\,s; simulated GPU counts are
+<<vr_ce_hyb_r2_5>>$\times$ the rate of always-hybrid at p95 $\le$ 5\,s; simulated GPU counts are
 projections; index sharding within a node is near-linear. \\
 \bottomrule
 \end{tabular}
@@ -868,34 +906,43 @@ most <<vl_anls_d>>, and <<vl_ident_min>>--<<vl_ident_max>>\% of answers were ide
 A10 took <<vl_svc_text>>, <<vl_svc_visual>> and <<vl_svc_hybrid>>\,s per text, visual and hybrid request, against
 <<vl_ref_text>>, <<vl_ref_visual>> and <<vl_ref_hybrid>>\,s of generation on the workstation.
 
-Under Poisson load the policies kept the order the simulation gives, and routing gained more than simulated. At
-p95 $\le$ 5\,s, CAVR-CE sustained <<vl_ce_hyb_r1_5_measured>>$\times$ the arrival rate of always-hybrid on one GPU and
-<<vl_ce_hyb_r2_5_measured>>$\times$ on two, where the simulator, given the A10's own service times and batching curve,
-predicted <<vl_ce_hyb_r1_5_a10>>$\times$ and <<vl_ce_hyb_r2_5_a10>>$\times$. On two GPUs at p95 $\le$ 2\,s the ratio was
-<<vl_ce_hyb_r2_2_measured>> (simulated <<vl_ce_hyb_r2_2_a10>>). Always-visual remained ahead of CAVR-CE, which sustained
-<<vl_ce_vis_r1_5_measured>>$\times$ and <<vl_ce_vis_r2_5_measured>>$\times$ its rate at 5\,s, as in the simulation. Answer
-quality did not change under load: ANLS over the tested rates was <<vl_ce2_anls>> for CAVR-CE, <<vl_hyb2_anls>> for
-always-hybrid and <<vl_vis2_anls>> for always-visual on two GPUs, close to the workstation's ANLS on the same requests.
-At each policy's highest tested rate, CAVR-CE used <<vl_ce2_j>>\,J of GPU energy per request, against <<vl_hyb2_j>>\,J for
-always-hybrid (<<vl_j_save>>\% less) and <<vl_vis2_j>>\,J for always-visual.
+Under Poisson load the policies kept the order the simulation gives. Each policy was served with <<vr_n>> arrival
+traces per rate: the original trace and four new ones with the same rates and requests, so that capacities carry 95\%
+$t$ intervals over traces and ratios between policies are paired by trace (Table~\ref{tab:live_serving}); re-running
+the original trace at its two lowest always-hybrid rates reproduced its p95 within <<vr_pilot_max>>\%. At p95 $\le$ 5\,s, one A10 sustained
+<<vr_vis_r1_5>> <<vr_vis_r1_5_ci>> queries/s with always-visual, <<vr_ce_r1_5>> <<vr_ce_r1_5_ci>> with CAVR-CE and
+<<vr_hyb_r1_5>> <<vr_hyb_r1_5_ci>> with always-hybrid; two A10s sustained <<vr_vis_r2_5>> <<vr_vis_r2_5_ci>>,
+<<vr_ce_r2_5>> <<vr_ce_r2_5_ci>> and <<vr_hyb_r2_5>> <<vr_hyb_r2_5_ci>>. CAVR-CE thus sustained
+<<vr_ce_hyb_r1_5>>$\times$ <<vr_ce_hyb_r1_5_ci>> the arrival rate of always-hybrid on one GPU and
+<<vr_ce_hyb_r2_5>>$\times$ <<vr_ce_hyb_r2_5_ci>> on two, where the simulator, given the A10's own service times and
+batching curve, predicted <<vl_ce_hyb_r1_5_a10>>$\times$ and <<vl_ce_hyb_r2_5_a10>>$\times$ for the original trace. At
+p95 $\le$ 2\,s, one A10 missed the target at the lowest tested rate with always-hybrid on all <<vr_n>> traces and with
+CAVR-CE on <<vr_ce_r1_2_zero>> of them; on two GPUs CAVR-CE sustained <<vr_ce_hyb_r2_2>>$\times$ <<vr_ce_hyb_r2_2_ci>> the rate
+of always-hybrid. Always-visual remained ahead of CAVR-CE, sustaining <<vr_vis_ce_r1_5>>$\times$ <<vr_vis_ce_r1_5_ci>>
+and <<vr_vis_ce_r2_5>>$\times$ <<vr_vis_ce_r2_5_ci>> its rate at 5\,s, as in the simulation. On the original trace,
+answer quality did not change under load: ANLS over the tested rates was <<vl_ce2_anls>> for CAVR-CE, <<vl_hyb2_anls>>
+for always-hybrid and <<vl_vis2_anls>> for always-visual on two GPUs, close to the workstation's ANLS on the same
+requests. At each policy's highest tested rate, CAVR-CE used <<vl_ce2_j>>\,J of GPU energy per request, against
+<<vl_hyb2_j>>\,J for always-hybrid (<<vl_j_save>>\% less) and <<vl_vis2_j>>\,J for always-visual.
 
-Absolute capacity, by contrast, was lower than simulated. At p95 $\le$ 5\,s the simulator predicted
-<<vl_over_min>>--<<vl_over_max>>$\times$ the measured capacity, and on the measured arrival traces its p95 was off by a
-median of <<vl_err_min>>--<<vl_err_max>>\% per run; inputs from the workstation gave similar predictions. At
-p95 $\le$ 2\,s, one A10 met the target only with always-visual, up to <<vl_vis1_2>> queries/s, where the simulator
-predicted <<vl_vis1_2_sim>>. The test points to two effects that the simulator leaves out. First, at the lowest rate a
+Absolute capacity, by contrast, was lower than simulated. At p95 $\le$ 5\,s the simulator's capacity was
+<<vr_corr_r1>>$\times$ <<vr_corr_r1_ci>> the measured one on one GPU and <<vr_corr_r2>>$\times$ <<vr_corr_r2_ci>> on two
+(pooled over policies and traces; <<vr_over_run_lo>>--<<vr_over_run_hi>>$\times$ over single runs), so a simulated
+capacity has to be divided by these factors to estimate live capacity on this hardware. On the original arrival
+traces its p95 was off by a median of <<vl_err_min>>--<<vl_err_max>>\% per run; inputs from the workstation gave
+similar predictions. At p95 $\le$ 2\,s, one A10 met the target reliably only with always-visual, up to
+<<vr_vis_r1_2>> <<vr_vis_r1_2_ci>> queries/s, where the simulator predicted <<vl_vis1_2_sim>>. The test points to two
+effects that the simulator leaves out. First, at the lowest rate a
 request that reached an idle replica took <<vl_idle_min>>--<<vl_idle_max>>$\times$ the time the same request took back to
 back with others; GPU clocks dropping between requests are a likely cause. Second, vLLM batches continuously: the
 prefill of a new request (on average <<vl_tok_visual>> prompt tokens on the visual path and <<vl_tok_hybrid>> on the
 hybrid path, while answers average at most <<vl_out_tok>> tokens) runs alongside the requests already in progress
 and slows them down, whereas the simulator treats a batch as uninterrupted once it starts. Adding a second GPU raised
-the measured capacity at 5\,s by <<vl_scale_min>>--<<vl_scale_max>>$\times$, more than the
+the measured capacity at 5\,s by <<vr_scale_min>>--<<vr_scale_max>>$\times$ (means over traces), more than the
 <<vl_ssim_min>>--<<vl_ssim_max>>$\times$ predicted, which is consistent with the larger pooling gain of a shared
-dispatcher when service times vary more than the model assumes. The simulated GPU counts of Table~\ref{tab:load_test} are therefore reported as simulated: on one and two A10
-GPUs the simulator overestimated capacity at p95 $\le$ 5\,s by <<vl_over_min>>--<<vl_over_max>>$\times$, the
-error was smaller with two GPUs than with one, and how it changes with pool size beyond two GPUs is not known. At
-2\,s the error was larger: on one A10, CAVR-CE and always-hybrid missed the target even at the lowest tested rate. The order of the policies
-and CAVR-CE's advantage over always-hybrid held in the live test.
+dispatcher when service times vary more than the model assumes. The simulated GPU counts of Table~\ref{tab:load_test}
+are therefore projections: the correction factor fell from one GPU to two, and how it changes with pool size beyond
+two GPUs is not known. The order of the policies and CAVR-CE's advantage over always-hybrid held on every live trace.
 
 \paragraph{Retrieval and routing in the loop.} The runs above serve generation only. To measure the whole pipeline
 once, a front end on the second A10 ran, for each request at its arrival time, BM25 over the OCR text, ColPali query
@@ -920,8 +967,9 @@ requests.
 \begin{figure*}[t]
   \centering
   \includegraphics[width=0.75\textwidth]{figures/live_serving.pdf}
-  \caption{Live serving with vLLM on one and two A10 GPUs: measured p95 latency against Poisson arrival rate (solid)
-  and the simulator's prediction for the same arrivals from the A10's service times and batching curve (dashed).
+  \caption{Live serving with vLLM on one and two A10 GPUs: measured p95 latency against Poisson arrival rate on the
+  original trace (solid; shaded, the range over <<vr_n>> arrival traces) and the simulator's prediction for the
+  original arrivals from the A10's service times and batching curve (dashed).
   Dotted lines mark the 2\,s and 5\,s targets.}
   \label{fig:live_serving}
 \end{figure*}
@@ -1102,10 +1150,9 @@ are not measured, and statements about larger clusters are projections. Caps on 
 below the point where the driver spills to system RAM. The cached run generates with HF Transformers. The 2\,s latency target is our choice; the saving is smaller at looser targets.
 
 The workstation load test is a simulation driven by measured service times. Checked against live vLLM serving on one
-and two A10 GPUs, it overestimated capacity at p95 $\le$ 5\,s by <<vl_over_min>>--<<vl_over_max>>$\times$, and
-by more at 2\,s, so its GPU counts are simulated estimates whose error beyond two GPUs is unknown; the live test kept
-the order of the policies at 5\,s. Each live rate is a single arrival trace, so the live capacities carry no
-interval. That test serves
+and two A10 GPUs over <<vr_n>> arrival traces per rate, it overestimated capacity at p95 $\le$ 5\,s by
+<<vr_corr_r1>>$\times$ on one GPU and <<vr_corr_r2>>$\times$ on two, and by more at 2\,s, so its GPU counts are
+projections whose error beyond two GPUs is unknown; the live test kept the order of the policies at 5\,s. That test serves
 generation only, with retrieval and routing run beforehand, on at most two GPUs under WSL, with one model and
 greedy decoding; retrieval and routing were in the loop for one trace per policy on one GPU, with a re-trained
 router whose path mix differs slightly from the original. Escalation latencies are

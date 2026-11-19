@@ -120,8 +120,10 @@ compiles the package on its own; in your document, copy its `\\input` lines and 
 
 - `[AUTHOR ACTION]` markers: release tag and DOI (Setup, reproducibility), author names and affiliations.
 - Condensing the main text / supplementary split (review item R4): awaiting your decision.
-- New GPU experiments not run in this round: repeated live-serving traces (R12), a higher visual-token budget on
-  InfographicVQA (R15), annotation of retrieval misses (R14); stated as limitations.
+- Not run, stated as limitations: a visual-token budget above 1,280 (InfographicVQA had not levelled off),
+  annotation of retrieval misses, a multi-node experiment, and an evaluation on a dataset with documented
+  non-exposure.
+- The GitHub repository is public; push the `revision` branch only after deciding on its visibility.
 """
 
 

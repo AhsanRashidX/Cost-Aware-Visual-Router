@@ -27,10 +27,12 @@ trained router covers a range of budgets; it is a per-deployment setting whose c
 new hardware. Confidence-based escalation adds nothing beyond it: every escalation operating point lies within
 0.010 ANLS of the operating points that lowering $\lambda$ reaches at the same cost.
 
-\emph{RQ4: capacity and index scaling.} Served live with vLLM on one and two A10 GPUs, CAVR-CE sustained
-1.82$\times$ the arrival rate of always-hybrid at p95 $\le$ 5\,s on two GPUs, and always-visual
-remained ahead of both. A simulator driven by measured service times kept this order but overestimated absolute
-capacity by 1.4--2.0$\times$, so the GPU counts it gives for larger pools are projections. Within
+\emph{RQ4: capacity and index scaling.} Served live with vLLM on one and two A10 GPUs over five arrival traces,
+CAVR-CE sustained 1.70$\times$ [1.57, 1.84] the arrival rate of always-hybrid at p95 $\le$ 5\,s
+on two GPUs, and always-visual remained ahead of both; with retrieval and routing in the loop, capacity fell by
+10\% for CAVR-CE and 3\% for always-visual. A simulator driven by measured service times kept
+the order of the policies but overestimated capacity 1.3--1.9-fold, so the GPU counts it gives
+for larger pools are projections. Within
 a node, sharding exhaustive MaxSim scaled almost linearly, as expected for an embarrassingly parallel search, and an
 index of a million pages held in host memory served large batches at close to the throughput per GPU of
 GPU-resident search, at 6.4\,s per single query.

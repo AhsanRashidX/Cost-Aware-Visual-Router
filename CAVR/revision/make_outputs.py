@@ -637,27 +637,43 @@ def live_serving():
     if not vl:
         return
     runs = vl["runs"]
+    rp = load("vllm_repeats_r3.json") or {}
+    agg, serr = rp.get("aggregate", {}), rp.get("simulator_error", {})
     order = [(p, n) for n in (1, 2) for p in ("always_visual", "cavr_ce_valsel", "always_hybrid") if f"{p}_r{n}" in runs]
     rows = []
+    ntr = max((a["n_traces"] for a in agg.values()), default=1)
     for p, n in order:
         r = runs[f"{p}_r{n}"]
-        c, lb = r["capacity_rps_at_p95_target"], r["measured_capacity_is_lower_bound"]
+        c = r["capacity_rps_at_p95_target"]
+        a = agg.get(f"{p}_r{n}")
         cells = []
         lo = min(v["offered_rps"] for v in r["rates"].values())
         for t in ("2.0", "5.0"):
-            live = f"$<${lo:.2f}" if c[t]["measured"] == 0 else ("$\\geq$" if lb[t] else "") + f"{c[t]['measured']:.2f}"
+            z = a[f"zero_capacity_traces_{t}"]
+            m = a[f"capacity_{t}"]
+            if z == a["n_traces"]:
+                live = f"$<${lo:.2f} ({z}/{a['n_traces']})"
+            elif z:
+                live = f"{m['mean']:.2f}, missed on {z}/{a['n_traces']}"
+            else:
+                live = f"{m['mean']:.2f} [{m['ci95_t'][0]:.2f}, {m['ci95_t'][1]:.2f}]"
             cells += [live, f"{c[t]['predicted_a10']:.2f}"]
+        o = serr[f"{p}_r{n}"]["5.0"]
+        cells.append(f"{o['mean']:.2f} [{o['ci95_t'][0]:.2f}, {o['ci95_t'][1]:.2f}]")
         ok = [v for v in r["rates"].values() if not v["aborted"] and v["n_errors"] == 0]
         anls = mean(v["anls"] for v in ok)
         ref = mean(v["anls_4090_same_requests"] for v in ok)
         rows.append([LABEL[p].split(",")[0], n] + cells + [f"{anls:.3f} ({ref:.3f})"])
     table("live_serving", "Live serving with vLLM on one and two A10 GPUs (one replica per GPU, open-loop Poisson "
-          "arrivals): highest arrival rate (queries/s) at which the measured p95 latency stays within the target, "
-          "interpolated between tested rates, against the simulator's prediction from the A10's own service times "
-          "and batching curve; $<x$ means the target was missed already at the lowest tested rate $x$. Each rate is "
-          "a single arrival trace. ANLS is the mean over the tested rates; in brackets, the 4090 reference run on the "
-          "same requests.", "tab:live_serving",
-          ["Policy", "GPUs", "p95$\\leq$2\\,s live", "sim.", "p95$\\leq$5\\,s live", "sim.", "ANLS (4090)"], rows)
+          "arrivals, generation only): highest arrival rate (queries/s) at which the measured p95 latency stays "
+          f"within the target, interpolated between tested rates; mean and 95\\% $t$ interval over {ntr} arrival traces "
+          "per rate (the original trace and four new ones, same rates and requests). $<x$ ($k/5$) means the target "
+          "was missed at the lowest tested rate $x$ on $k$ traces. Sim.: the simulator's prediction for the original "
+          "trace from the A10's own service times and batching curve; sim./live: its overestimate of the capacity at "
+          "5\\,s over the traces. ANLS is the mean over the tested rates of the original trace; in brackets, the 4090 "
+          "reference run on the same requests.", "tab:live_serving",
+          ["Policy", "GPUs", "p95$\\leq$2\\,s live", "sim.", "p95$\\leq$5\\,s live", "sim.", "sim./live",
+           "ANLS (4090)"], rows)
     reps = sorted({n for _, n in order})
     fig, axes = plt.subplots(1, len(reps), figsize=(3.4 * len(reps), 3.0), sharey=True, squeeze=False)
     for ax, n in zip(axes[0], reps):
@@ -668,6 +684,12 @@ def live_serving():
             ok = sorted((v["offered_rps"], v["p95_s"], v["predicted"]["a10"]["p95_s"]) for v in r["rates"].values()
                         if not v["aborted"] and v["n_errors"] == 0)
             x, live, sim = zip(*ok)
+            band = (agg.get(f"{p}_r{n}") or {}).get("p95_by_rate", {})
+            if band:
+                bx = sorted(float(k) for k in band)
+                ax.fill_between(bx, [band[f"{b:g}"]["min"] if f"{b:g}" in band else band[str(b)]["min"] for b in bx],
+                                [band[f"{b:g}"]["max"] if f"{b:g}" in band else band[str(b)]["max"] for b in bx],
+                                color=COLOR[p], alpha=0.15, linewidth=0)
             ax.plot(x, live, marker=MARK[p], color=COLOR[p], label=LABEL[p].split(",")[0])
             ax.plot(x, sim, color=COLOR[p], linestyle="--", linewidth=1.2)
         for t in (2.0, 5.0):

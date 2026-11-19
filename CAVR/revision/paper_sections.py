@@ -26,12 +26,12 @@ little gain. The Cost-Aware Visual Router (CAVR) chooses the path per query unde
 Its content-aware variant CAVR-CE, a cross-encoder (CE) over the retrieved passages, uses <<ce_save>>\% less GPU
 compute than always combining both contexts at <<ce_dh_abs>> lower ANLS, and keeps a <<rr_cf_sh>>\% saving on
 <<cf_n>> questions from the datasets' training splits. Against the page image alone, routing is not consistently
-better: CAVR-CE gains <<rr_dv>> ANLS for <<rr_xv>>\% more GPU compute on the design splits, but only <<rr_cf_dv_abs>>
-(not significant) on the training-split questions, which ColPali and possibly the generator saw in training. Served
-live with vLLM on one and two A10 GPUs, CAVR-CE sustained <<vl_ce_hyb_r2_5_measured>>$\times$ the arrival rate of
-always-hybrid at a p95 latency of 5\,s; a simulator driven by measured service times overestimated absolute capacity
-by <<vl_over_min>>--<<vl_over_max>>$\times$, so its GPU counts for larger pools are projections. Our earlier
-keyword-rule labels agree with measured outcomes no better than chance.
+better: CAVR-CE gains <<rr_dv>> ANLS for <<rr_xv>>\% more GPU compute on the design splits but only <<rr_cf_dv_abs>>
+(not significant) on training-split questions, which ColPali and possibly the generator saw in training. Served
+live with vLLM on two A10 GPUs (five arrival traces), CAVR-CE sustained <<vr_ce_hyb_r2_5>>$\times$
+<<vr_ce_hyb_r2_5_ci>> always-hybrid's arrival rate at a p95 latency of 5\,s; a simulator built on measured service
+times overestimated capacity <<vr_over_lo>>--<<vr_over_hi>>-fold, so its larger-pool GPU counts are projections.
+Earlier keyword-rule labels match measured outcomes only at chance level.
 \end{abstract}
 """
 
@@ -56,10 +56,10 @@ Three properties make serving multimodal RAG a question of how many GPUs, and wh
 a modelling detail; routing acts on the first and the third, index placement on the second.
 
 \emph{Compute grows with the request rate.} Generation dominates the cost of every path. Served live with vLLM on
-one A10 GPU, the hybrid path alone missed a p95 latency of 2\,s even at the lowest arrival rate we tested, and at
-5\,s routing sustained <<vl_ce_hyb_r2_5_measured>>$\times$ its arrival rate on two GPUs (Section~\ref{sec:res-scale}).
-Projected to a larger pool with a simulator driven by measured service times, which overestimated capacity by
-<<vl_over_min>>--<<vl_over_max>>$\times$ against live serving, 100 queries/s would need <<hyb_vs_ce_gpus>>$\times$
+one A10 GPU, the hybrid path alone missed a p95 latency of 2\,s even at the lowest arrival rate we tested, on
+every one of <<vr_n>> arrival traces, and at 5\,s routing sustained <<vr_ce_hyb_r2_5>>$\times$ <<vr_ce_hyb_r2_5_ci>> its
+arrival rate on two GPUs (Section~\ref{sec:res-scale}). Projected to a larger pool with a simulator driven by measured
+service times, which overestimated capacity <<vr_over_lo>>--<<vr_over_hi>>-fold against live serving, 100 queries/s would need <<hyb_vs_ce_gpus>>$\times$
 as many GPUs for the hybrid path as for content-aware routing.
 
 \emph{Memory grows with the corpus.} ColPali stores 1,031 vectors per page; at 100k pages the index needs
@@ -97,7 +97,8 @@ not measured; capacity for larger pools is a projection from the simulator, with
 \midrule
 Per-query cost and quality of each path & measured & 1 GPU (<<gpu_short>>), <<n_q>> questions \\
 Router overhead and throughput & measured & 1 GPU, batch 1--1,024 \\
-Capacity at a p95 target, live & measured (vLLM) & 1--2 A10 GPUs, generation only \\
+Capacity at a p95 target, live & measured (vLLM), <<vr_n>> traces per rate & 1--2 A10 GPUs, generation only \\
+Capacity with retrieval and routing in the loop & measured (vLLM), 1 trace & 1 A10 GPU plus front end \\
 GPUs needed at a p95 target for larger pools & projected (simulator) & up to 256 simulated GPUs \\
 Multi-node serving or retrieval & not measured & -- \\
 Index sharding & measured & up to <<mg_n_word>> GPUs per node, <<mg_maxpages>> pages \\
@@ -573,7 +574,16 @@ requests. The load test sends open-loop Poisson arrivals (fixed seed) at 15--110
 throughput for the policy's path mix, with at most 400 arrivals per rate, the first 10\% discarded, and stops once p95
 exceeds 30\,s. Each measured arrival trace is then replayed through the simulator above, once with the A10's service
 times and batching curve and once with the workstation's, so that predicted and measured p95 refer to the same
-arrivals; the capacity at a p95 target is interpolated between tested rates.
+arrivals; the capacity at a p95 target is interpolated between tested rates. Every policy and replica count was
+run with <<vr_n>> arrival traces (Poisson seeds 1234--1238; 1234 is the original run), with the server, rates and
+requests unchanged, and the runs were made one at a time with nothing else on the GPUs. Capacities are reported as
+means with 95\% $t$ intervals over traces, and ratios between policies are paired by trace.
+
+In one further run per policy (CAVR-CE and always-visual, original trace, one replica), retrieval and routing were in
+the loop: a single front-end worker on the second A10 ran BM25, ColPali query encoding with exhaustive MaxSim over the
+dataset's pages and, for CAVR-CE, the cross-encoder router at each request's arrival, and sent the prompt built from
+this live retrieval to the replica. The router weights of the main run had not been stored, so the split-1 router was
+re-trained with the same code, data, hyperparameters and seed.
 
 \paragraph{Sensitivity and control experiments.} With the same simulator, the GPUs needed for 100 queries/s are
 found for p95 targets of 1.5, 2, 3, 5, 7.5 and 10\,s on all five splits for always-visual, always-hybrid and
@@ -726,10 +736,12 @@ trained router covers a range of budgets; it is a per-deployment setting whose c
 new hardware. Confidence-based escalation adds nothing beyond it: every escalation operating point lies within
 <<eg_max_hi>> ANLS of the operating points that lowering $\lambda$ reaches at the same cost.
 
-\emph{RQ4: capacity and index scaling.} Served live with vLLM on one and two A10 GPUs, CAVR-CE sustained
-<<vl_ce_hyb_r2_5_measured>>$\times$ the arrival rate of always-hybrid at p95 $\le$ 5\,s on two GPUs, and always-visual
-remained ahead of both. A simulator driven by measured service times kept this order but overestimated absolute
-capacity by <<vl_over_min>>--<<vl_over_max>>$\times$, so the GPU counts it gives for larger pools are projections. Within
+\emph{RQ4: capacity and index scaling.} Served live with vLLM on one and two A10 GPUs over <<vr_n>> arrival traces,
+CAVR-CE sustained <<vr_ce_hyb_r2_5>>$\times$ <<vr_ce_hyb_r2_5_ci>> the arrival rate of always-hybrid at p95 $\le$ 5\,s
+on two GPUs, and always-visual remained ahead of both; with retrieval and routing in the loop, capacity fell by
+<<lp_ce_drop>>\% for CAVR-CE and <<lp_vis_drop>>\% for always-visual. A simulator driven by measured service times kept
+the order of the policies but overestimated capacity <<vr_over_lo>>--<<vr_over_hi>>-fold, so the GPU counts it gives
+for larger pools are projections. Within
 a node, sharding exhaustive MaxSim scaled almost linearly, as expected for an embarrassingly parallel search, and an
 index of <<hs_max_words>> pages held in host memory served large batches at close to the throughput per GPU of
 GPU-resident search, at <<hs_p50_2>>\,s per single query.

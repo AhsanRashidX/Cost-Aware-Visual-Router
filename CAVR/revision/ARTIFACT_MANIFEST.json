@@ -1,5 +1,5 @@
 {
- "git_commit": "b55e9c5301b0620c0f28730c70f1886350bd5abe",
+ "git_commit": "fe3230364b29c708fcf1d52927c4e243504303e0",
  "regenerate": "python make_outputs.py; python make_method_figure.py; python make_training_figure.py; python make_paper_text.py; python make_bib.py",
  "artifacts": [
   {
@@ -72,11 +72,15 @@
    "in_paper": "results_section",
    "generator": "make_outputs.py:live_serving",
    "reads": [
-    "vllm_a10.json"
+    "vllm_a10.json",
+    "vllm_repeats_r3.json"
    ],
    "produced_by": {
     "vllm_a10.json": [
      "vllm_analysis.py"
+    ],
+    "vllm_repeats_r3.json": [
+     "vllm_repeats_r3.py"
     ]
    }
   },
@@ -298,11 +302,15 @@
    "in_paper": "results_section",
    "generator": "make_outputs.py:live_serving",
    "reads": [
-    "vllm_a10.json"
+    "vllm_a10.json",
+    "vllm_repeats_r3.json"
    ],
    "produced_by": {
     "vllm_a10.json": [
      "vllm_analysis.py"
+    ],
+    "vllm_repeats_r3.json": [
+     "vllm_repeats_r3.py"
     ]
    }
   },
@@ -449,6 +457,20 @@
    "produced_by": {
     "token_pooling.json": [
      "token_pooling.py"
+    ]
+   }
+  },
+  {
+   "kind": "table",
+   "name": "token_sweep",
+   "in_paper": "appendix",
+   "generator": "make_outputs.py:token_sweep_table",
+   "reads": [
+    "review_round3.json"
+   ],
+   "produced_by": {
+    "review_round3.json": [
+     "review_round3.py"
     ]
    }
   },

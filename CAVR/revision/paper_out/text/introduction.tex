@@ -19,10 +19,10 @@ Three properties make serving multimodal RAG a question of how many GPUs, and wh
 a modelling detail; routing acts on the first and the third, index placement on the second.
 
 \emph{Compute grows with the request rate.} Generation dominates the cost of every path. Served live with vLLM on
-one A10 GPU, the hybrid path alone missed a p95 latency of 2\,s even at the lowest arrival rate we tested, and at
-5\,s routing sustained 1.82$\times$ its arrival rate on two GPUs (Section~\ref{sec:res-scale}).
-Projected to a larger pool with a simulator driven by measured service times, which overestimated capacity by
-1.4--2.0$\times$ against live serving, 100 queries/s would need 1.5$\times$
+one A10 GPU, the hybrid path alone missed a p95 latency of 2\,s even at the lowest arrival rate we tested, on
+every one of five arrival traces, and at 5\,s routing sustained 1.70$\times$ [1.57, 1.84] its
+arrival rate on two GPUs (Section~\ref{sec:res-scale}). Projected to a larger pool with a simulator driven by measured
+service times, which overestimated capacity 1.3--1.9-fold against live serving, 100 queries/s would need 1.5$\times$
 as many GPUs for the hybrid path as for content-aware routing.
 
 \emph{Memory grows with the corpus.} ColPali stores 1,031 vectors per page; at 100k pages the index needs
@@ -60,7 +60,8 @@ not measured; capacity for larger pools is a projection from the simulator, with
 \midrule
 Per-query cost and quality of each path & measured & 1 GPU (RTX 4090), 8,150 questions \\
 Router overhead and throughput & measured & 1 GPU, batch 1--1,024 \\
-Capacity at a p95 target, live & measured (vLLM) & 1--2 A10 GPUs, generation only \\
+Capacity at a p95 target, live & measured (vLLM), five traces per rate & 1--2 A10 GPUs, generation only \\
+Capacity with retrieval and routing in the loop & measured (vLLM), 1 trace & 1 A10 GPU plus front end \\
 GPUs needed at a p95 target for larger pools & projected (simulator) & up to 256 simulated GPUs \\
 Multi-node serving or retrieval & not measured & -- \\
 Index sharding & measured & up to three GPUs per node, 150k pages \\
